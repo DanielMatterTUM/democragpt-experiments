@@ -1,0 +1,326 @@
+[
+ {
+  "uid": "72fc8f292092",
+  "n_models": 3,
+  "party": "CSU",
+  "text": "Man sollte das Problem bekämpfen und jeden der auffällig ist ausweisen. Das was er da sagt das ist ein Überwachungs Staat",
+  "verdict": "ja",
+  "label": "konfrontation_angriff",
+  "why": "Rahmen als Überwachungsstaat = wahrgenommene Kontrollbedrohung (A)"
+ },
+ {
+  "uid": "595e7ef3272e",
+  "n_models": 3,
+  "party": "ÖVP",
+  "text": "wir sollen masken tragen und politiker dürfen alles a frechheit is des",
+  "verdict": "ja",
+  "label": "konfrontation_angriff",
+  "why": "Maskenpflicht als Eingriff in den Körper benannt = Kontrollbedrohung (A)"
+ },
+ {
+  "uid": "35c8d2851eee",
+  "n_models": 3,
+  "party": "Grüne",
+  "text": "Ach jetzt macht euch doch nicht dauernd ins Hemd wegen so einem Scheiss, daneben ist nur der hochgekackte hype den ihr draus macht.",
+  "verdict": "ja",
+  "label": "keine_reaktanz",
+  "why": "Video beschämt die Zuschauer → Normdruck + Identitätsbedrohung (C/D). Gutes Beispiel."
+ },
+ {
+  "uid": "08221862dbd3",
+  "n_models": 3,
+  "party": "ÖVP",
+  "text": "Wenn du drei 1.90 große Streifen-Polizisten vor meine Haustüre schickst überleg ichs mir..",
+  "verdict": "ja",
+  "label": "vermeidung_rueckzug",
+  "why": "Polizei vor der Tür gegen Impfpflicht = Bedrohungsrahmen, Verweigerung (A)"
+ },
+ {
+  "uid": "c98642d183ca",
+  "n_models": 3,
+  "party": "AfD",
+  "text": "nix werde ich, meine Sprache bleibt altdeutsch und fertig",
+  "verdict": "ja",
+  "label": "reflektierte_rechtfertigung",
+  "why": "Weist aufgezwungene Terminologie zurück → Identitätsbedrohung (D), schwach aber vertretbar"
+ },
+ {
+  "uid": "164fdbd05be0",
+  "n_models": 3,
+  "party": "FreieWähler",
+  "text": "dafür haben wir jetzt ganz viel Impfstoff mit dem wir die Leute Zwangsimpfen können. Danke Politiker",
+  "verdict": "ja",
+  "label": "konfrontation_angriff",
+  "why": "„Zwangsimpfen“ explizit benannt = Kontrollbedrohung (A) + Sarkasmus"
+ },
+ {
+  "uid": "9670b72be611",
+  "n_models": 3,
+  "party": "ÖVP",
+  "text": "Es gibt mindestens 5 andere arten corona zu bekämpfen außer der Impfung... warum hört man davon nichts? Weil ihr von denen keinen Gewinn erziehlt..",
+  "verdict": "ja",
+  "label": "konstruktive_kritik",
+  "why": "Wirft der Impfpolitik Gewinnmotive vor = wahrgenommene Manipulation (B)"
+ },
+ {
+  "uid": "c4ab95489e86",
+  "n_models": 3,
+  "party": "CDU",
+  "text": "Hahahaha hinter de Mauer !????? Never.",
+  "verdict": "nein",
+  "label": "-",
+  "why": "Nicht deutbares Fragment, keine rekonstruierbare Reaktanz"
+ },
+ {
+  "uid": "dd91791e7a6d",
+  "n_models": 3,
+  "party": "Grüne",
+  "text": "Der Zimmerman hat ein großes Loch in jedem Zimmer hinterlassen und jeder kann gehen wenn es ihm nicht passt!! Und Tschüß 🇩🇪💙🇩🇪",
+  "verdict": "ja",
+  "label": "konfrontation_angriff",
+  "why": "Weist den Beschämungsrahmen zurück, nennt den Ausstieg = Normdruck (C)"
+ },
+ {
+  "uid": "154b7ea414d7",
+  "n_models": 3,
+  "party": "SPD",
+  "text": "Jetzt ist es das Wachstum,ich denke es ist Putin,der Klimawandel,die AFD, Trump,der Ukrainekrieg,ihre Fönfrisur usw......,meint ihr wirklich wir sind total verblödet.😂😂😂😂",
+  "verdict": "ja",
+  "label": "konfrontation_angriff",
+  "why": "„total verblödet“ = Identitäts-/Würdeangriff (D)"
+ },
+ {
+  "uid": "6f1413afa4a1",
+  "n_models": 3,
+  "party": "CDU",
+  "text": "Das würde mich sooooo nerven. Geht mir bitte nicht jede Minute damit auf den Keks - ich bin beim Fußball !",
+  "verdict": "ja",
+  "label": "vermeidung_rueckzug",
+  "why": "Message Fatigue, „jede Minute auf den Keks“ = Auslöserdimension E"
+ },
+ {
+  "uid": "03fe0e9d33e5",
+  "n_models": 3,
+  "party": "CDU",
+  "text": "Wie jemand seine Zeit nutzt ist erstmal egal. Wenn jemand glücklich damit ist nichts anderes zu tun außer zu zocken ist alles gut.Jeder ist anders.",
+  "verdict": "ja",
+  "label": "reflektierte_rechtfertigung",
+  "why": "Gegenargument gegen bevormundende Screen-Time-Moralisierung (C)"
+ },
+ {
+  "uid": "e64da5bb8587",
+  "n_models": 2,
+  "party": "Grüne",
+  "text": "*Friedrich Merz will Familien in die Obdachlosigkeit schicken.* wenn du so verzweifelt bist dass dir einfach jedes Mittel recht ist:",
+  "verdict": "nein",
+  "label": "-",
+  "why": "Zustimmung / Wahlempfehlung"
+ },
+ {
+  "uid": "2cf8201f3b22",
+  "n_models": 2,
+  "party": "CSU",
+  "text": "Wen das Demokratische Flicht ist dann sollte auch Stimen Von Volker AKZEPTIEREN.",
+  "verdict": "nein",
+  "label": "-",
+  "why": "Angriff auf eine rivalisierende Partei, keine Autonomiebedrohung"
+ },
+ {
+  "uid": "1b1473453593",
+  "n_models": 2,
+  "party": "Grüne",
+  "text": "Grüne Kriegsfetischisten dürfen nie wieder in Regierungsverantwortung kommen bevor unser Land komplett zerstört ist 😩",
+  "verdict": "nein",
+  "label": "-",
+  "why": "Gewöhnliche Sachkritik (Rundfunkgebühren)"
+ },
+ {
+  "uid": "fb7051982c51",
+  "n_models": 2,
+  "party": "unabhängig",
+  "text": "Klimawandel war schon immer! Wir haben Null Einfluss auf das Wetter. Ihr solltet sich anderer Wissenschafter anhören und nicht nur Systemgetreue Wisse",
+  "verdict": "nein",
+  "label": "-",
+  "why": "Beleidigung von Parteien, kein Rahmen einer Freiheitsbedrohung"
+ },
+ {
+  "uid": "93120de7b522",
+  "n_models": 2,
+  "party": "CSU",
+  "text": "Warum sorgen sie nicht das Amerikanische Armee Deutschland verlässt. Wie lange sollen wir Kolonie den USA sein?",
+  "verdict": "ja",
+  "label": "-",
+  "why": "„plumpe Framing“ benennt Framing/Manipulation (B) — Grenzfall, aber der Auslöser wird benannt"
+ },
+ {
+  "uid": "2764d52df393",
+  "n_models": 2,
+  "party": "AfD",
+  "text": "@💙💙💙Endspurt 💙💙.. 14.09.25 wählen 🗳️gehen es geht um euch und keiner hat es Verdient sich weiter von CDU/ SPD und Co. Demütigen und Belügen zu lassen… Steht auf es geht um unsere Stadt Gelsenkirchen und NRW💙💙💙💙💙💙 wer Altparteien wählt wird weiterhin Gedemütigt und Belogen💙💙",
+  "verdict": "ja",
+  "label": "vermeidung_rueckzug",
+  "why": "Verweigert eine Impfpflicht = Lehrbuchfall des Boomerang-Effekts (A)"
+ },
+ {
+  "uid": "75a022890f54",
+  "n_models": 2,
+  "party": "FDP",
+  "text": "Das ist doch der erste Aufruf Plattformen, wie diese zu kontrollieren und zu verbieten. Nach der COVID Geschichte, ist doch bewiesen, wer am meisten Desinformation verbreitet.. Teilnehmer vom WEF.",
+  "verdict": "ja",
+  "label": "konfrontation_angriff",
+  "why": "Weist die Norm der Wahlpflicht zurück = Normdruck (C)"
+ },
+ {
+  "uid": "2c59ca2f16c5",
+  "n_models": 2,
+  "party": "CDU",
+  "text": "Na dann lassen Sie sich mal Impfen. Und ich bitte darum Sie zuerst. Am besten als Testperson. Mein Leben und ich lasse mich nicht Impfen.",
+  "verdict": "nein",
+  "label": "-",
+  "why": "Beiläufige Bemerkung, keine Bewertung einer Einschränkung"
+ },
+ {
+  "uid": "11bce973d570",
+  "n_models": 2,
+  "party": "CDU",
+  "text": "Beide Stimmen für die Grünen 💚",
+  "verdict": "ja",
+  "label": "konfrontation_angriff",
+  "why": "„totalitärer Staat“ + Weigerung, sich spalten zu lassen = Identität/Würde (D)"
+ },
+ {
+  "uid": "281054d3929b",
+  "n_models": 2,
+  "party": "unabhängig",
+  "text": "Immer wieder erfrischend dieses plumpe Framing.",
+  "verdict": "nein",
+  "label": "-",
+  "why": "Spott, keine Wiederherstellung von Autonomie"
+ },
+ {
+  "uid": "97bc1bb18aac",
+  "n_models": 2,
+  "party": "Linke",
+  "text": "💙 jetzt erst recht, nur noch AFD 💙",
+  "verdict": "ja",
+  "label": "vermeidung_rueckzug",
+  "why": "Nimmt aus Prinzip ein Bußgeld an = klassische Reaktanz-Bewältigung (A)"
+ },
+ {
+  "uid": "fa01d672cd71",
+  "n_models": 2,
+  "party": "FDP",
+  "text": "eyyyy kann diese Reichenpartei uns nicht bitte endlich in Ruhe lassen????",
+  "verdict": "ja",
+  "label": "ablenkung_whataboutism",
+  "why": "Benennt „kontrollieren und zu verbieten“ = Kontrollbedrohung (A)"
+ },
+ {
+  "uid": "b4cb6160f2d2",
+  "n_models": 1,
+  "party": "AfD",
+  "text": "Herr Becker Ich bin Afd Wähler und freue mich auf solch einer Partei die versucht für das Volk zu sein und nicht dagegen. Jetzt hätte ich gerne einen Rat von Ihnen. Meine Tochter meinte sozusagen ich sei ein Nazi ,da sie eine linkspaetei gewählt hatte. Dies ist natürlich für mich verletzend und traurig das meine eigene Tochter mich als Nazi betitelt. Wie oder was sollte ich tun. Habe versucht eine lockere Diskussionsrunde Runde untereinander zu eröffnen aber keine Chance",
+  "verdict": "nein",
+  "label": "-",
+  "why": "Selbstauskunft + Bitte um Rat; keine Reaktion auf eine Einschränkung im Video"
+ },
+ {
+  "uid": "0b00c9eb868e",
+  "n_models": 1,
+  "party": "BSW",
+  "text": "immer noch Propagandabegriffe wie \"definitiv rechtsextremistisch\" und \"Nazis\". Erstmal sollte der BSW gehörig abrüsten 😕",
+  "verdict": "nein",
+  "label": "-",
+  "why": "Kritik an der Wortwahl, keine Autonomiebedrohung"
+ },
+ {
+  "uid": "5ab8106ad24c",
+  "n_models": 1,
+  "party": "Grüne",
+  "text": "Sind das jetzt auch gekaufte Leute 🤔🤔🤔",
+  "verdict": "ja",
+  "label": "ablenkung_whataboutism",
+  "why": "Verdacht auf gekaufte Abgeordnete = wahrgenommene Manipulation (B). Grenzfall."
+ },
+ {
+  "uid": "91470539cea8",
+  "n_models": 1,
+  "party": "FDP",
+  "text": "Beide Stimmen am 23.02.2025 für die AFD 💙 💙 💙 💙 💙",
+  "verdict": "nein",
+  "label": "-",
+  "why": "Wahlempfehlung"
+ },
+ {
+  "uid": "7757d0d3554f",
+  "n_models": 1,
+  "party": "Grüne",
+  "text": "Meine Gemeinde in Sachsen Anhalt ist bereits GRÜNEN frei!! Weck mit diesen faschistischrn Subjekten und dieser Dreck gehört auf den Müllhaufen der Geschichte",
+  "verdict": "nein",
+  "label": "-",
+  "why": "Reine Aggression, kein Einschränkungsrahmen"
+ },
+ {
+  "uid": "74b76eda3305",
+  "n_models": 1,
+  "party": "Grüne",
+  "text": "Selbstbestimmungsgeset!?! Nicht reden handeln. Jetzt. Handeln!",
+  "verdict": "nein",
+  "label": "-",
+  "why": "Stimmt zu und fordert Handeln; Gegenteil von Reaktanz"
+ },
+ {
+  "uid": "de7cc9ed2663",
+  "n_models": 1,
+  "party": "AfD",
+  "text": "Bin für Abtreibung von Politikern, Beamten, Anwälten, Richtern, Ärzten und illegalen Einwanderern/Invasoren!",
+  "verdict": "nein",
+  "label": "-",
+  "why": "Drohung gegen andere, keine Reaktanz der kommentierenden Person"
+ },
+ {
+  "uid": "7039632930e0",
+  "n_models": 1,
+  "party": "BSW",
+  "text": "richtig so. Und die wollen alles verbieten 🤣. Das ist grünen Logik",
+  "verdict": "ja",
+  "label": "konfrontation_angriff",
+  "why": "„die wollen alles verbieten“ = Kontrollbedrohung (A). Grenzfall."
+ },
+ {
+  "uid": "7f4bbe6be93b",
+  "n_models": 1,
+  "party": "Linke",
+  "text": "Ihr seid doch die Kinder und Enkel der SED? Habt Ihr die Maueropfer und Häftlinge schon entschädigt?",
+  "verdict": "ja",
+  "label": "konfrontation_angriff",
+  "why": "SED/Maueropfer-Konfrontation = Identität/Status (D). Grenzfall."
+ },
+ {
+  "uid": "367c29515d9d",
+  "n_models": 1,
+  "party": "CSU",
+  "text": "Nimalscdu oder andere drei.",
+  "verdict": "nein",
+  "label": "-",
+  "why": "Sinnloses Fragment"
+ },
+ {
+  "uid": "cd532c30f994",
+  "n_models": 1,
+  "party": "Grüne",
+  "text": "Zum ersten Gas aus Russland wäre eine gute Möglichkeit, günstige Energie für Deutschland zu erhalten. Russland hat immer weiter angeboten, das zu liefern. Man sollte diese Lügen mal einstellen.",
+  "verdict": "nein",
+  "label": "-",
+  "why": "Sachliche Kritik an den Aussagen eines Politikers"
+ },
+ {
+  "uid": "38aee3d11aac",
+  "n_models": 1,
+  "party": "Grüne",
+  "text": "Warum sollen wir kein Gas kaufen. Günstig ist gut für Deutschland. Es gibt keinen Krieg aus Russland. Wir müssen höchstens Grönland vor USA verteidigen.",
+  "verdict": "nein",
+  "label": "-",
+  "why": "Gegenargument zur Gasfrage, keine Bewertung einer Einschränkung"
+ }
+]

@@ -5,9 +5,24 @@ const [inMd, outPdf] = process.argv.slice(2);
 if (!inMd || !outPdf) { console.error('usage: node md2pdf.js in.md out.pdf'); process.exit(1); }
 
 const md = fs.readFileSync(inMd, 'utf8');
+// Figures are referenced relative to the markdown file (results/REPORT.md ->
+// results/figures/*.png). Resolve to absolute paths so Chromium finds them --
+// relative paths in a data: URL context resolve against nothing and fail
+// SILENTLY (empty img boxes).
+const path = require('path');
+const baseDir = path.dirname(path.resolve(inMd));
 
 function esc(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function imgSrc(rel) {
+  const abs = path.resolve(baseDir, rel);
+  if (!fs.existsSync(abs)) {
+    console.error('MISSING IMAGE: ' + abs);
+    return '';
+  }
+  return 'data:image/png;base64,' + fs.readFileSync(abs).toString('base64');
 }
 
 // Minimal but table-aware markdown -> HTML (enough for our reports).
@@ -43,6 +58,14 @@ function convert(src) {
       h += '</tbody></table>';
       out.push(h);
       continue;
+    }
+
+    // image (block-level: a paragraph consisting only of ![alt](src))
+    const img = line.trim().match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (img) {
+      const src = imgSrc(img[2]);
+      if (src) out.push('<figure><img src="' + src + '" alt="' + esc(img[1]) + '"></figure>');
+      i++; continue;
     }
 
     // headings
@@ -89,8 +112,11 @@ function convert(src) {
 function inline(s) {
   s = esc(s);
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // Bold first, then italic. The italic pattern must not swallow a typographic
+  // quote followed by a letter (e.g. '... auf den Keks" — i bin beim') -- require
+  // a non-word, non-quote char before the opening asterisk.
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  s = s.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
+  s = s.replace(/(^|[^*\w„“"'])\*([^*]+?)\*(?![\w])/g, '$1<em>$2</em>');
   s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
   return s;
 }
@@ -124,6 +150,8 @@ pre {
   page-break-inside: avoid; margin: 2mm 0 3mm 0;
 }
 blockquote { border-left: 2.5pt solid #b8c6d4; margin: 2mm 0; padding: 1.5mm 0 1.5mm 3mm; color: #444; }
+figure { margin: 3mm 0 2mm 0; text-align: center; page-break-inside: avoid; }
+figure img { max-width: 100%; }
 hr { border: none; border-top: 0.5pt solid #ccd6e0; margin: 5mm 0; }
 a { color: #14304f; }
 .small { font-size: 8pt; color: #555; }

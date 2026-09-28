@@ -65,6 +65,30 @@ A("**Codebook B nach dem Gate-Fix deckungsgleich mit Codebook A.** Vor dem Fix "
   "(siehe Abschnitt 4).")
 A("")
 
+# --- critical audit numbers, if available ---
+try:
+    AUD = json.load((RES / "audit_linked.json").open(encoding="utf-8"))
+except Exception:
+    AUD = []
+w = 0.0
+if AUD:
+    p3 = sum(1 for r in AUD if r["n_models"] == 3 and r["verdict"] == "ja")
+    n3 = sum(1 for r in AUD if r["n_models"] == 3)
+    p2 = sum(1 for r in AUD if r["n_models"] == 2 and r["verdict"] == "ja")
+    n2 = sum(1 for r in AUD if r["n_models"] == 2)
+    p1 = sum(1 for r in AUD if r["n_models"] == 1 and r["verdict"] == "ja")
+    n1 = sum(1 for r in AUD if r["n_models"] == 1)
+    w = (p3 / n3 * 27 + p2 / n2 * 26 + p1 / n1 * 66) / 119
+    A(f"**⚠️ Der wichtigste Befund: rund die Hälfte der 'Reaktanz'-Treffer sind "
+      f"Fehlalarme.** Von 119 als positiv markierten Kommentaren sind nach "
+      f"manueller Nachkodierung geschätzt nur **{100*w:.0f} %** echte Reaktanz. "
+      f"Die Fehler verteilen sich nicht zufällig: Wo alle drei Modelle "
+      f"übereinstimmen ({p3}/{n3} = {100*p3/n3:.0f} % richtig), sind fast alle "
+      f"Treffer echt; bei Zweier-Mehrheiten ({p2}/{n2} = {100*p2/n2:.0f} %) "
+      f"und besonders bei Einzelstimmen ({p1}/{n1} = {100*p1/n1:.0f} %) "
+      f"dominiert der Fehlalarm. Abschnitt 6 diskutiert die Konsequenzen.")
+    A("")
+
 A("---")
 A("")
 A("## 2. Methodik")
@@ -140,6 +164,12 @@ A("---")
 A("")
 A("## 3. Prävalenz und Geschwindigkeit")
 A("")
+A("![Abb. 1: Prävalenz nach Modell, Codebook und Condition]"
+  "(figures/fig1_prevalence.png)")
+A("")
+A("**Abb. 1** Prävalenz psychologischer Reaktanz. Beide Codebooks und beide "
+  "Conditions im Vergleich; die y-Achse ist identisch skaliert.")
+A("")
 A("### 3.1 Prävalenz nach Codebook und Condition")
 A("")
 A("| Codebook | Condition | Modell | Parse % | n reaktant | Prävalenz % | Ø Latenz s | $/1.000 Zeilen |")
@@ -153,7 +183,13 @@ A("**Codebook A** ist die methodisch belastbarere Größe: Es liefert eine "
   "zusätzlich den Typ zu und ist damit für die Feinanalyse interessant.")
 A("")
 
-A("### 3.2 Geschwindigkeit und Kosten")
+A("### 3.3 Geschwindigkeit und Kosten")
+A("")
+A("![Abb. 4: Latenz und Kosten je 1.000 Kommentare]"
+  "(figures/fig4_cost_latency.png)")
+A("")
+A("**Abb. 4** Antwortzeit und Kosten je 1.000 Kommentare (Condition A). Jev ist "
+  "in beiden Panels gleichzeitig Spitzenreiter.")
 A("")
 A("| Modell | Codebook | Cond | Calls | Latenz Ø s | Latenz p90 s | Summe $ |")
 A("|---|---|---|---:|---:|---:|---:|")
@@ -163,11 +199,11 @@ for c in D["cost"]:
 A("")
 
 if D["examples"]:
-    A("### 3.3 Beispiele: was der Gate-Fix als Reaktanz kodiert")
+    A("### 3.4 Beispiele: was die Modelle als Reaktanz markiert haben")
     A("")
-    A("Nach dem Fix bleiben nur Kommentare übrig, die tatsächlich eine "
-      "Freiheitsbedrohung rahmen. Beispiele (Modell `jev-1.13`, Codebook A, "
-      "Condition A):")
+    A("Nach dem Gate-Fix bleiben nur Kommentare übrig, die tatsächlich eine "
+      "Freiheitsbedrohung rahmen. **Diese Liste ist ungeprüft** — die kritische "
+      "Auswertung in Abschnitt 6 zeigt, dass auch hier Fehlalarme enthalten sind.")
     A("")
     for e in D["examples"]:
         A(f"- *„{e['text']}“*")
@@ -195,6 +231,11 @@ A("")
 
 A("## 5. Modellübergreifende Übereinstimmung")
 A("")
+A("![Abb. 3: Rohübereinstimmung vs. Cohen's κ](figures/fig3_agreement.png)")
+A("")
+A("**Abb. 3** Rohübereinstimmung gegen Cohen's κ. Die Lücke zwischen beiden Größen "
+  "ist der eigentliche Befund.")
+A("")
 A("| Codebook | Cond | Modell A | Modell B | n | % Übereinstimmung | Cohen's κ |")
 A("|---|---|---|---|---:|---:|---:|")
 for o in D["overlap"]:
@@ -211,8 +252,76 @@ A("**Zur Interpretation der Kennwerte:** Bei Codebook A ist die rohe "
   "Differenzieren gibt.")
 A("")
 
+# --- critical audit section (inserted before the party table) --------------
+if AUD:
+    A("---")
+    A("")
+    A("## 6. Kritische Prüfung: zeigen die Beispiele wirklich Reaktanz?")
+    A("")
+    A("Eine Prävalenzzahl ist nur so gut wie die Fälle, auf denen sie beruht. "
+      "Deshalb wurden die positiven Treffer einer manuellen Nachkodierung "
+      "unterzogen — geschichtet nach Konsensgrad, weil genau dort die "
+      "Fehler zu erwarten sind.")
+    A("")
+    A("![Abb. 2: Präzision nach Konsensgrad](figures/fig2_precision.png)")
+    A("")
+    A("**Abb. 2** Präzision der Positiverkennung nach Konsensgrad (links) und "
+      "Verteilung aller 119 Positiven (rechts).")
+    A("")
+    A("Gewichtet nach den wahren Stratumgrößen ergibt sich eine **geschätzte "
+      f"Präzision von {100*w:.0f} %**: von 119 markierten Kommentaren sind rund "
+      f"{round(w*119)} echte Reaktanz und {119 - round(w*119)} Fehlalarm.")
+    A("")
+    A("### 6.1 Was die echten Fälle ausmacht")
+    A("")
+    A("Die als korrekt kodierten Fälle tragen durchweg die Triggerdimensionen A–D:")
+    A("")
+    for r in AUD:
+        if r["verdict"] == "ja":
+            A(f"- *„{r['text'][:150]}“* — {r['why']}")
+    A("")
+    A("### 6.2 Was die Fehlalarme ausmacht")
+    A("")
+    A("Der Fehler ist nicht zufällig verteilt, sondern systematisch. Drei "
+      "wiederkehrende Muster:")
+    A("")
+    A("1. **Empörung ohne Freiheitsbezug.** Der Kommentar ist wütend, greift die "
+      "Politikerin oder die Partei an, aber der Bezug zur eigenen bedrohten "
+      "Freiheit fehlt. Beispiel: *„Paranoia als Privileg 🤣“*, *„Beide Stimmen für "
+      "die AfD 💙💙💙“*, *„Beide Stimmen für die Grünen 💚“*.")
+    A("2. **Antwort auf eine Sachfrage, nicht auf eine Einschränkung.** Die "
+      "Models lesen das Video als Provokation und reagieren darauf — aber die "
+      "Reaktanz richtet sich gegen das *Video*, nicht gegen eine Freiheitsbedrohung "
+      "durch die Botschaft. Beispiel: *„Jetzt ist es das Wachstum, ich denke es ist "
+      "Putin, der Klimawandel […] meint ihr wirklich wir sind total verblödet.“*")
+    A("3. **Kein reaktantes Verhalten trotz Benennung eines Triggers.** Drei "
+      "Grenzfälle der 1/3-Gruppe benennen zwar einen Auslöser (etwa *„die wollen "
+      "alles verbieten“*), zeigen aber keine Autonomie-restaurierende Reaktion. "
+      "Unter strikter Regel als Fehlalarm gewertet; großzügiger gelesen wären sie "
+      "Grenzfälle.")
+    A("")
+    A("### 6.3 Konsequenzen für die Interpretation")
+    A("")
+    A("**Die Prävalenzzahlen sind Obergrenzen.** Wenn rund die Hälfte der "
+      "Treffer Fehlalarme sind, ist die tatsächliche Prävalenz niedriger als "
+      "3–7 % — die Größenordnung bleibt aber erhalten, da die Fehler nicht "
+      "systematisch in eine Richtung gehen.")
+    A("")
+    A("**Der Konsensgrad ist ein brauchbarer Prüf-Filter.** Wo alle drei Modelle "
+      "übereinstimmen, ist die Trefferquote hoch (92 %); wo nur eines anschlägt, "
+      "ist sie sehr niedrig (25 %). Für eine praktische Pipeline heißt das: "
+      "Mehrfachkodierung oder ein Mindest-Konsens verwenden, statt den "
+      "Erzähler-Output eines einzelnen Modells zu übernehmen.")
+    A("")
+    A("**Die manuellen Verdicts sind keine goldene Referenz.** Die Nachkodierung "
+      "hier wurde vom Assistenten durchgeführt, nicht von einer trainierten "
+      "Koderin. Die Fallzahl (n = 36) ist zu klein für eine belastbare "
+      "Präzisionsangabe mit engem Konfidenzintervall. Die Punktschätzung von "
+      f"{100*w:.0f} % ist als Größenordnung zu lesen, nicht als exakter Wert.")
+    A("")
+
 if D["by_party"]:
-    A("## 6. Prävalenz nach Partei")
+    A("## 7. Prävalenz nach Partei")
     A("")
     A("Nur Zellen mit n ≥ 20. **Achtung:** für eine Inference-Anwendung sind diese "
       "Zellen zu klein — die Darstellung dient der Plausibilitätsprüfung.")
@@ -223,13 +332,26 @@ if D["by_party"]:
         A(f"| {b['model']} | {b['party']} | {b['n']} | {b['pos']} | {b['pct']} |")
     A("")
 
-A("## 7. Diskussion und offene Punkte")
+A("## 8. Diskussion und offene Punkte")
+A("")
+A("**Die Prävalenzangaben dieses Berichts sind Obergrenzen.** Abschnitt 6 hat "
+  f"gezeigt, dass rund die Hälfte der markierten Kommentare keine Reaktanz im Sinne "
+  "der Theorie zeigt. Für die Aussage *wie häufig ist Reaktanz auf TikTok* heißt "
+  "das: die Größenordnung (niedriger einstelliger Prozentbereich) hält, die "
+  "exakten Prozentwerte sind zu hoch.")
 A("")
 A("**Für die Detection-Pipeline ist die Frage nicht *welches* Modell, sondern "
   "ob man das Transkript überhaupt braucht.** Der Befund, dass Condition A und B "
   "praktisch gleichauf liegen, ist praktisch relevant: die Transkripte im "
   "Korpus sind der teuerste Datenbestandteil (nicht im Repo, nur über NAS) — "
   "wenn sie für die Erkennung keinen Beitrag leisten, genügt der Kommentartext.")
+A("")
+A("**Konsens als Filter, nicht Einzelmodell.** Die Präzisionsanalyse zeigt eine "
+  "steile Gradienten: 92 % bei Drei-Stimmen-Konsens, 25 % bei einer Einzelstimme. "
+  "Eine Pipeline, die nur Jev laufen lässt und dessen Positives übernimmt, "
+  "übernimmt zu etwa zwei Dritteln Fehlalarme. Entweder Mehrfachkodierung, oder "
+  "ein Schwellwert auf der von Jev gelieferten Konfidenz — letzteres ist dank "
+  "Decision-API verfügbar und wäre der naheliegende Test für den nächsten Schritt.")
 A("")
 A("**Jev hat einen methodischen Vorteil, der über den Preis hinausgeht.** Das "
   "Decisions-API liefert `probabilities` je Label und einen `confidence`-Wert. "
@@ -241,11 +363,17 @@ A("")
 A("**Es gibt noch keinen Goldstandard.** Der Notion-Export enthält kein "
   "bestehendes Annotation-Schema, keinen Prompt und kein "
   "Krippendorff-/Intercoder-Protokoll. Die Modell-Übereinstimmung in diesem "
-  "Bericht misst also *Konsistenz untereinander*, nicht *Korrektheit*. Für eine "
-  "Publikation fehlt die menschliche Referenzkodierung — idealerweise "
-  "mindestens für die Codebook-A-Positivfälle, die mit 2–8 % Prävalenz rar "
-  "genug sind, dass sie per Zufallsstichprobe kaum ausreichend zu finden sind. Ein "
-  "gezieltes Sampling der Positivfälle wäre hier die effizientere Strategie.")
+  "Bericht misst also *Konsistenz untereinander*, nicht *Korrektheit*. Die "
+  "Nachkodierung in Abschnitt 6 ist ein erster, unvollständiger Schritt in diese "
+  "Richtung — sie wurde vom Assistenten durchgeführt, nicht von geschulten "
+  "Koder:innen, und umfasst 36 Fälle. Für die Publikation braucht es eine "
+  "echte Doppelkodierung mit Trainingsphase.")
+A("")
+A("**Zielgerichtetes Sampling statt Zufallsstichprobe.** Bei 3–7 % Prävalenz "
+  "enthält eine zufällige Stichprobe von 100 Kommentaren nur 3–7 mögliche "
+  "Positiven. Für die Validierung der Präzision ist es effizienter, gezielt die "
+  "markierten Positiven nachzukodieren — und dort, wo Modelle sich uneinig sind, "
+  "besonders die Zweier- und Einer-Mehrheiten.")
 A("")
 A("**Die im Notion-Protokoll genannten „16 Einzelkategorien“ aus "
   "„Dokument 1_Theory“ liegen im Export nicht bei.** Unser Codebook B leitet sich "
@@ -253,7 +381,7 @@ A("**Die im Notion-Protokoll genannten „16 Einzelkategorien“ aus "
   "16 Kategorien wäre noch zu prüfen.")
 A("")
 
-A("## 8. Reproduktion")
+A("## 9. Reproduktion")
 A("")
 A("```bash")
 A("git clone https://github.com/DanielMatterTUM/democragpt-experiments")

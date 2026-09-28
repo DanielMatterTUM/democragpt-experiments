@@ -124,3 +124,43 @@ small to estimate these reliably.
 - The "16 Einzelkategorien" referenced in the Notion protocol are **not** in the
   export; Codebook B derives from the 8-typology on the wiki page instead.
 - Party-level cells are too small for inference (largest: AfD at 192 comments).
+
+---
+
+## 5. Precision audit (2026-09-28, added after the figures)
+
+36 of the 119 flagged positives (stratified 12 each by consensus degree) were
+hand-coded against the strict rule: reactance requires **both** a perceived
+freedom threat **and** an autonomy-restoring reaction.
+
+| stratum | n | precision |
+|---|---:|---:|
+| all 3 models agree | 27 | **92 %** |
+| 2 of 3 | 26 | **50 %** |
+| 1 of 3 only | 66 | **25 %** |
+
+Stratum-weighted estimate: **46 % precision** → of 119 flagged comments roughly
+54 are genuine reactance and 65 are false alarms.
+
+**The error is structured, not random.** Three recurring false-positive patterns:
+
+1. **Indignation without a freedom reference** — angry, attacks the politician,
+   but no sense of threatened autonomy ("Paranoia als Privileg 🤣",
+   "Beide Stimmen für die AfD 💙💙💙").
+2. **Responding to a claim, not to a constraint** — the model reads the video as
+   provocative and reacts, but the reactance targets the *video*, not an attempt
+   to constrain the commenter.
+3. **A trigger is named but no reactive behaviour follows** — three borderline
+   cases in the 1/3 stratum ("die wollen alles verbieten") were coded as false
+   under the strict rule.
+
+**Consequences.** Prevalence figures are upper bounds; the order of magnitude
+(low single digits) survives because the errors are not directional. And a
+pipeline that takes a single model's positive output inherits roughly two thirds
+false alarms — consensus degree, or a confidence threshold on Jev's decision
+output, is the obvious mitigation.
+
+**Caveat.** These verdicts were produced by the assistant, not a trained coder,
+on 36 cases — indicative, not a validated precision estimate. Files:
+`src/inspect_examples.py`, `src/audit_positives.py`, `src/make_audit_sample.py`,
+`src/score_audit.py`, `results/audit_verdicts.json`, `results/audit_linked.json`.

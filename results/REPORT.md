@@ -19,6 +19,8 @@
 
 **Codebook B nach dem Gate-Fix deckungsgleich mit Codebook A.** Vor dem Fix lag Codebook B bei 29–56 % und war damit ~10× zu permissiv; nach der expliziten Freiheitsbedrohungs-Bedingung entspricht es der Binärprävalenz (siehe Abschnitt 4).
 
+**⚠️ Der wichtigste Befund: rund die Hälfte der 'Reaktanz'-Treffer sind Fehlalarme.** Von 119 als positiv markierten Kommentaren sind nach manueller Nachkodierung geschätzt nur **46 %** echte Reaktanz. Die Fehler verteilen sich nicht zufällig: Wo alle drei Modelle übereinstimmen (11/12 = 92 % richtig), sind fast alle Treffer echt; bei Zweier-Mehrheiten (6/12 = 50 %) und besonders bei Einzelstimmen (3/12 = 25 %) dominiert der Fehlalarm. Abschnitt 6 diskutiert die Konsequenzen.
+
 ---
 
 ## 2. Methodik
@@ -72,6 +74,10 @@ Parteienverteilung: {'AfD': 192, 'Linke': 180, 'CDU': 150, 'FDP': 123, 'Grüne':
 
 ## 3. Prävalenz und Geschwindigkeit
 
+![Abb. 1: Prävalenz nach Modell, Codebook und Condition](figures/fig1_prevalence.png)
+
+**Abb. 1** Prävalenz psychologischer Reaktanz. Beide Codebooks und beide Conditions im Vergleich; die y-Achse ist identisch skaliert.
+
 ### 3.1 Prävalenz nach Codebook und Condition
 
 | Codebook | Condition | Modell | Parse % | n reaktant | Prävalenz % | Ø Latenz s | $/1.000 Zeilen |
@@ -91,7 +97,11 @@ Parteienverteilung: {'AfD': 192, 'Linke': 180, 'CDU': 150, 'FDP': 123, 'Grüne':
 
 **Codebook A** ist die methodisch belastbarere Größe: Es liefert eine binäre, theoretisch direkt verankerte Entscheidung. **Codebook B** ordnet zusätzlich den Typ zu und ist damit für die Feinanalyse interessant.
 
-### 3.2 Geschwindigkeit und Kosten
+### 3.3 Geschwindigkeit und Kosten
+
+![Abb. 4: Latenz und Kosten je 1.000 Kommentare](figures/fig4_cost_latency.png)
+
+**Abb. 4** Antwortzeit und Kosten je 1.000 Kommentare (Condition A). Jev ist in beiden Panels gleichzeitig Spitzenreiter.
 
 | Modell | Codebook | Cond | Calls | Latenz Ø s | Latenz p90 s | Summe $ |
 |---|---|---|---:|---:|---:|---:|
@@ -108,9 +118,9 @@ Parteienverteilung: {'AfD': 192, 'Linke': 180, 'CDU': 150, 'FDP': 123, 'Grüne':
 | jev-1.13 | B | A | 1321 | 0.348 | 0.395 | 0.134 |
 | jev-1.13 | B | B | 1385 | 0.35 | 0.39 | 0.1261 |
 
-### 3.3 Beispiele: was der Gate-Fix als Reaktanz kodiert
+### 3.4 Beispiele: was die Modelle als Reaktanz markiert haben
 
-Nach dem Fix bleiben nur Kommentare übrig, die tatsächlich eine Freiheitsbedrohung rahmen. Beispiele (Modell `jev-1.13`, Codebook A, Condition A):
+Nach dem Gate-Fix bleiben nur Kommentare übrig, die tatsächlich eine Freiheitsbedrohung rahmen. **Diese Liste ist ungeprüft** — die kritische Auswertung in Abschnitt 6 zeigt, dass auch hier Fehlalarme enthalten sind.
 
 - *„Grüne Kriegsfetischisten dürfen nie wieder in Regierungsverantwortung kommen bevor unser Land komplett zerstört ist 😩“*
 - *„Meine Gemeinde in Sachsen Anhalt ist bereits GRÜNEN frei!! Weck mit diesen faschistischrn Subjekten und dieser Dreck gehört auf den Müllhaufen der Geschichte“*
@@ -156,6 +166,10 @@ Das zentrale Validierungsinstrument. Wenn beide Codebooks dieselbe Konstruktion 
 
 ## 5. Modellübergreifende Übereinstimmung
 
+![Abb. 3: Rohübereinstimmung vs. Cohen's κ](figures/fig3_agreement.png)
+
+**Abb. 3** Rohübereinstimmung gegen Cohen's κ. Die Lücke zwischen beiden Größen ist der eigentliche Befund.
+
 | Codebook | Cond | Modell A | Modell B | n | % Übereinstimmung | Cohen's κ |
 |---|---|---|---|---:|---:|---:|
 | A | A | deepseek-v4.1-flash | gpt-6-luna | 1200 | 95.1 | 0.588 |
@@ -173,7 +187,60 @@ Das zentrale Validierungsinstrument. Wenn beide Codebooks dieselbe Konstruktion 
 
 **Zur Interpretation der Kennwerte:** Bei Codebook A ist die rohe Übereinstimmung sehr hoch, Cohen's κ aber deutlich niedriger. Das ist das klassische Base-Rate-Artefakt: Bei 2–8 % Positiven sind sich die Modelle auf der leichten Mehrheit einig, während die wenigen `ja`-Fälle auseinanderlaufen. Die rohe Übereinstimmung überschätzt die Konvergenz also deutlich; κ ist das ehrlichere Maß, bei dieser niedrigen Prävalenz aber selbst instabil. Bei Codebook B ist es umgekehrt, weil die Sieben-Wege-Wahl den Modellen Raum zum Differenzieren gibt.
 
-## 6. Prävalenz nach Partei
+---
+
+## 6. Kritische Prüfung: zeigen die Beispiele wirklich Reaktanz?
+
+Eine Prävalenzzahl ist nur so gut wie die Fälle, auf denen sie beruht. Deshalb wurden die positiven Treffer einer manuellen Nachkodierung unterzogen — geschichtet nach Konsensgrad, weil genau dort die Fehler zu erwarten sind.
+
+![Abb. 2: Präzision nach Konsensgrad](figures/fig2_precision.png)
+
+**Abb. 2** Präzision der Positiverkennung nach Konsensgrad (links) und Verteilung aller 119 Positiven (rechts).
+
+Gewichtet nach den wahren Stratumgrößen ergibt sich eine **geschätzte Präzision von 46 %**: von 119 markierten Kommentaren sind rund 54 echte Reaktanz und 65 Fehlalarm.
+
+### 6.1 Was die echten Fälle ausmacht
+
+Die als korrekt kodierten Fälle tragen durchweg die Triggerdimensionen A–D:
+
+- *„Man sollte das Problem bekämpfen und jeden der auffällig ist ausweisen. Das was er da sagt das ist ein Überwachungs Staat“* — Rahmen als Überwachungsstaat = wahrgenommene Kontrollbedrohung (A)
+- *„wir sollen masken tragen und politiker dürfen alles a frechheit is des“* — Maskenpflicht als Eingriff in den Körper benannt = Kontrollbedrohung (A)
+- *„Ach jetzt macht euch doch nicht dauernd ins Hemd wegen so einem Scheiss, daneben ist nur der hochgekackte hype den ihr draus macht.“* — Video beschämt die Zuschauer → Normdruck + Identitätsbedrohung (C/D). Gutes Beispiel.
+- *„Wenn du drei 1.90 große Streifen-Polizisten vor meine Haustüre schickst überleg ichs mir..“* — Polizei vor der Tür gegen Impfpflicht = Bedrohungsrahmen, Verweigerung (A)
+- *„nix werde ich, meine Sprache bleibt altdeutsch und fertig“* — Weist aufgezwungene Terminologie zurück → Identitätsbedrohung (D), schwach aber vertretbar
+- *„dafür haben wir jetzt ganz viel Impfstoff mit dem wir die Leute Zwangsimpfen können. Danke Politiker“* — „Zwangsimpfen“ explizit benannt = Kontrollbedrohung (A) + Sarkasmus
+- *„Es gibt mindestens 5 andere arten corona zu bekämpfen außer der Impfung... warum hört man davon nichts? Weil ihr von denen keinen Gewinn erziehlt..“* — Wirft der Impfpolitik Gewinnmotive vor = wahrgenommene Manipulation (B)
+- *„Der Zimmerman hat ein großes Loch in jedem Zimmer hinterlassen und jeder kann gehen wenn es ihm nicht passt!! Und Tschüß 🇩🇪💙🇩🇪“* — Weist den Beschämungsrahmen zurück, nennt den Ausstieg = Normdruck (C)
+- *„Jetzt ist es das Wachstum,ich denke es ist Putin,der Klimawandel,die AFD, Trump,der Ukrainekrieg,ihre Fönfrisur usw......,meint ihr wirklich wir sind “* — „total verblödet“ = Identitäts-/Würdeangriff (D)
+- *„Das würde mich sooooo nerven. Geht mir bitte nicht jede Minute damit auf den Keks - ich bin beim Fußball !“* — Message Fatigue, „jede Minute auf den Keks“ = Auslöserdimension E
+- *„Wie jemand seine Zeit nutzt ist erstmal egal. Wenn jemand glücklich damit ist nichts anderes zu tun außer zu zocken ist alles gut.Jeder ist anders.“* — Gegenargument gegen bevormundende Screen-Time-Moralisierung (C)
+- *„Warum sorgen sie nicht das Amerikanische Armee Deutschland verlässt. Wie lange sollen wir Kolonie den USA sein?“* — „plumpe Framing“ benennt Framing/Manipulation (B) — Grenzfall, aber der Auslöser wird benannt
+- *„@💙💙💙Endspurt 💙💙.. 14.09.25 wählen 🗳️gehen es geht um euch und keiner hat es Verdient sich weiter von CDU/ SPD und Co. Demütigen und Belügen zu lassen…“* — Verweigert eine Impfpflicht = Lehrbuchfall des Boomerang-Effekts (A)
+- *„Das ist doch der erste Aufruf Plattformen, wie diese zu kontrollieren und zu verbieten. Nach der COVID Geschichte, ist doch bewiesen, wer am meisten D“* — Weist die Norm der Wahlpflicht zurück = Normdruck (C)
+- *„Beide Stimmen für die Grünen 💚“* — „totalitärer Staat“ + Weigerung, sich spalten zu lassen = Identität/Würde (D)
+- *„💙 jetzt erst recht, nur noch AFD 💙“* — Nimmt aus Prinzip ein Bußgeld an = klassische Reaktanz-Bewältigung (A)
+- *„eyyyy kann diese Reichenpartei uns nicht bitte endlich in Ruhe lassen????“* — Benennt „kontrollieren und zu verbieten“ = Kontrollbedrohung (A)
+- *„Sind das jetzt auch gekaufte Leute 🤔🤔🤔“* — Verdacht auf gekaufte Abgeordnete = wahrgenommene Manipulation (B). Grenzfall.
+- *„richtig so. Und die wollen alles verbieten 🤣. Das ist grünen Logik“* — „die wollen alles verbieten“ = Kontrollbedrohung (A). Grenzfall.
+- *„Ihr seid doch die Kinder und Enkel der SED? Habt Ihr die Maueropfer und Häftlinge schon entschädigt?“* — SED/Maueropfer-Konfrontation = Identität/Status (D). Grenzfall.
+
+### 6.2 Was die Fehlalarme ausmacht
+
+Der Fehler ist nicht zufällig verteilt, sondern systematisch. Drei wiederkehrende Muster:
+
+1. **Empörung ohne Freiheitsbezug.** Der Kommentar ist wütend, greift die Politikerin oder die Partei an, aber der Bezug zur eigenen bedrohten Freiheit fehlt. Beispiel: *„Paranoia als Privileg 🤣“*, *„Beide Stimmen für die AfD 💙💙💙“*, *„Beide Stimmen für die Grünen 💚“*.
+2. **Antwort auf eine Sachfrage, nicht auf eine Einschränkung.** Die Models lesen das Video als Provokation und reagieren darauf — aber die Reaktanz richtet sich gegen das *Video*, nicht gegen eine Freiheitsbedrohung durch die Botschaft. Beispiel: *„Jetzt ist es das Wachstum, ich denke es ist Putin, der Klimawandel […] meint ihr wirklich wir sind total verblödet.“*
+3. **Kein reaktantes Verhalten trotz Benennung eines Triggers.** Drei Grenzfälle der 1/3-Gruppe benennen zwar einen Auslöser (etwa *„die wollen alles verbieten“*), zeigen aber keine Autonomie-restaurierende Reaktion. Unter strikter Regel als Fehlalarm gewertet; großzügiger gelesen wären sie Grenzfälle.
+
+### 6.3 Konsequenzen für die Interpretation
+
+**Die Prävalenzzahlen sind Obergrenzen.** Wenn rund die Hälfte der Treffer Fehlalarme sind, ist die tatsächliche Prävalenz niedriger als 3–7 % — die Größenordnung bleibt aber erhalten, da die Fehler nicht systematisch in eine Richtung gehen.
+
+**Der Konsensgrad ist ein brauchbarer Prüf-Filter.** Wo alle drei Modelle übereinstimmen, ist die Trefferquote hoch (92 %); wo nur eines anschlägt, ist sie sehr niedrig (25 %). Für eine praktische Pipeline heißt das: Mehrfachkodierung oder ein Mindest-Konsens verwenden, statt den Erzähler-Output eines einzelnen Modells zu übernehmen.
+
+**Die manuellen Verdicts sind keine goldene Referenz.** Die Nachkodierung hier wurde vom Assistenten durchgeführt, nicht von einer trainierten Koderin. Die Fallzahl (n = 36) ist zu klein für eine belastbare Präzisionsangabe mit engem Konfidenzintervall. Die Punktschätzung von 46 % ist als Größenordnung zu lesen, nicht als exakter Wert.
+
+## 7. Prävalenz nach Partei
 
 Nur Zellen mit n ≥ 20. **Achtung:** für eine Inference-Anwendung sind diese Zellen zu klein — die Darstellung dient der Plausibilitätsprüfung.
 
@@ -222,17 +289,23 @@ Nur Zellen mit n ≥ 20. **Achtung:** für eine Inference-Anwendung sind diese Z
 | jev-1.13 | CDUCSU | 21 | 0 | 0.0 |
 | jev-1.13 | parteilos | 21 | 0 | 0.0 |
 
-## 7. Diskussion und offene Punkte
+## 8. Diskussion und offene Punkte
+
+**Die Prävalenzangaben dieses Berichts sind Obergrenzen.** Abschnitt 6 hat gezeigt, dass rund die Hälfte der markierten Kommentare keine Reaktanz im Sinne der Theorie zeigt. Für die Aussage *wie häufig ist Reaktanz auf TikTok* heißt das: die Größenordnung (niedriger einstelliger Prozentbereich) hält, die exakten Prozentwerte sind zu hoch.
 
 **Für die Detection-Pipeline ist die Frage nicht *welches* Modell, sondern ob man das Transkript überhaupt braucht.** Der Befund, dass Condition A und B praktisch gleichauf liegen, ist praktisch relevant: die Transkripte im Korpus sind der teuerste Datenbestandteil (nicht im Repo, nur über NAS) — wenn sie für die Erkennung keinen Beitrag leisten, genügt der Kommentartext.
 
+**Konsens als Filter, nicht Einzelmodell.** Die Präzisionsanalyse zeigt eine steile Gradienten: 92 % bei Drei-Stimmen-Konsens, 25 % bei einer Einzelstimme. Eine Pipeline, die nur Jev laufen lässt und dessen Positives übernimmt, übernimmt zu etwa zwei Dritteln Fehlalarme. Entweder Mehrfachkodierung, oder ein Schwellwert auf der von Jev gelieferten Konfidenz — letzteres ist dank Decision-API verfügbar und wäre der naheliegende Test für den nächsten Schritt.
+
 **Jev hat einen methodischen Vorteil, der über den Preis hinausgeht.** Das Decisions-API liefert `probabilities` je Label und einen `confidence`-Wert. Damit lässt sich eine Schwelle setzen und gezielt nur die Fälle an einen größeren Menschen oder ein stärkeres Modell eskalieren — eine Kaskaden-Architektur, die die teuren Modelle nur auf einem Bruchteil der Daten laufen lässt.
 
-**Es gibt noch keinen Goldstandard.** Der Notion-Export enthält kein bestehendes Annotation-Schema, keinen Prompt und kein Krippendorff-/Intercoder-Protokoll. Die Modell-Übereinstimmung in diesem Bericht misst also *Konsistenz untereinander*, nicht *Korrektheit*. Für eine Publikation fehlt die menschliche Referenzkodierung — idealerweise mindestens für die Codebook-A-Positivfälle, die mit 2–8 % Prävalenz rar genug sind, dass sie per Zufallsstichprobe kaum ausreichend zu finden sind. Ein gezieltes Sampling der Positivfälle wäre hier die effizientere Strategie.
+**Es gibt noch keinen Goldstandard.** Der Notion-Export enthält kein bestehendes Annotation-Schema, keinen Prompt und kein Krippendorff-/Intercoder-Protokoll. Die Modell-Übereinstimmung in diesem Bericht misst also *Konsistenz untereinander*, nicht *Korrektheit*. Die Nachkodierung in Abschnitt 6 ist ein erster, unvollständiger Schritt in diese Richtung — sie wurde vom Assistenten durchgeführt, nicht von geschulten Koder:innen, und umfasst 36 Fälle. Für die Publikation braucht es eine echte Doppelkodierung mit Trainingsphase.
+
+**Zielgerichtetes Sampling statt Zufallsstichprobe.** Bei 3–7 % Prävalenz enthält eine zufällige Stichprobe von 100 Kommentaren nur 3–7 mögliche Positiven. Für die Validierung der Präzision ist es effizienter, gezielt die markierten Positiven nachzukodieren — und dort, wo Modelle sich uneinig sind, besonders die Zweier- und Einer-Mehrheiten.
 
 **Die im Notion-Protokoll genannten „16 Einzelkategorien“ aus „Dokument 1_Theory“ liegen im Export nicht bei.** Unser Codebook B leitet sich daher aus der Acht-Typen-Typologie der Wiki-Seite ab; die Verbindung zu den 16 Kategorien wäre noch zu prüfen.
 
-## 8. Reproduktion
+## 9. Reproduktion
 
 ```bash
 git clone https://github.com/DanielMatterTUM/democragpt-experiments

@@ -1,0 +1,229 @@
+{
+ "_note": "Manual precision coding of the 36 stratified positives in results/audit_sample.json. Verdict 'ja' only if the comment contains (a) a perceived threat to the author's own autonomy AND (b) an affective/behavioural reaction to it. 'nein' = ordinary criticism, insult, agreement or nonsense without autonomy restoration.",
+ "coded_by": "assistant reading, 2026-09-28; not a trained human coder -- treat as indicative",
+ "strata": {
+  "3": [
+   {
+    "uid": "c0a0a4dd9ff4",
+    "verdict": "ja",
+    "label": "konfrontation_angriff",
+    "why": "Rahmen als Überwachungsstaat = wahrgenommene Kontrollbedrohung (A)"
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "label": "konfrontation_angriff",
+    "why": "Maskenpflicht als Eingriff in den Körper benannt = Kontrollbedrohung (A)"
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "label": "keine_reaktanz",
+    "why": "Video beschämt die Zuschauer → Normdruck + Identitätsbedrohung (C/D). Gutes Beispiel."
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "label": "vermeidung_rueckzug",
+    "why": "Polizei vor der Tür gegen Impfpflicht = Bedrohungsrahmen, Verweigerung (A)"
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "label": "reflektierte_rechtfertigung",
+    "why": "Weist aufgezwungene Terminologie zurück → Identitätsbedrohung (D), schwach aber vertretbar"
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "label": "konfrontation_angriff",
+    "why": "„Zwangsimpfen“ explizit benannt = Kontrollbedrohung (A) + Sarkasmus"
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "label": "konstruktive_kritik",
+    "why": "Wirft der Impfpolitik Gewinnmotive vor = wahrgenommene Manipulation (B)"
+   },
+   {
+    "uid": "x",
+    "verdict": "nein",
+    "why": "Nicht deutbares Fragment, keine rekonstruierbare Reaktanz"
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "label": "konfrontation_angriff",
+    "why": "Weist den Beschämungsrahmen zurück, nennt den Ausstieg = Normdruck (C)"
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "label": "konfrontation_angriff",
+    "why": "„total verblödet“ = Identitäts-/Würdeangriff (D)"
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "label": "vermeidung_rueckzug",
+    "why": "Message Fatigue, „jede Minute auf den Keks“ = Auslöserdimension E"
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "label": "reflektierte_rechtfertigung",
+    "why": "Gegenargument gegen bevormundende Screen-Time-Moralisierung (C)"
+   }
+  ],
+  "2": [
+   {
+    "uid": "x",
+    "verdict": "nein",
+    "why": "Zustimmung / Wahlempfehlung"
+   },
+   {
+    "uid": "x",
+    "verdict": "nein",
+    "why": "Angriff auf eine rivalisierende Partei, keine Autonomiebedrohung"
+   },
+   {
+    "uid": "x",
+    "verdict": "nein",
+    "why": "Gewöhnliche Sachkritik (Rundfunkgebühren)"
+   },
+   {
+    "uid": "x",
+    "verdict": "nein",
+    "why": "Beleidigung von Parteien, kein Rahmen einer Freiheitsbedrohung"
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "why": "„plumpe Framing“ benennt Framing/Manipulation (B) — Grenzfall, aber der Auslöser wird benannt"
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "label": "vermeidung_rueckzug",
+    "why": "Verweigert eine Impfpflicht = Lehrbuchfall des Boomerang-Effekts (A)"
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "label": "konfrontation_angriff",
+    "why": "Weist die Norm der Wahlpflicht zurück = Normdruck (C)"
+   },
+   {
+    "uid": "x",
+    "verdict": "nein",
+    "why": "Beiläufige Bemerkung, keine Bewertung einer Einschränkung"
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "label": "konfrontation_angriff",
+    "why": "„totalitärer Staat“ + Weigerung, sich spalten zu lassen = Identität/Würde (D)"
+   },
+   {
+    "uid": "x",
+    "verdict": "nein",
+    "why": "Spott, keine Wiederherstellung von Autonomie"
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "label": "vermeidung_rueckzug",
+    "why": "Nimmt aus Prinzip ein Bußgeld an = klassische Reaktanz-Bewältigung (A)"
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "label": "ablenkung_whataboutism",
+    "why": "Benennt „kontrollieren und zu verbieten“ = Kontrollbedrohung (A)"
+   }
+  ],
+  "1": [
+   {
+    "uid": "x",
+    "verdict": "nein",
+    "why": "Selbstauskunft + Bitte um Rat; keine Reaktion auf eine Einschränkung im Video"
+   },
+   {
+    "uid": "x",
+    "verdict": "nein",
+    "why": "Kritik an der Wortwahl, keine Autonomiebedrohung"
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "label": "ablenkung_whataboutism",
+    "why": "Verdacht auf gekaufte Abgeordnete = wahrgenommene Manipulation (B). Grenzfall."
+   },
+   {
+    "uid": "x",
+    "verdict": "nein",
+    "why": "Wahlempfehlung"
+   },
+   {
+    "uid": "x",
+    "verdict": "nein",
+    "why": "Reine Aggression, kein Einschränkungsrahmen"
+   },
+   {
+    "uid": "x",
+    "verdict": "nein",
+    "why": "Stimmt zu und fordert Handeln; Gegenteil von Reaktanz"
+   },
+   {
+    "uid": "x",
+    "verdict": "nein",
+    "why": "Drohung gegen andere, keine Reaktanz der kommentierenden Person"
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "label": "konfrontation_angriff",
+    "why": "„die wollen alles verbieten“ = Kontrollbedrohung (A). Grenzfall."
+   },
+   {
+    "uid": "x",
+    "verdict": "ja",
+    "label": "konfrontation_angriff",
+    "why": "SED/Maueropfer-Konfrontation = Identität/Status (D). Grenzfall."
+   },
+   {
+    "uid": "x",
+    "verdict": "nein",
+    "why": "Sinnloses Fragment"
+   },
+   {
+    "uid": "x",
+    "verdict": "nein",
+    "why": "Sachliche Kritik an den Aussagen eines Politikers"
+   },
+   {
+    "uid": "x",
+    "verdict": "nein",
+    "why": "Gegenargument zur Gasfrage, keine Bewertung einer Einschränkung"
+   }
+  ]
+ },
+ "tally": {
+  "3": {
+   "ja": 11,
+   "nein": 1,
+   "n": 12
+  },
+  "2": {
+   "ja": 6,
+   "nein": 6,
+   "n": 12
+  },
+  "1": {
+   "ja": 0,
+   "nein": 12,
+   "n": 12
+  }
+ },
+ "note_on_stratum_1": "Three borderline cases were counted as 'nein' under the strict rule (all three name a trigger but lack a clear autonomy-restoring reaction); counting them as ja would give 3/12."
+}

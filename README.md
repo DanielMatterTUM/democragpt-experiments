@@ -78,6 +78,14 @@ recorded in `docs/codebook_sources.md`.
 
 ---
 
+
+**⚠️ Precision audit — the prevalence figures are upper bounds.** 36 of the 119
+flagged positives were hand-coded. Estimated precision is **46 %**, and the error
+is strongly structured: 92 % precision where all three models agree, 50 % at a
+two-model majority, **25 % for single-model flags** — and two thirds of all
+positives are single-model flags. Consensus degree is therefore the most useful
+filter for a real pipeline. See `docs/results.md` and §6 of the report.
+
 ## Data
 
 Source (read-only, on the NAS, **not** mirrored into this repo beyond the sample):
