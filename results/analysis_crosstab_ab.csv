@@ -1,0 +1,9 @@
+model,condition,n_paired,both_reactance,b_type_a_no,a_yes_b_none,both_none
+deepseek-v4.1-flash,A,201,6,80,1,114
+deepseek-v4.1-flash,B,201,3,109,0,89
+glm-5.3-flash,A,201,15,81,1,104
+glm-5.3-flash,B,201,12,98,1,90
+gpt-6-luna,A,201,4,54,1,142
+gpt-6-luna,B,201,6,52,0,143
+jev-1.13,A,201,4,86,0,111
+jev-1.13,B,201,2,73,0,126

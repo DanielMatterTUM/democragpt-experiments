@@ -1,0 +1,34 @@
+{
+  "source_nas": "/mnt/nasother/TikTok_Pol2025",
+  "source_files": {
+    "comments": "comments/<account>/<account>_comments_<videoid>.json",
+    "transcripts": "transcripts/data/<account>/<videoid>.txt"
+  },
+  "seed": 20260928,
+  "target": 200,
+  "reached": 201,
+  "videos_used": 67,
+  "accounts_used": 12,
+  "parties_used": 9,
+  "party_counts": {
+    "Grüne": 63,
+    "FDP": 24,
+    "Tierschutz": 21,
+    "TeamTodenhöfer": 21,
+    "BSW": 21,
+    "AfD": 21,
+    "Linke": 15,
+    "ÖDP": 9,
+    "ÖVP": 6
+  },
+  "filters": {
+    "min_comment_chars": 25,
+    "max_comments_per_video": 3,
+    "max_comments_per_account": 20,
+    "min_comments_per_video": 4,
+    "top_level_comments_only": true,
+    "requires_nonempty_transcript": true,
+    "transcript_max_chars": 1800,
+    "urls_and_mentions_stripped": true
+  }
+}
