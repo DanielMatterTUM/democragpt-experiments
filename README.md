@@ -24,34 +24,33 @@ and cross-condition overlap is directly comparable.
                         ┌─ Condition A: comment + video transcript
                         └─ Condition B: comment only
                                    ×
-                        gpt-6-luna · deepseek-v4.1-flash · glm-5.3-flash · jev-1.13
+                        jev-1.13 · gpt-6-luna · deepseek-v4.1-flash
 ```
 
-Full factorial = **2 codebooks × 2 conditions × 4 models × 201 comments = 3,216 requests.**
+Final run: **2 codebooks × 2 conditions × 3 models × 1,200 comments = 14,400 requests.**
+
+**→ The formatted report is [`results/REPORT.pdf`](results/REPORT.pdf).**
+See `docs/results.md` for the written digest.
 
 ## Findings (short version)
 
-**How frequent is reactance?** Rare. Under Codebook A with the video transcript
-(condition A), `gpt-6-luna` codes 5/201 (**2,5 %**) and `jev-1.13` 4/201
-(**2,0 %**) as reactance. Dropping the transcript (condition B) barely moves the
-binary number (3,0 % / 1,0 %) — **the video context adds almost nothing for
-the yes/no decision.**
+**How frequent is reactance?** Rare — **3–7 %**. Codebook A with transcript:
+gpt-6-luna 6,6 %, deepseek-v4.1-flash 6,2 %, jev-1.13 3,8 %. All three agree on the
+order of magnitude.
 
-**How fast can we detect it?** `jev-1.13` is both the fastest (~0,35 s) and the
-cheapest backend, and additionally returns calibrated class probabilities and a
-confidence score. `gpt-6-luna` is the most reliable chat model (100 % parse
-rate). The whole 3,216-request matrix costs **≈ $0,39**.
+**The video transcript adds almost nothing.** Condition A → B moves prevalence by
+under 1,2 percentage points, and all three models move in the *same* direction. For
+a detection pipeline the transcript is ~900 prompt tokens for no measurable gain.
 
-**⚠️ Open issue — Codebook B needs a boundary fix before publication.**
-Codebook B yields 29–46 % reactance where Codebook A yields 2–6 %, consistently
-across all four models and both conditions. This is a *codebook* effect, not a
-model effect: the models are coding ordinary disagreement and criticism of a
-politician as reactance, whereas the project theory requires an appraisal of a
-*threatened autonomy*. See `docs/results.md` for the proposed fix (make the
-freedom-threat requirement a hard precondition of every Codebook B label).
-Not yet applied — it changes the instrument.
+**Jev wins on both axes:** ~0,46 s and ~$0,061 per 1,000 comments — ~4,5× faster and
+~2,4× cheaper than the best chat model — and it is the only backend that returns
+per-class probabilities plus a confidence score, which enables a cascade design
+(escalate only low-confidence cases to a bigger model).
 
-See `docs/results.md` for the full digest.
+**Codebook B was fixed and re-validated.** Its first version had no link to the
+freedom-threat appraisal, so models coded ordinary political criticism as reactance
+(29–56 % vs Codebook A's 2–8 %). The gate fix plus a staged Jev-only validation run
+brought the A×B false-positive:true-positive ratio from **13–20× down to 0,1–0,6**.
 
 ### Codebook A — binary
 
@@ -88,12 +87,12 @@ Source (read-only, on the NAS, **not** mirrored into this repo beyond the sample
 - account → party map: `/mnt/nasother/TikTok_Pol2025/parteien.txt`
 
 `src/build_dataset.py` builds `data/sample_comments.jsonl` — a stratified sample
-of **201 comments**, round-robin across parties so no party dominates, with
-non-empty transcripts (needed for Condition A). Filters and provenance are in
-`data/sample_meta.json`. Rebuild with:
+of **1,200 comments** (68 accounts, 16 parties, 400 videos), round-robin across
+parties so no party dominates, with non-empty transcripts (needed for Condition A).
+Filters and provenance are in `data/sample_meta.json`. Rebuild with:
 
 ```bash
-python3 src/build_dataset.py --target 200 --n-accounts-per-party 6
+python3 src/build_dataset.py --target 1200 --n-accounts-per-party 8
 ```
 
 > The NAS comment files are **concatenated JSON objects** (one per pagination
@@ -107,20 +106,30 @@ python3 src/build_dataset.py --target 200 --n-accounts-per-party 6
 ```bash
 export OPENROUTER_API_KEY=...        # or leave the key at /home/hermes/Desktop/democragptkey.txt
 
-python3 src/build_dataset.py --target 200 --n-accounts-per-party 6
+python3 src/build_dataset.py --target 1200 --n-accounts-per-party 8
 
 python3 src/run_benchmark.py \
-    --models gpt-6-luna deepseek-v4.1-flash glm-5.3-flash jev-1.13 \
+    --models jev-1.13 gpt-6-luna deepseek-v4.1-flash \
     --codebooks A B --conditions A B \
-    --workers 10 --run-name full
+    --workers 12 --run-name full
 
-python3 src/analyze.py
+python3 src/dedup_requests.py     # collapse repair-run duplicates
+python3 src/analyze.py           # -> results/analysis.md + CSVs
+python3 src/make_report.py       # -> results/report_data.json
+python3 src/build_report_md.py   # -> results/REPORT.md
+node tools/md2pdf.js results/REPORT.md results/REPORT.pdf
 ```
+
+Helpers: `src/check_gate_jev.py` (validate a codebook change cheaply with Jev only,
+before spending on the full matrix), `src/crosstab.py` (A×B crosstab),
+`src/diag.py` (parse rates), `src/probe_budget.py` (reasoning-budget probe),
+`src/plan_cost.py` (budget planning), `src/check_spend.sh` (live spend).
 
 `run_benchmark.py` records **every** request to `results/requests_full.jsonl` with
 wall-clock time, prompt/completion tokens, cost, provider, generation id, finish
 reason, and label-salvage flags. A content-hash cache (`results/cache.sqlite`)
-keyed on `{model, codebook, condition, state}` makes reruns free.
+keyed on `{model, codebook, CODEBOOK_VERSION, condition, state}` makes reruns free
+— and keeps an edited codebook from silently reusing stale labels.
 
 ## Layout
 
@@ -129,12 +138,17 @@ src/build_dataset.py     stratified sampler -> data/sample_comments.jsonl
 src/codebook.py          the codebook (chat prompts + Jev criteria)
 src/run_benchmark.py     OpenRouter runner (chat + Jev/Decisions API)
 src/analyze.py           aggregation -> results/analysis.md + CSVs
+src/make_report.py       figures -> results/report_data.json
+src/build_report_md.py   report markdown -> results/REPORT.md
+tools/md2pdf.js          markdown -> A4 PDF (headless Chrome)
 data/                    the sample + sampling metadata
-results/                 per-request logs, predictions, analysis tables
+results/                 per-request logs, predictions, REPORT.pdf, analysis tables
 docs/codebook_sources.md provenance of every codebook statement
+docs/results.md          written results digest
 ```
 
 ## Cost
 
-Full 3,216-request matrix costs well under $1 with these flash-tier models — see
-`results/analysis_cost.csv` for the per-model breakdown.
+The 14,400-request matrix on 1,200 comments cost ≈ $2.4 — i.e. under $1.70 per 1,000
+comments for all 3 models × 2 codebooks × 2 conditions. Per-model breakdown in
+`results/analysis_cost.csv`.

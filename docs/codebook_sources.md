@@ -57,3 +57,38 @@ These are **our** decisions, not the Notion export's — flagged so they are eas
 4. **No `score` question** for Codebook A. The Jev API offers `choice` / `noul` / `score`;
    we use `choice` for both codebooks so chat models and Jev see an identical label
    space and their agreement is meaningful.
+
+---
+
+## Revision history
+
+### v2 (`B-gate-v2`) — 2026-09-28, applied after the 201-comment run
+
+Codebook B was revised after the first matrix showed a 10x prevalence gap against
+Codebook A (29-56 % vs 2-8 %) across all models and conditions. The crosstab
+showed the discrepancy was concentrated in one direction: comments that Codebook B
+assigned a reactance type to while Codebook A said `nein` outnumbered true positives
+13-20 to 1, and ~70 % of that class was `konfrontation_angriff`. In other words the
+models were reading ordinary angry criticism of a politician as reactance.
+
+**The change:** the freedom-threat appraisal is now a *hard precondition* evaluated
+before label selection, stated in both `B_INSTRUCTIONS` (chat models) and
+`B_CRITERIA` (Jev — which only sees the criteria). Three specific label
+descriptions were tightened to exclude their common non-reactance readings:
+`konfrontation_angriff` (insult without constraint framing), `vermeidung_rueckzug`
+(indifference vs. deliberate withdrawal) and `konstruktive_kritik` (now requires the
+constraint framing).
+
+The gate carries one control question: *"Would the author still be angry if nobody
+were restricting their freedom? Then it is not reactance."*
+
+**Validation:** staged deliberately — first run with Jev alone on 60 comments
+(`src/check_gate_jev.py`, $0.009), which took the FP:TP ratio from 13-20x to 0.0
+before a single cent was spent on the full matrix. At 1,200 comments across three
+models and both conditions the ratio sits at 0.1-0.6.
+
+### Cache-safety note
+
+The cache key did not include the codebook text, so an edited codebook would have
+silently reused labels from the old wording. `CODEBOOK_VERSION` (`"B-gate-v2"`) is
+now part of the key. Any future codebook edit must bump it.

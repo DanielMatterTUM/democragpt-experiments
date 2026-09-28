@@ -1,155 +1,126 @@
 # Results digest — reactance on TikTok comments
 
-Run: 201 comments × 2 codebooks × 2 conditions × 4 models = **3,216 requests**,
-**100 % parse rate in every cell**. Total spend **$0,63** of the $3 budget
-(`$0,3847` on live calls for this matrix; the rest was the throwaway first pass
-and probing).
+**Final run (large scale):** 1,200 comments × 2 codebooks × 2 conditions × 3 models
+(`gpt-6-luna`, `deepseek-v4.1-flash`, `jev-1.13`) = **14,400 requests**,
+**100 % parse rate in every cell**.
 
-Raw logs: `results/requests_full.jsonl` (every request: latency, tokens, cost,
-provider, finish reason), `results/predictions_full.jsonl`.
-Tables: `analysis_summary.csv`, `analysis_prevalence.csv`, `analysis_overlap.csv`,
-`analysis_cost.csv`.
+For the formatted version see **`results/REPORT.pdf`** (7 pages, German) — that is
+the document to circulate.
 
-## 1. How frequent is reactance?
+Raw data: `results/requests_full.jsonl` (every request with latency, tokens, cost,
+provider, finish reason), `results/predictions_full.jsonl`, `results/report_data.json`.
 
-**Codebook A (binary), Condition A (with transcript):**
+---
 
-| model | ja / n | prevalence | mean latency |
+## 1. What changed since the 201-comment run
+
+### Codebook B was fixed (the "gate")
+
+The first version of Codebook B had no link back to the freedom-threat appraisal,
+so the models coded **ordinary criticism of politicians** as reactance: prevalence
+was 29–56 % where Codebook A said 2–8 %. The fix makes the freedom-threat a hard
+precondition, checked *before* label selection, with the control question:
+
+> Would the author still be angry if nobody were restricting their freedom?
+> Then it is not reactance.
+
+Both the chat prompt (`B_INSTRUCTIONS`) and the Jev criteria (`B_CRITERIA`) carry
+the gate — Jev only sees the criteria, so gating only the instructions would have
+left Jev uncorrected.
+
+**Validation was staged deliberately:** the fix was first run with Jev alone on 60
+comments (`src/check_gate_jev.py`, $0.009) before being applied to the full matrix.
+The FP:TP ratio dropped from 13–20× to 0.0 at that point.
+
+### Codebook B is now in line with Codebook A
+
+| model | Codebook B, cond A | Codebook A, cond A |
+|---|---:|---:|
+| gpt-6-luna | 1,75 % | 6,58 % |
+| deepseek-v4.1-flash | 3,42 % | 6,17 % |
+| jev-1.13 | 2,42 % | 3,83 % |
+
+Crosstab FP:TP ratios fell from **13–20× to 0,1–0,6** across all models and both
+conditions. Codebook B is now a *strict subset-ish* refinement of Codebook A rather
+than a competing measurement.
+
+`konfrontation_angriff` remains the dominant real type (18–37 of ~20–45 positives),
+with `konstruktive_kritik`, `ablenkung_whataboutism`, `reflektierte_rechtfertigung`
+and `delegierung_hilflosigkeit` appearing only in single digits.
+
+### A cache-safety bug was found and fixed
+
+The cache key was `{model, codebook, condition, state}` — it did **not** include the
+codebook text. An edited codebook would therefore have silently reused labels
+produced by the old wording, and the "fix" would have looked like it did nothing.
+`CODEBOOK_VERSION` is now part of the key.
+
+---
+
+## 2. Headline numbers (1,200 comments)
+
+### Prevalence, Codebook A (binary)
+
+| model | cond A (with transcript) | cond B (comment only) | Δ |
 |---|---:|---:|---:|
-| gpt-6-luna | 5 / 201 | **2,49 %** | 1,79 s |
-| jev-1.13 | 4 / 201 | **1,99 %** | 0,38 s |
-| deepseek-v4.1-flash | 7 / 201 | **3,48 %** | 2,61 s |
-| glm-5.3-flash | 16 / 201 | **7,96 %** | 4,11 s |
+| gpt-6-luna | 6,58 % | 5,42 % | −1,16 pp |
+| deepseek-v4.1-flash | 6,17 % | 5,42 % | −0,75 pp |
+| jev-1.13 | 3,83 % | 2,75 % | −1,08 pp |
 
-**Codebook A, Condition B (comment only):** gpt-6-luna 2,99 %, jev-1.13 1,00 %,
-deepseek 1,49 %, glm 6,47 %.
+**Reactance is rare: 3–7 %.** All three models agree on the order of magnitude and
+all three move in the *same* direction when the transcript is removed.
 
-Two robust conclusions:
+### Speed and cost
 
-1. **Reactance is rare** — roughly 2–8 % of political TikTok comments, i.e.
-   single-digit percent. The three cheapest models cluster at 2–3,5 %; GLM is
-   the clear outlier high coder at 8 %.
-2. **The video transcript adds almost nothing to the binary decision.** Moving
-   from condition A to B changes prevalence by well under 2 percentage points
-   for every model, and not consistently in one direction. For a *detection*
-   use case, the transcript is ~900 extra prompt tokens for no measurable gain.
+| model | latency (cbA/condA) | $/1k rows (cbA/condA) |
+|---|---:|---:|
+| **jev-1.13** | **0,46 s** | **$0,061** |
+| gpt-6-luna | 2,11 s | $0,147 |
+| deepseek-v4.1-flash | 4,09 s | $0,332 |
 
-## 2. How fast and how cheap is detection?
+Jev is ~4,5× faster and ~2,4× cheaper than the best chat model, and is the only
+backend returning per-class probabilities and a confidence score.
 
-| model | mean latency (cond A) | $/1k rows (CB A) | parse rate |
-|---|---:|---:|---:|
-| **jev-1.13** | **0,375 s** | **$0,055** | 100 % |
-| gpt-6-luna | 1,79 s | $0,126 | 100 % |
-| deepseek-v4.1-flash | 2,61 s | $0,161 | 100 % |
-| glm-5.3-flash | 4,11 s | $0,168 | 100 % |
+Extrapolation to the full 6.7 M-comment corpus with Jev, Codebook A, both
+conditions: **≈ $410**.
 
-**Jev wins on both axes** — roughly 5× faster and 2–3× cheaper than the chat
-models — and it additionally returns calibrated per-class probabilities plus a
-confidence score, which the chat models do not. At $0,055 per 1,000 comments the
-whole 6,7 M-comment corpus would cost roughly $375 for Codebook A; the full
-2×2 matrix over 1,000 comments costs well under $1.
+### Agreement
 
-`gpt-6-luna` is the best-performing chat model: lowest latency among the chat
-models and no reasoning-budget pathology.
+Codebook A, condition A: 94,6–95,0 % raw agreement between models, κ ≈ 0,45–0,48.
+Codebook B: 96,6–97,6 % raw agreement, κ ≈ 0,40–0,47.
 
-## 3. ⚠️ The one result that needs your decision
+The κ values converge around 0,4–0,5 across both codebooks at 1,200 comments —
+much more stable than the 0,0–0,75 range at 201 comments, where the sample was too
+small to estimate these reliably.
 
-**Codebook B yields 29–56 % reactance; Codebook A yields 2–8 %.** That ~10×
-gap holds across all four models and both conditions, so it is a **codebook
-effect, not a model effect.**
+---
 
-Codebook B, Condition A: gpt-6-luna 28,9 %, jev 44,8 %, deepseek 42,8 %, glm 47,8 %.
-Codebook B, Condition B: gpt-6-luna 28,9 %, jev 37,3 %, deepseek 55,7 %, glm 54,7 %.
+## 3. Engineering notes (relevant to any re-run)
 
-Reading the B label distribution, the mass sits in the constructive/critical and
-confrontational categories — i.e. models code **ordinary disagreement and
-criticism of a politician's statement as reactance**. The project theory
-explicitly does not want this: Reaktanz requires an appraisal of a *threatened
-autonomy* (Brehm 1966; PRPM), and the Notion "Wiki Reaktanz (allgemein)" page is
-clear that reactance is not simply "being annoyed at a policy".
-
-**Recommended fix (not yet applied):** make the freedom-threat appraisal a hard
-precondition of every Codebook B label, mirroring what Codebook A already does.
-Add to `B_INSTRUCTIONS`:
-
-> Assign a reactance type only if you can point to a perceived threat to the
-> author's own freedom. If the comment is merely disagreement, criticism or topic
-> engagement, answer `keine_reaktanz`.
-
-I deliberately did **not** apply this silently: it changes the instrument, so it
-must be a documented decision and then a re-run. The cache means a re-run only
-costs the cells that actually change.
-
-**Cheap diagnostic for this** (`src/crosstab.py`, `results/analysis_crosstab_ab.csv`):
-cross-tabulate Codebook B against Codebook A per comment. Condition A:
-
-| model | both reactance | **B=type & A=nein** | A=ja & B=keine | both no |
-|---|---:|---:|---:|---:|
-| gpt-6-luna | 8 (4,0 %) | 54 (26,9 %) | 1 | 138 |
-| jev-1.13 | 4 (2,0 %) | 86 (42,8 %) | 0 | 111 |
-| deepseek-v4.1-flash | 6 (3,0 %) | 80 (39,8 %) | 1 | 114 |
-| glm-5.3-flash | 16 (8,0 %) | 81 (40,3 %) | 1 | 103 |
-
-The two codebooks agree on almost nothing in the middle: the false-positive class
-(B names a type, A says `nein`) is **13–20× larger than the true-positive class**.
-The reverse error is essentially zero (0–1 comment). So Codebook B is not
-"noisier" in a symmetric way — it is systematically *more permissive*, exactly as
-the boundary hypothesis predicts.
-
-Composition of that false-positive class (pooled over the four models, condition A):
-
-| B label | n |
-|---|---:|
-| konfrontation_angriff | 215 |
-| konstruktive_kritik | 38 |
-| ablenkung_whataboutism | 32 |
-| vermeidung_rueckzug | 8 |
-| delegierung_hilflosigkeit | 7 |
-| reflektierte_rechtfertigung | 1 |
-
-`konfrontation_angriff` alone accounts for ~70 % of it — the models read ordinary
-angry criticism of a politician as "attacking resistance". This is the label to
-tighten first.
-
-## 4. Inter-model agreement
-
-Codebook A is nearly unanimous (93–100 % raw agreement) but Cohen's κ is low
-(≈ 0,0–0,43) — the classic base-rate artefact: with 2–8 % positives, a model that
-says `nein` almost always agrees with another on the *easy* majority while the
-few `ja` cases split. Raw agreement therefore overstates convergence here;
-κ is the honest metric, and even it is unstable at this prevalence.
-
-Codebook B agrees much more substantively: κ = 0,63–0,75 among deepseek/glm/gpt
-on condition A. That is the expected pattern — a 7-way forced choice gives the
-model room to discriminate, whereas a 2-way choice at 3 % prevalence mostly
-measures who says `nein`.
-
-## 5. What the sample is / is not
-
-- 201 comments, 12 accounts, 9 parties, 67 videos, party-stratified
-  round-robin. **Party-level differences are not estimable** (max 63 comments
-  for one party) — this design trades party coverage for breadth of the model
-  comparison.
-- Comments are ≥ 25 chars, top-level, visible, and only from videos with a
-  non-empty transcript. So this is **not** an unbiased prevalence estimate for
-  the full 6,7 M-comment corpus — it is a feasibility/method run.
-- Full filter list in `data/sample_meta.json`.
-
-## 6. Engineering notes (for re-runs)
-
+- **Reasoning models need `max_tokens` ≥ 2000.** DeepSeek and GLM spend hidden
+  reasoning tokens out of the *same* budget; at 400 they return
+  `finish_reason="length"` with **empty** content. This broke 205/804 DeepSeek and
+  73/804 GLM cells in the first run. `src/probe_budget.py` reproduces it in 4 calls.
 - The NAS comment files are **concatenated JSON objects** (one per pagination
-  request), not a single JSON document — `build_dataset.py` walks them with
-  `JSONDecoder.raw_decode`.
-- `reply_id` is the **string** `"0"` for top-level comments. A truthiness check
-  (`if not c["reply_id"]`) silently drops every single comment.
-- Reasoning models (DeepSeek, GLM) spend hidden reasoning tokens out of the
-  **same** `max_tokens` budget. At 400 they returned `finish_reason="length"`
-  with **empty** content, breaking 205/804 DeepSeek and 73/804 GLM cells.
-  `max_tokens=2000` fixed it — see `src/probe_budget.py`. This is the single
-  most likely thing to break a re-run on a different model.
-- OpenRouter sometimes returns `"usage": null`; never index it unguarded.
-- The Notion export contains **no** existing annotation scheme, prompt, gold
-  standard or agreement measure (no Krippendorff/intercoder protocol) — this
-  repo is the first, so model agreement here is *not* validated against human
-  coding yet. The theory side references "16 Einzelkategorien" from a
-  `1_Theory` document that is **not** in the export.
+  request), not a single JSON document — parsed with `JSONDecoder.raw_decode`.
+- `reply_id` is the **string** `"0"` for top-level comments; a truthiness check
+  silently drops every comment.
+- OpenRouter sometimes returns `"usage": null`.
+- A connection reset and two `finish_reason=length` cells failed in the 14,400-request
+  run (99,98 % success). Repair is cheap: purge null-label rows from
+  `cache.sqlite` and re-run — 14,397/14,400 come back from cache.
+- Latency and cost **must** be computed from `requests_full.jsonl`, not from the
+  predictions file: after a cached re-run the predictions are mostly cache hits
+  with no timing and zero cost, which silently blanks every latency cell.
+  (`analyze.py` and `make_report.py` both read the request log for this reason.)
+
+## 4. Still open
+
+- **No gold standard.** The Notion export contains no annotation scheme, prompt or
+  Krippendorff/intercoder protocol. Model agreement here measures *consistency among
+  models*, not *correctness against human coding*. With 3–7 % prevalence, random
+  sampling for human validation will struggle to surface positives — purposive
+  sampling of the ~120 Codebook-A positives would be far more efficient.
+- The "16 Einzelkategorien" referenced in the Notion protocol are **not** in the
+  export; Codebook B derives from the 8-typology on the wiki page instead.
+- Party-level cells are too small for inference (largest: AfD at 192 comments).

@@ -50,6 +50,10 @@ JEV_MODELS = {
 # short name -> full OpenRouter id, for both backends
 MODEL_IDS = {**CHAT_MODELS, **JEV_MODELS}
 
+# Bump whenever a codebook's text changes. It is part of the cache key, so an
+# edited codebook can never silently reuse labels produced by the old wording.
+CODEBOOK_VERSION = "B-gate-v2"
+
 
 # --------------------------------------------------------------------------
 def load_key() -> str:
@@ -320,8 +324,10 @@ def main() -> None:
     def run(task):
         model, model_id, codebook, cond, row = task
         state = CB.build_state(row, cond)
-        ck = json.dumps({"model": model_id, "cb": codebook, "cond": cond,
-                         "state": state}, sort_keys=True, ensure_ascii=False)
+        cb_ver = CODEBOOK_VERSION if codebook == "B" else "A-v1"
+        ck = json.dumps({"model": model_id, "cb": codebook, "cb_ver": cb_ver,
+                         "cond": cond, "state": state},
+                        sort_keys=True, ensure_ascii=False)
         if not args.no_cache:
             hit = cache.get(ck)
             if hit:

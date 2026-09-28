@@ -1,0 +1,1034 @@
+{
+ "meta": {
+  "source_nas": "/mnt/nasother/TikTok_Pol2025",
+  "source_files": {
+   "comments": "comments/<account>/<account>_comments_<videoid>.json",
+   "transcripts": "transcripts/data/<account>/<videoid>.txt"
+  },
+  "seed": 20260928,
+  "target": 1200,
+  "reached": 1200,
+  "videos_used": 400,
+  "accounts_used": 68,
+  "parties_used": 16,
+  "party_counts": {
+   "AfD": 192,
+   "Linke": 180,
+   "CDU": 150,
+   "FDP": 123,
+   "Grüne": 108,
+   "BSW": 93,
+   "CSU": 84,
+   "SPD": 78,
+   "FreieWähler": 63,
+   "DiePartei": 27,
+   "Tierschutz": 21,
+   "ÖVP": 21,
+   "CDUCSU": 21,
+   "parteilos": 21,
+   "unabhängig": 9,
+   "ÖDP": 9
+  },
+  "filters": {
+   "min_comment_chars": 25,
+   "max_comments_per_video": 3,
+   "max_comments_per_account": 20,
+   "min_comments_per_video": 4,
+   "top_level_comments_only": true,
+   "requires_nonempty_transcript": true,
+   "transcript_max_chars": 1800,
+   "urls_and_mentions_stripped": true
+  }
+ },
+ "models": [
+  "deepseek-v4.1-flash",
+  "gpt-6-luna",
+  "jev-1.13"
+ ],
+ "summary": [
+  {
+   "cb": "A",
+   "cond": "A",
+   "model": "deepseek-v4.1-flash",
+   "n": 1200,
+   "parse_pct": 100.0,
+   "n_pos": 74,
+   "prev_pct": 6.17,
+   "lat": 4.085,
+   "usd": 0.3988,
+   "usd_1k": 0.3324
+  },
+  {
+   "cb": "A",
+   "cond": "A",
+   "model": "gpt-6-luna",
+   "n": 1200,
+   "parse_pct": 100.0,
+   "n_pos": 79,
+   "prev_pct": 6.58,
+   "lat": 2.114,
+   "usd": 0.1768,
+   "usd_1k": 0.1473
+  },
+  {
+   "cb": "A",
+   "cond": "A",
+   "model": "jev-1.13",
+   "n": 1200,
+   "parse_pct": 100.0,
+   "n_pos": 46,
+   "prev_pct": 3.83,
+   "lat": 0.464,
+   "usd": 0.0733,
+   "usd_1k": 0.0611
+  },
+  {
+   "cb": "A",
+   "cond": "B",
+   "model": "deepseek-v4.1-flash",
+   "n": 1200,
+   "parse_pct": 100.0,
+   "n_pos": 65,
+   "prev_pct": 5.42,
+   "lat": 3.63,
+   "usd": 0.2918,
+   "usd_1k": 0.2432
+  },
+  {
+   "cb": "A",
+   "cond": "B",
+   "model": "gpt-6-luna",
+   "n": 1200,
+   "parse_pct": 100.0,
+   "n_pos": 65,
+   "prev_pct": 5.42,
+   "lat": 1.898,
+   "usd": 0.1357,
+   "usd_1k": 0.1131
+  },
+  {
+   "cb": "A",
+   "cond": "B",
+   "model": "jev-1.13",
+   "n": 1200,
+   "parse_pct": 100.0,
+   "n_pos": 33,
+   "prev_pct": 2.75,
+   "lat": 0.349,
+   "usd": 0.0624,
+   "usd_1k": 0.052
+  },
+  {
+   "cb": "B",
+   "cond": "A",
+   "model": "deepseek-v4.1-flash",
+   "n": 1200,
+   "parse_pct": 100.0,
+   "n_pos": 41,
+   "prev_pct": 3.42,
+   "lat": 3.976,
+   "usd": 0.3643,
+   "usd_1k": 0.3036
+  },
+  {
+   "cb": "B",
+   "cond": "A",
+   "model": "gpt-6-luna",
+   "n": 1200,
+   "parse_pct": 100.0,
+   "n_pos": 21,
+   "prev_pct": 1.75,
+   "lat": 2.073,
+   "usd": 0.1296,
+   "usd_1k": 0.108
+  },
+  {
+   "cb": "B",
+   "cond": "A",
+   "model": "jev-1.13",
+   "n": 1200,
+   "parse_pct": 100.0,
+   "n_pos": 29,
+   "prev_pct": 2.42,
+   "lat": 0.348,
+   "usd": 0.134,
+   "usd_1k": 0.1117
+  },
+  {
+   "cb": "B",
+   "cond": "B",
+   "model": "deepseek-v4.1-flash",
+   "n": 1200,
+   "parse_pct": 100.0,
+   "n_pos": 45,
+   "prev_pct": 3.75,
+   "lat": 3.924,
+   "usd": 0.2857,
+   "usd_1k": 0.2381
+  },
+  {
+   "cb": "B",
+   "cond": "B",
+   "model": "gpt-6-luna",
+   "n": 1200,
+   "parse_pct": 100.0,
+   "n_pos": 22,
+   "prev_pct": 1.83,
+   "lat": 2.096,
+   "usd": 0.0878,
+   "usd_1k": 0.0732
+  },
+  {
+   "cb": "B",
+   "cond": "B",
+   "model": "jev-1.13",
+   "n": 1200,
+   "parse_pct": 100.0,
+   "n_pos": 27,
+   "prev_pct": 2.25,
+   "lat": 0.35,
+   "usd": 0.1261,
+   "usd_1k": 0.1051
+  }
+ ],
+ "prevalence": [
+  {
+   "cb": "A",
+   "cond": "A",
+   "model": "deepseek-v4.1-flash",
+   "counts": {
+    "ja": 74,
+    "nein": 1126
+   }
+  },
+  {
+   "cb": "A",
+   "cond": "A",
+   "model": "gpt-6-luna",
+   "counts": {
+    "ja": 79,
+    "nein": 1121
+   }
+  },
+  {
+   "cb": "A",
+   "cond": "A",
+   "model": "jev-1.13",
+   "counts": {
+    "ja": 46,
+    "nein": 1154
+   }
+  },
+  {
+   "cb": "A",
+   "cond": "B",
+   "model": "deepseek-v4.1-flash",
+   "counts": {
+    "ja": 65,
+    "nein": 1135
+   }
+  },
+  {
+   "cb": "A",
+   "cond": "B",
+   "model": "gpt-6-luna",
+   "counts": {
+    "ja": 65,
+    "nein": 1135
+   }
+  },
+  {
+   "cb": "A",
+   "cond": "B",
+   "model": "jev-1.13",
+   "counts": {
+    "ja": 33,
+    "nein": 1167
+   }
+  },
+  {
+   "cb": "B",
+   "cond": "A",
+   "model": "deepseek-v4.1-flash",
+   "counts": {
+    "konfrontation_angriff": 35,
+    "ablenkung_whataboutism": 5,
+    "delegierung_hilflosigkeit": 1,
+    "vermeidung_rueckzug": 0,
+    "reflektierte_rechtfertigung": 0,
+    "konstruktive_kritik": 0,
+    "keine_reaktanz": 1159
+   }
+  },
+  {
+   "cb": "B",
+   "cond": "A",
+   "model": "gpt-6-luna",
+   "counts": {
+    "konfrontation_angriff": 18,
+    "ablenkung_whataboutism": 0,
+    "delegierung_hilflosigkeit": 0,
+    "vermeidung_rueckzug": 0,
+    "reflektierte_rechtfertigung": 0,
+    "konstruktive_kritik": 3,
+    "keine_reaktanz": 1179
+   }
+  },
+  {
+   "cb": "B",
+   "cond": "A",
+   "model": "jev-1.13",
+   "counts": {
+    "konfrontation_angriff": 22,
+    "ablenkung_whataboutism": 0,
+    "delegierung_hilflosigkeit": 1,
+    "vermeidung_rueckzug": 0,
+    "reflektierte_rechtfertigung": 3,
+    "konstruktive_kritik": 3,
+    "keine_reaktanz": 1171
+   }
+  },
+  {
+   "cb": "B",
+   "cond": "B",
+   "model": "deepseek-v4.1-flash",
+   "counts": {
+    "konfrontation_angriff": 37,
+    "ablenkung_whataboutism": 3,
+    "delegierung_hilflosigkeit": 1,
+    "vermeidung_rueckzug": 0,
+    "reflektierte_rechtfertigung": 1,
+    "konstruktive_kritik": 3,
+    "keine_reaktanz": 1155
+   }
+  },
+  {
+   "cb": "B",
+   "cond": "B",
+   "model": "gpt-6-luna",
+   "counts": {
+    "konfrontation_angriff": 22,
+    "ablenkung_whataboutism": 0,
+    "delegierung_hilflosigkeit": 0,
+    "vermeidung_rueckzug": 0,
+    "reflektierte_rechtfertigung": 0,
+    "konstruktive_kritik": 0,
+    "keine_reaktanz": 1178
+   }
+  },
+  {
+   "cb": "B",
+   "cond": "B",
+   "model": "jev-1.13",
+   "counts": {
+    "konfrontation_angriff": 22,
+    "ablenkung_whataboutism": 0,
+    "delegierung_hilflosigkeit": 0,
+    "vermeidung_rueckzug": 0,
+    "reflektierte_rechtfertigung": 1,
+    "konstruktive_kritik": 4,
+    "keine_reaktanz": 1173
+   }
+  }
+ ],
+ "overlap": [
+  {
+   "cb": "A",
+   "cond": "A",
+   "a": "deepseek-v4.1-flash",
+   "b": "gpt-6-luna",
+   "n": 1200,
+   "agree": 95.1,
+   "kappa": 0.588
+  },
+  {
+   "cb": "A",
+   "cond": "A",
+   "a": "deepseek-v4.1-flash",
+   "b": "jev-1.13",
+   "n": 1200,
+   "agree": 95.0,
+   "kappa": 0.475
+  },
+  {
+   "cb": "A",
+   "cond": "A",
+   "a": "gpt-6-luna",
+   "b": "jev-1.13",
+   "n": 1200,
+   "agree": 94.6,
+   "kappa": 0.454
+  },
+  {
+   "cb": "A",
+   "cond": "B",
+   "a": "deepseek-v4.1-flash",
+   "b": "gpt-6-luna",
+   "n": 1200,
+   "agree": 97.0,
+   "kappa": 0.707
+  },
+  {
+   "cb": "A",
+   "cond": "B",
+   "a": "deepseek-v4.1-flash",
+   "b": "jev-1.13",
+   "n": 1200,
+   "agree": 95.8,
+   "kappa": 0.47
+  },
+  {
+   "cb": "A",
+   "cond": "B",
+   "a": "gpt-6-luna",
+   "b": "jev-1.13",
+   "n": 1200,
+   "agree": 95.7,
+   "kappa": 0.449
+  },
+  {
+   "cb": "B",
+   "cond": "A",
+   "a": "deepseek-v4.1-flash",
+   "b": "gpt-6-luna",
+   "n": 1200,
+   "agree": 97.0,
+   "kappa": 0.407
+  },
+  {
+   "cb": "B",
+   "cond": "A",
+   "a": "deepseek-v4.1-flash",
+   "b": "jev-1.13",
+   "n": 1200,
+   "agree": 96.6,
+   "kappa": 0.4
+  },
+  {
+   "cb": "B",
+   "cond": "A",
+   "a": "gpt-6-luna",
+   "b": "jev-1.13",
+   "n": 1200,
+   "agree": 97.6,
+   "kappa": 0.41
+  },
+  {
+   "cb": "B",
+   "cond": "B",
+   "a": "deepseek-v4.1-flash",
+   "b": "gpt-6-luna",
+   "n": 1200,
+   "agree": 97.2,
+   "kappa": 0.496
+  },
+  {
+   "cb": "B",
+   "cond": "B",
+   "a": "deepseek-v4.1-flash",
+   "b": "jev-1.13",
+   "n": 1200,
+   "agree": 96.9,
+   "kappa": 0.474
+  },
+  {
+   "cb": "B",
+   "cond": "B",
+   "a": "gpt-6-luna",
+   "b": "jev-1.13",
+   "n": 1200,
+   "agree": 97.6,
+   "kappa": 0.397
+  }
+ ],
+ "crosstab": [
+  {
+   "model": "deepseek-v4.1-flash",
+   "cond": "A",
+   "n": 1200,
+   "both": 26,
+   "fp": 15,
+   "fn": 48,
+   "both_no": 1111,
+   "ratio": 0.6
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "cond": "B",
+   "n": 1200,
+   "both": 35,
+   "fp": 10,
+   "fn": 30,
+   "both_no": 1125,
+   "ratio": 0.3
+  },
+  {
+   "model": "gpt-6-luna",
+   "cond": "A",
+   "n": 1200,
+   "both": 19,
+   "fp": 2,
+   "fn": 60,
+   "both_no": 1119,
+   "ratio": 0.1
+  },
+  {
+   "model": "gpt-6-luna",
+   "cond": "B",
+   "n": 1200,
+   "both": 19,
+   "fp": 3,
+   "fn": 46,
+   "both_no": 1132,
+   "ratio": 0.2
+  },
+  {
+   "model": "jev-1.13",
+   "cond": "A",
+   "n": 1200,
+   "both": 21,
+   "fp": 8,
+   "fn": 25,
+   "both_no": 1146,
+   "ratio": 0.4
+  },
+  {
+   "model": "jev-1.13",
+   "cond": "B",
+   "n": 1200,
+   "both": 17,
+   "fp": 10,
+   "fn": 16,
+   "both_no": 1157,
+   "ratio": 0.6
+  }
+ ],
+ "cost": [
+  {
+   "model": "deepseek-v4.1-flash",
+   "cb": "A",
+   "cond": "A",
+   "calls": 1382,
+   "usd": 0.3988,
+   "mean": 4.085,
+   "p90": 7.481
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "cb": "A",
+   "cond": "B",
+   "calls": 1385,
+   "usd": 0.2918,
+   "mean": 3.63,
+   "p90": 6.203
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "cb": "B",
+   "cond": "A",
+   "calls": 1382,
+   "usd": 0.3643,
+   "mean": 3.976,
+   "p90": 6.484
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "cb": "B",
+   "cond": "B",
+   "calls": 1385,
+   "usd": 0.2857,
+   "mean": 3.924,
+   "p90": 6.505
+  },
+  {
+   "model": "gpt-6-luna",
+   "cb": "A",
+   "cond": "A",
+   "calls": 1381,
+   "usd": 0.1768,
+   "mean": 2.114,
+   "p90": 3.098
+  },
+  {
+   "model": "gpt-6-luna",
+   "cb": "A",
+   "cond": "B",
+   "calls": 1385,
+   "usd": 0.1357,
+   "mean": 1.898,
+   "p90": 2.799
+  },
+  {
+   "model": "gpt-6-luna",
+   "cb": "B",
+   "cond": "A",
+   "calls": 1381,
+   "usd": 0.1296,
+   "mean": 2.073,
+   "p90": 2.955
+  },
+  {
+   "model": "gpt-6-luna",
+   "cb": "B",
+   "cond": "B",
+   "calls": 1385,
+   "usd": 0.0878,
+   "mean": 2.096,
+   "p90": 3.129
+  },
+  {
+   "model": "jev-1.13",
+   "cb": "A",
+   "cond": "A",
+   "calls": 1321,
+   "usd": 0.0733,
+   "mean": 0.464,
+   "p90": 0.406
+  },
+  {
+   "model": "jev-1.13",
+   "cb": "A",
+   "cond": "B",
+   "calls": 1385,
+   "usd": 0.0624,
+   "mean": 0.349,
+   "p90": 0.39
+  },
+  {
+   "model": "jev-1.13",
+   "cb": "B",
+   "cond": "A",
+   "calls": 1321,
+   "usd": 0.134,
+   "mean": 0.348,
+   "p90": 0.395
+  },
+  {
+   "model": "jev-1.13",
+   "cb": "B",
+   "cond": "B",
+   "calls": 1385,
+   "usd": 0.1261,
+   "mean": 0.35,
+   "p90": 0.39
+  }
+ ],
+ "by_party": [
+  {
+   "model": "deepseek-v4.1-flash",
+   "party": "AfD",
+   "n": 192,
+   "pos": 5,
+   "pct": 2.6
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "party": "Linke",
+   "n": 180,
+   "pos": 8,
+   "pct": 4.4
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "party": "CDU",
+   "n": 150,
+   "pos": 12,
+   "pct": 8.0
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "party": "FDP",
+   "n": 123,
+   "pos": 6,
+   "pct": 4.9
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "party": "Grüne",
+   "n": 108,
+   "pos": 11,
+   "pct": 10.2
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "party": "BSW",
+   "n": 93,
+   "pos": 1,
+   "pct": 1.1
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "party": "CSU",
+   "n": 84,
+   "pos": 11,
+   "pct": 13.1
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "party": "SPD",
+   "n": 78,
+   "pos": 8,
+   "pct": 10.3
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "party": "FreieWähler",
+   "n": 63,
+   "pos": 2,
+   "pct": 3.2
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "party": "DiePartei",
+   "n": 27,
+   "pos": 0,
+   "pct": 0.0
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "party": "Tierschutz",
+   "n": 21,
+   "pos": 1,
+   "pct": 4.8
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "party": "ÖVP",
+   "n": 21,
+   "pos": 4,
+   "pct": 19.0
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "party": "CDUCSU",
+   "n": 21,
+   "pos": 0,
+   "pct": 0.0
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "party": "parteilos",
+   "n": 21,
+   "pos": 1,
+   "pct": 4.8
+  },
+  {
+   "model": "gpt-6-luna",
+   "party": "AfD",
+   "n": 192,
+   "pos": 8,
+   "pct": 4.2
+  },
+  {
+   "model": "gpt-6-luna",
+   "party": "Linke",
+   "n": 180,
+   "pos": 7,
+   "pct": 3.9
+  },
+  {
+   "model": "gpt-6-luna",
+   "party": "CDU",
+   "n": 150,
+   "pos": 12,
+   "pct": 8.0
+  },
+  {
+   "model": "gpt-6-luna",
+   "party": "FDP",
+   "n": 123,
+   "pos": 8,
+   "pct": 6.5
+  },
+  {
+   "model": "gpt-6-luna",
+   "party": "Grüne",
+   "n": 108,
+   "pos": 8,
+   "pct": 7.4
+  },
+  {
+   "model": "gpt-6-luna",
+   "party": "BSW",
+   "n": 93,
+   "pos": 6,
+   "pct": 6.5
+  },
+  {
+   "model": "gpt-6-luna",
+   "party": "CSU",
+   "n": 84,
+   "pos": 10,
+   "pct": 11.9
+  },
+  {
+   "model": "gpt-6-luna",
+   "party": "SPD",
+   "n": 78,
+   "pos": 3,
+   "pct": 3.8
+  },
+  {
+   "model": "gpt-6-luna",
+   "party": "FreieWähler",
+   "n": 63,
+   "pos": 7,
+   "pct": 11.1
+  },
+  {
+   "model": "gpt-6-luna",
+   "party": "DiePartei",
+   "n": 27,
+   "pos": 1,
+   "pct": 3.7
+  },
+  {
+   "model": "gpt-6-luna",
+   "party": "Tierschutz",
+   "n": 21,
+   "pos": 0,
+   "pct": 0.0
+  },
+  {
+   "model": "gpt-6-luna",
+   "party": "ÖVP",
+   "n": 21,
+   "pos": 5,
+   "pct": 23.8
+  },
+  {
+   "model": "gpt-6-luna",
+   "party": "CDUCSU",
+   "n": 21,
+   "pos": 0,
+   "pct": 0.0
+  },
+  {
+   "model": "gpt-6-luna",
+   "party": "parteilos",
+   "n": 21,
+   "pos": 1,
+   "pct": 4.8
+  },
+  {
+   "model": "jev-1.13",
+   "party": "AfD",
+   "n": 192,
+   "pos": 6,
+   "pct": 3.1
+  },
+  {
+   "model": "jev-1.13",
+   "party": "Linke",
+   "n": 180,
+   "pos": 5,
+   "pct": 2.8
+  },
+  {
+   "model": "jev-1.13",
+   "party": "CDU",
+   "n": 150,
+   "pos": 11,
+   "pct": 7.3
+  },
+  {
+   "model": "jev-1.13",
+   "party": "FDP",
+   "n": 123,
+   "pos": 1,
+   "pct": 0.8
+  },
+  {
+   "model": "jev-1.13",
+   "party": "Grüne",
+   "n": 108,
+   "pos": 5,
+   "pct": 4.6
+  },
+  {
+   "model": "jev-1.13",
+   "party": "BSW",
+   "n": 93,
+   "pos": 0,
+   "pct": 0.0
+  },
+  {
+   "model": "jev-1.13",
+   "party": "CSU",
+   "n": 84,
+   "pos": 7,
+   "pct": 8.3
+  },
+  {
+   "model": "jev-1.13",
+   "party": "SPD",
+   "n": 78,
+   "pos": 2,
+   "pct": 2.6
+  },
+  {
+   "model": "jev-1.13",
+   "party": "FreieWähler",
+   "n": 63,
+   "pos": 1,
+   "pct": 1.6
+  },
+  {
+   "model": "jev-1.13",
+   "party": "DiePartei",
+   "n": 27,
+   "pos": 0,
+   "pct": 0.0
+  },
+  {
+   "model": "jev-1.13",
+   "party": "Tierschutz",
+   "n": 21,
+   "pos": 0,
+   "pct": 0.0
+  },
+  {
+   "model": "jev-1.13",
+   "party": "ÖVP",
+   "n": 21,
+   "pos": 5,
+   "pct": 23.8
+  },
+  {
+   "model": "jev-1.13",
+   "party": "CDUCSU",
+   "n": 21,
+   "pos": 0,
+   "pct": 0.0
+  },
+  {
+   "model": "jev-1.13",
+   "party": "parteilos",
+   "n": 21,
+   "pos": 0,
+   "pct": 0.0
+  }
+ ],
+ "examples": [
+  {
+   "model": "deepseek-v4.1-flash",
+   "text": "Grüne Kriegsfetischisten dürfen nie wieder in Regierungsverantwortung kommen bevor unser Land komplett zerstört ist 😩",
+   "party": "Grüne"
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "text": "Meine Gemeinde in Sachsen Anhalt ist bereits GRÜNEN frei!! Weck mit diesen faschistischrn Subjekten und dieser Dreck gehört auf den Müllhaufen der Geschichte",
+   "party": "Grüne"
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "text": "Immer wieder nur Vorschriften und verbote, es geht nur gemeinsam nicht mit der Brechstange und Ideologien , nur weil in der EU die Rohstoffe fehlen",
+   "party": "Grüne"
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "text": "traurig wie Realitätsfremd diese Menschen bereits sind aber bei deren Gehältern wer mir der Bürger auch egal 😏😏😏",
+   "party": "Grüne"
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "text": "Mal gut das wir in Deutschland noch eine Demokratie sind. Die Stimme kommen von unten und nicht von oben, das ist Demokratie. 👍",
+   "party": "Grüne"
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "text": "ich bin deutschland und ich muss einen Scheiss!",
+   "party": "CSU"
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "text": "Warum sorgen sie nicht das Amerikanische Armee Deutschland verlässt. Wie lange sollen wir Kolonie den USA sein?",
+   "party": "CSU"
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "text": "ok dann wohl die Grünen, traue niemand ausser dir selbst!",
+   "party": "CSU"
+  },
+  {
+   "model": "gpt-6-luna",
+   "text": "Grüne Kriegsfetischisten dürfen nie wieder in Regierungsverantwortung kommen bevor unser Land komplett zerstört ist 😩",
+   "party": "Grüne"
+  },
+  {
+   "model": "gpt-6-luna",
+   "text": "Immer wieder nur Vorschriften und verbote, es geht nur gemeinsam nicht mit der Brechstange und Ideologien , nur weil in der EU die Rohstoffe fehlen",
+   "party": "Grüne"
+  },
+  {
+   "model": "gpt-6-luna",
+   "text": "Mal gut das wir in Deutschland noch eine Demokratie sind. Die Stimme kommen von unten und nicht von oben, das ist Demokratie. 👍",
+   "party": "Grüne"
+  },
+  {
+   "model": "gpt-6-luna",
+   "text": "ich bin deutschland und ich muss einen Scheiss!",
+   "party": "CSU"
+  },
+  {
+   "model": "gpt-6-luna",
+   "text": "Warum sorgen sie nicht das Amerikanische Armee Deutschland verlässt. Wie lange sollen wir Kolonie den USA sein?",
+   "party": "CSU"
+  },
+  {
+   "model": "gpt-6-luna",
+   "text": "ok dann wohl die Grünen, traue niemand ausser dir selbst!",
+   "party": "CSU"
+  },
+  {
+   "model": "gpt-6-luna",
+   "text": "richtig so. Und die wollen alles verbieten 🤣. Das ist grünen Logik",
+   "party": "BSW"
+  },
+  {
+   "model": "gpt-6-luna",
+   "text": "Beide Stimmen am 23.02.2025 für die AFD 💙 💙 💙 💙 💙",
+   "party": "FDP"
+  },
+  {
+   "model": "jev-1.13",
+   "text": "Immer wieder nur Vorschriften und verbote, es geht nur gemeinsam nicht mit der Brechstange und Ideologien , nur weil in der EU die Rohstoffe fehlen",
+   "party": "Grüne"
+  },
+  {
+   "model": "jev-1.13",
+   "text": "Ich kenne einen anderen Inhalt, sorry, Propaganda funktioniert nicht mehr. Die Bürger werden es euch danken!!!",
+   "party": "CSU"
+  },
+  {
+   "model": "jev-1.13",
+   "text": "sie sind nicht integrierbar und wollen nicht integriert werden",
+   "party": "AfD"
+  },
+  {
+   "model": "jev-1.13",
+   "text": "nix werde ich, meine Sprache bleibt altdeutsch und fertig",
+   "party": "AfD"
+  },
+  {
+   "model": "jev-1.13",
+   "text": "WER versteht hier WAS nicht ? ... wir haben verstanden, dass die GRÜNEN die Bevölkerung seit Jahren für DUMM verkaufen !!",
+   "party": "Grüne"
+  },
+  {
+   "model": "jev-1.13",
+   "text": "Wir lassen uns nicht einschüchtern ,es gibt nur eins blau, blau",
+   "party": "AfD"
+  },
+  {
+   "model": "jev-1.13",
+   "text": "Freiheit der Menschen 🤯 Menschen erschiessen andere Menschen weil sie auf die Maskenpflicht hinweisen. tolle Freiheit 👌",
+   "party": "ÖVP"
+  },
+  {
+   "model": "jev-1.13",
+   "text": "wir sollen masken tragen und politiker dürfen alles a frechheit is des",
+   "party": "ÖVP"
+  }
+ ]
+}
