@@ -80,6 +80,9 @@ class Cache:
         import threading
         self._lock = threading.Lock()
         self.con = sqlite3.connect(path, check_same_thread=False)
+        # two benchmark processes may share this cache file; wait instead of
+        # raising 'database is locked' on a concurrent short write
+        self.con.execute("PRAGMA busy_timeout=30000")
         self.con.execute(
             "CREATE TABLE IF NOT EXISTS cache ("
             "k TEXT PRIMARY KEY, val TEXT, ts REAL)")
@@ -300,6 +303,8 @@ def main() -> None:
     ap.add_argument("--models", nargs="*", default=list(CHAT_MODELS) + list(JEV_MODELS))
     ap.add_argument("--codebooks", nargs="*", default=["A", "B"])
     ap.add_argument("--conditions", nargs="*", default=["A"])
+    ap.add_argument("--sample", default="sample_comments.jsonl",
+                    help="sample file in data/ (default: sample_comments.jsonl)")
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--offset", type=int, default=0)
     ap.add_argument("--workers", type=int, default=8)
@@ -310,7 +315,7 @@ def main() -> None:
     RESULTS.mkdir(parents=True, exist_ok=True)
     cache = Cache(RESULTS / "cache.sqlite")
     key = load_key()
-    rows = load_rows(REPO / "data/sample_comments.jsonl", args.limit, args.offset)
+    rows = load_rows(REPO / "data" / args.sample, args.limit, args.offset)
     log_path = RESULTS / f"requests_{args.run_name}.jsonl"
     preds_path = RESULTS / f"predictions_{args.run_name}.jsonl"
     print(f"{len(rows)} rows x {len(args.models)} models x "

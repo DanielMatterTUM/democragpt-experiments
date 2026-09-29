@@ -153,6 +153,23 @@ def main():
                 a = [x for x, _ in pairs]
                 b = [y for _, y in pairs]
                 m, nrm = confusion(a, b, labels)
+                # F1 of model A's labels with model B's as (reference-free)
+                # ground truth: exact label agreement is the only "true
+                # positive", every mismatch is one false positive AND one false
+                # negative (symmetric by construction), so precision = recall
+                # = raw agreement and F1 = raw agreement. Kept as its own
+                # number because it is what a pipeline would actually compute.
+                m_np = np.asarray(m)
+                n_ = len(pairs)
+                if n_ and m_np.sum():
+                    off = m_np.sum() - sum(m_np[i, i] for i in range(len(labels)))
+                    tp = float(sum(m_np[i, i] for i in range(len(labels))))
+                    prec = tp / (tp + off) if (tp + off) else None
+                    rec = prec
+                    f1v = (2 * prec * rec / (prec + rec) if prec and prec + rec
+                            else None)
+                else:
+                    f1v = None
                 out["model_pairwise"].append({
                     "cb": cb, "cond": cond, "a": m1, "b": m2,
                     "labels": labels, "n": len(pairs),
@@ -160,6 +177,7 @@ def main():
                     "raw_pct": round(100 * sum(1 for x, y in pairs if x == y) / len(pairs), 2),
                     "kappa": round(cohen_kappa(a, b, labels), 4),
                     "ac1": round(gwets_ac1(a, b, labels), 4),
+                    "f1": round(f1v, 4) if f1v is not None else None,
                 })
 
     # ---------- 2. condition A x B, per model & codebook --------------------
@@ -315,18 +333,28 @@ def main():
             ref[u] = "ja" if votes.count("ja") > len(votes) / 2 else "nein"
         npos = sum(1 for u in uids if ref[u] == "ja")
         for m in models:
-            tp = sum(1 for u in uids if ref[u] == "ja" and lab[(m, "A", cond, u)] == "ja")
-            fp = sum(1 for u in uids if ref[u] == "nein" and lab[(m, "A", cond, u)] == "ja")
-            fn = sum(1 for u in uids if ref[u] == "ja" and lab[(m, "A", cond, u)] == "nein")
+            pred = [lab[(m, "A", cond, u)] for u in uids]
+            refs = [ref[u] for u in uids]
+            tp = sum(1 for a, b in zip(pred, refs) if a == "ja" and b == "ja")
+            fp = sum(1 for a, b in zip(pred, refs) if a == "ja" and b == "nein")
+            fn = sum(1 for a, b in zip(pred, refs) if a == "nein" and b == "ja")
             prec = tp / (tp + fp) if tp + fp else None
             rec = tp / (tp + fn) if tp + fn else None
             f1 = (2 * prec * rec / (prec + rec)) if prec and rec else None
+            # reference-free agreement measures of this model vs the majority
+            # (same definitions as the pairwise section), so a single table can
+            # carry raw / F1 / kappa / AC1 side by side
+            kk = cohen_kappa(pred, refs, LAB_A)
+            aa = gwets_ac1(pred, refs, LAB_A)
             out["consensus_reference"].append({
                 "model": m, "cond": cond, "n": len(uids), "n_ref_pos": npos,
                 "tp": tp, "fp": fp, "fn": fn,
                 "precision": round(prec, 4) if prec is not None else None,
                 "recall": round(rec, 4) if rec is not None else None,
-                "f1": round(f1, 4) if f1 is not None else None})
+                "f1": round(f1, 4) if f1 is not None else None,
+                "raw": round(float(np.mean([a == b for a, b in zip(pred, refs)])), 4),
+                "kappa": round(kk, 4) if kk is not None else None,
+                "ac1": round(aa, 4) if aa is not None else None})
 
     # ---------- 6. Jev calibration + threshold sweep -----------------------
     reqs = load(RES / "requests_full.jsonl")

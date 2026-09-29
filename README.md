@@ -39,7 +39,7 @@ Written digest: [`docs/results.md`](docs/results.md).
                         ┌─ Condition A: comment + video transcript
                         └─ Condition B: comment only
                                    ×
-                        jev-1.13 · gpt-6-luna · deepseek-v4.1-flash
+                        jev-1.13 · gpt-6-luna · deepseek-v4.1-flash · glm-5.3-flash
 ```
 
 Two samples:
@@ -49,8 +49,9 @@ Two samples:
 | `sample_matrix.jsonl` | 1,200 | 68 | 16 | 400 | A and B | v2 |
 | `sample_big.jsonl` | 2,001 | 114 | 16 | 667 | B only | v3 |
 
-The matrix run is 1,200 × 2 codebooks × 2 conditions × 3 models = **14,400 requests**;
-the large-scale run adds 4,002.
+The matrix run is 1,200 × 2 codebooks × 2 conditions × 4 models = **19,200 requests**
+(the fourth model, GLM-5.3-Flash, was added in the 2026-09-29 iteration);
+the large-scale run adds 4,002 (Jev) plus 4,002 (GLM).
 
 ## Findings (short version)
 
@@ -67,7 +68,7 @@ but κ only 0.45–0.59 — a base-rate artefact at 3–7 % prevalence.
 
 **Jev wins on both axes** (~0.46 s, ~$0.061 per 1,000 comments) and is the only
 backend returning calibrated probabilities. That matters more than the speed: a
-threshold on `p(ja)` lifts precision from 9 % to ~70 %.
+threshold on `p(ja)` lifts precision from 14 % to ~80 % (at t=0.6).
 
 **But precision is the real problem.** A hand-coded audit of 36 positives puts
 precision at **46 %** (92 % at three-model consensus, 25 % for single-model
@@ -77,6 +78,13 @@ figures are upper bounds.
 **Two validation experiments** (1,360 extra calls, $0.075): Jev is ≥ 92 % stable
 across identical repeats and insensitive to prompt order, but a neutral
 politeness frame flips **22–38 %** of positive codes.
+
+**GLM-5.3-Flash is the least conservative model.** It marks 10.8 % of the
+matrix sample as reactance (two to three times the others), F1 0.52–0.54.
+
+**Gated condition.** A cheap Jev binary pass first, type classification only
+on the ≈3 % it lets through: type agreement across the four models is 58–70 %
+raw (κ 0.18–0.46); a 3-of-4 majority is reached on 79 % of gated comments.
 
 ## Data
 
@@ -184,5 +192,6 @@ once. `report/verify.sh` guards against the blank-PDF failure.
 ## Cost
 
 The 14,400-request matrix cost ≈ $2.4 on 1,200 comments; the large-scale run
-$0.30; the two validation experiments $0.075. Total $2.99 of a $3 budget.
+$0.30; the two validation experiments $0.075; the GLM-5.3-Flash addition
+≈$0.69. Total ≈$3.17. 
 Breakdown in `results/analysis_cost.csv`.

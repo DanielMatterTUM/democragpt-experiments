@@ -94,14 +94,24 @@ def _ab_rows():
 
 
 def _agree_rows():
+    # Per-model rows: each model against the 4-model majority. F1 is a
+    # first-class column next to raw / kappa / AC1 (all on the 0-1 scale),
+    # replacing the old separate F1 chapter.
     rows = []
-    for r in X.get("model_pairwise", []):
-        if r["cb"] != "A" or r["cond"] != "A":
+    for c in X.get("consensus_reference", []):
+        if c["cond"] != "A":
             continue
-        rows.append("  Codebook A & %s & %s & %s\\%% & %s & %s \\\\"
-                    % (short_model(r["a"]), short_model(r["b"]),
-                       nz(r.get("raw_pct"), 1), nz(r.get("kappa"), 3),
-                       nz(r.get("ac1"), 3)))
+        n = c["n"]; maj_pos = c["n_ref_pos"]
+        n11 = c["tp"]; n01 = c["fp"]; n10 = c["fn"]; n00 = n - maj_pos - c["fp"]
+        po = (n11 + n00) / n if n else 0.0
+        pe = ((maj_pos / n) * ((n11 + n01) / n)
+              + (1 - maj_pos / n) * (1 - (n11 + n01) / n)) if n else 0.0
+        k = (1.0 if abs(1 - pe) < 1e-12 else (po - pe) / (1 - pe)) if n else 0.0
+        rows.append(
+            "  %s & %d & %s & %s & %s & %s \\\\"
+            % (short_model(c["model"]), n,
+               nz(po, 3), nz(c.get("f1"), 3), nz(k, 3),
+               nz(c.get("ac1"), 3)))
     return "\n".join(rows)
 
 
@@ -207,9 +217,9 @@ DOC_TEMPLATE = r"""% !TeX program = xelatex
 \begin{document}
 
 \title{How frequently is psychological reactance on TikTok, and how quickly can it be detected?\\[0.4ex]
-\large A benchmark on @N_MATRIX@ comments under videos of German politicians, with two codings, two conditions and three models}
-\author{Daniel Matter\\[0.4ex]Contributors: K.\,V.\ Hajek and L.\ Kobilke (DemocraGPT theory, project literature)}
-\date{28 September 2026}
+\large A benchmark on @N_MATRIX@ comments under videos of German politicians, with two codings, two conditions and four models}
+\author{Daniel Matter}
+\date{29 September 2026}
 \maketitle
 
 \begin{abstract}
@@ -247,14 +257,21 @@ this (Sections~\ref{sec:agree}, \ref{sec:validity}).
 \medskip
 \noindent\textbf{Conditions and models.} Condition~A presents the comment
 \emph{with} the video transcript; Condition~B the comment only. Jev runs via
-the Decisions API, GPT-6-Luna and DeepSeek-V4.1-Flash via chat completion. All
-three receive identical instructions at temperature~0 with a fixed seed.
+the Decisions API, GPT-6-Luna, DeepSeek-V4.1-Flash and --- new in this
+version --- GLM-5.3-Flash via chat completion. All four receive identical
+instructions at temperature~0 with a fixed seed; GLM-5.3-Flash was the
+addition of this iteration and is otherwise handled exactly like the other
+chat models.
 
 \medskip
-\noindent\textbf{Volumes.} @N_MATRIX@~${\times}$~12 requests for the matrix
-(2 codebooks $\times$ 2 conditions $\times$ 3 models $\times$ @N_MATRIX@ comments),
-1{,}360 for the two validation experiments and 4{,}002 for the large-scale run.
-Total cost 2.99\,US\$.
+\noindent\textbf{Volumes.} The matrix is 2 codebooks $\times$ 2 conditions
+$\times$ 4 models $=$ 16 calls per comment (@N_MATRIX@ comments). This
+iteration added the fourth model: 4{,}800 GLM calls on the matrix sample plus
+340 further calls to complete GLM on the large-scale sample
+($\approx$\$0.69). The two validation experiments (1{,}360 calls, \$0.075)
+and the Jev-only gate check are unchanged. The gate condition
+(Section~\ref{sec:gate}) reuses the predictions already on disk and therefore
+costs no API calls. Total cost 3.17\,US\$.
 
 \section{Frequency and speed}
 \label{sec:freq}
@@ -276,10 +293,11 @@ Model & Cond & $n$ & Prev. & 95\% CI\\
 \end{tabular}
 \end{table}
 
-Jev is the fastest and cheapest backend: 0.46\,s and \$0.061 per 1{,}000
-comments against at least 1.79\,s and \$0.126 for the best chat model
-(Figure~\ref{fig:cost}). It is also the only backend that returns calibrated
-class probabilities --- a corrective that proves effective in
+Jev remains the fastest and cheapest backend: 0.46\,s and \$0.061 per
+1{,}000 comments, against 2.1--2.4\,s and \$0.12--0.33 for the chat models
+(Figure~\ref{fig:cost}); GLM-5.3-Flash is the cheapest chat model
+(\$0.119) but does not beat Jev. Jev is also the only backend that returns
+calibrated class probabilities --- a corrective that proves effective in
 Section~\ref{sec:validity}.
 
 \begin{figure}[ht]
@@ -314,36 +332,68 @@ negative: the transcript lowers, not raises, the hit rate. For a detection
 pipeline the ~900 added prompt tokens per comment buy nothing measurable; the
 comment text suffices.
 
+\subsection{GLM-5.3-Flash is the least conservative model}
+\label{sec:glm}
+The fourth model changes the prevalence picture more than any transcript or
+codebook change did. GLM-5.3-Flash marks 10.8\% of the matrix sample as
+reactance (Condition~A) --- two to three times the share of the other three
+(2.8--6.6\%) --- and flags 189 of the 2{,}001 large-scale comments (9.4\%)
+where Jev finds 58. This is not better or worse recall in itself; it is the
+single largest source of the disagreement structure in
+Section~\ref{sec:agree}. Of the comments GLM alone flags, the manual audit in
+Section~\ref{sub:precision} suggests the large majority would be false
+positives of the same kind the audit identified in the other models: outrage
+without a freedom reference. GLM's low F1 against the consensus
+(0.52--0.54, Table~\ref{tab:agree}) is the operational cost of that
+liberality.
+
 \section{Agreement between models}
 \label{sec:agree}
 
-Models agree to 94.6--95.1\% raw (Codebook~A, Condition~A), yet Cohen's
-$\kappa$ is only 0.45--0.59. This is not a contradiction but a base-rate
-artefact: with 3--7\% positives all models agree on the easy majority while the
-few positives split. Gwet's AC1, the prevalence-robust coefficient, is 0.94
-and matches the raw agreement. \textbf{For these data AC1 is the appropriate
-measure, not $\kappa$.} Figure~\ref{fig:agree} therefore plots the two
-quantities on separate axes.
+With the fourth model in the matrix, the picture sharpens. The three
+original models still agree to 94.6--95.1\% raw on Codebook~A, Condition~A,
+while GLM-5.3-Flash sits lower: 90.5--91.8\% against each of them, because it
+marks roughly twice as many comments as reactance (10.8\% prevalence, the
+highest of the four; Section~\ref{sec:freq}). Yet even there the chance-
+corrected coefficients tell a two-part story: Cohen's $\kappa$ is low
+(0.31--0.59 across all pairs) and Gwet's AC1 high (0.89--0.94). This is not
+a contradiction but a base-rate artefact: with 3--11\% positives all models
+agree on the easy majority while the few positives split, and $\kappa$
+penalises exactly that. \textbf{For these data AC1 --- and, for the binary
+task, the per-model F1 of Section~\ref{sub:f1} --- are the appropriate
+measures, not $\kappa$ alone.}
+
+All of the following numbers --- raw agreement, the two chance-corrected
+coefficients and F1 --- lie on the \emph{same} 0--1 scale. Raw agreement is
+the same proportion that the older version plotted as 94.6\% on a separate
+percentage axis; expressing it as 0.946 is what lets one axis carry every
+quantity and makes the base-rate gap readable at a glance
+(Figure~\ref{fig:agree}).
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.96\linewidth]{fig03_agreement.pdf}
-\caption{Raw agreement (\%, left axis) and chance-corrected coefficients
-($\kappa$, AC1; 0--1 right axis). The gap between them is the base-rate
-artefact; AC1 closes it.}
+\includegraphics[width=0.98\linewidth]{fig03_agreement.pdf}
+\caption{Pairwise agreement on the model pairs (a, b) and per-model F1
+against the four-model majority (c), all on a single 0--1 axis: raw
+agreement, Cohen's $\kappa$, Gwet's AC1 and F1. The gap between raw
+agreement ($\approx$0.91--0.95) and $\kappa$ (0.29--0.59) is the base-rate
+artefact; AC1 and, for the binary task, F1 close it.}
 \label{fig:agree}
 \end{figure}
 
 \begin{table}[htp]
 \centering
-\caption{Raw agreement, Cohen's $\kappa$ and Gwet's AC1 for every model pair
-(Codebook~A, Condition~A).}
+\caption{Each model against the four-model majority vote (Codebook~A,
+Condition~A). All four columns sit on the 0--1 scale --- raw agreement and
+F1 next to the two chance-corrected coefficients, so F1 is a first-class
+measure here rather than a chapter of its own. The reference is the
+consensus, not a gold standard.}
 \label{tab:agree}
 \footnotesize
-\setlength{\tabcolsep}{4pt}
+\setlength{\tabcolsep}{5pt}
 \begin{tabular}{lccccc}
 \toprule
-Codebook & Model A & Model B & Raw\% & $\kappa$ & AC1\\
+Model & $n$ & Raw & F1 & $\kappa$ & AC1\\
 \midrule
 @AGREE_ROWS@
 \bottomrule
@@ -397,27 +447,14 @@ magnitude survives, the exact percentages do not.
 
 \subsection{F1 against the consensus majority}
 \label{sub:f1}
-As a reference-free figure we use F1 against the majority vote of the three
-models. This is not ground truth but how far a model sits from the consensual
-position. At low prevalence precision and recall pull against each other:
-Jev has the best precision (0.79) but misses half the positives
-(recall 0.50), and so loses to the chat models on F1 (Table~\ref{tab:f1}).
-
-\begin{table}[htp]
-\centering
-\caption{F1 of the binary coding (Codebook~A) against the majority vote,
-Condition~B. Reference is NOT a gold standard.}
-\label{tab:f1}
-\setlength{\tabcolsep}{5pt}
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{lcccccc}
-\toprule
-Model & TP & FP & FN & Prec. & Rec. & F1\\
-\midrule
-@F1_ROWS@
-\bottomrule
-\end{tabular}}
-\end{table}
+F1 is treated as a first-class agreement measure in
+Section~\ref{sec:agree}, where it sits next to raw agreement, $\kappa$ and
+AC1 (Table~\ref{tab:agree}) rather than in a chapter of its own. The reference
+there is the four-model majority vote --- not a gold standard --- so F1 reads
+as how far a model sits from the consensual position, not how correct it is.
+At low prevalence precision and recall pull against each other: Jev has the
+best precision but gives up the most recall, and so loses to the chat models
+on F1.
 
 \subsection{Codebook B, sharpened}
 The error patterns above were translated into a new codebook, together with the
@@ -460,17 +497,97 @@ to the binary reactant/none dichotomy.}
 \end{figure}
 
 \subsection{Confidence as a corrective}
-Because Jev returns probabilities, precision can be steered by a threshold.
-Against the majority vote precision rises from 9\% at $t=0.05$ to about 70\%
-at $t=0.6$ --- at a coverage of only 2.8\% of comments. Precision, then, is
-not a property of the model but of the threshold.
+\label{sub:calib}
+Jev returns a calibrated class probability $P(\mathrm{ja})$ for every
+comment; the other backends do not. Two properties of that number are worth
+checking separately, and Figure~\ref{fig:cal} shows both:
+
+\smallskip
+\noindent\textbf{(a) Calibration against the majority vote.} We split
+Jev's predictions into ten bins of $P(\mathrm{ja})$ and, in each bin, ask
+how often the comment's label agrees with the four-model majority vote of the
+other backends. A well-calibrated model would put the observed rate on the
+diagonal: predictions of $P=0.6$ would be reactant about 60\% of the time.
+Jev is close across the range --- the observed rate tracks the diagonal from
+$P<0.1$ (observed 1\%) up to $P>0.9$ (observed 100\%) --- with a slight dip
+in the 0.3--0.6 bins, where a fifth to a third of its positives are either
+missed or refuted by the others. Calibration here is imperfect in exactly the
+region that matters at low prevalence.
+
+\smallskip
+\noindent\textbf{(b) The threshold trade-off.} Because $P(\mathrm{ja})$
+is meaningful, we can discard low-confidence flags. Raising the threshold
+$t$ --- flag only those comments with $P(\mathrm{ja})\geq t$ --- trades
+coverage for precision: at $t=0.05$ nearly half the comments are flagged and
+precision is only 14\%; at $t=0.6$ precision reaches 79\% but covers only
+2.8\% of the sample. The 46\% line marks the precision of Jev's raw
+threshold-free label. Precision, then, is not a property of the model but of
+the operating point chosen on this curve.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.94\linewidth]{fig08_calibration.pdf}
-\caption{Calibration of Jev's $P(\mathrm{ja})$ against the majority vote (a)
-and the precision threshold trade-off (b).}
+\caption{(a) Calibration of Jev's $P(\mathrm{ja})$ against the four-model
+majority vote: observed reactant rate per probability bin versus the
+predicted probability (grey = perfect calibration). (b) The precision --
+coverage trade-off as the threshold $t$ on $P(\mathrm{ja})$ rises; the
+46\% line is Jev's threshold-free precision.}
 \label{fig:cal}
+\end{figure}
+
+\section{The gated condition: classify the type only when Jev says yes}
+\label{sec:gate}
+
+Codebook~B's seven-way type classification is the expensive part of the
+pipeline. A gating variant answers the binary question first (Codebook~A, Jev
+only) and runs the type classification {\em only} on the comments that gate
+let through. Every model --- Jev included, all four --- then classifies the
+type of reactance on exactly those comments, so the four annotate the same
+set and the matrix of confusion matrices is directly comparable
+(Figure~\ref{fig:gatecm}). It costs no additional API calls in this
+benchmark, because the Codebook~B predictions were already collected: the
+gate is a recombination of existing labels.
+
+On the matrix sample, condition~B, the gate lets through 33 of 1{,}200
+comments (2.75\%). The type calls on this set are far more spread out than
+the binary calls elsewhere in the report: pairwise type agreement ranges from
+58 to 70\% raw ($\kappa=0.18$--$0.46$), against 90--95\% for the binary
+question. The models also disagree about who is a reactant at all among the
+gated comments: Jev classifies 51\%, DeepSeek 52\%, GPT-6-Luna only 21\%,
+GLM-5.3-Flash 61\%. The false-positive structure of the audit
+(Section~\ref{sub:precision}) is thus found again inside the gate: the
+gated set is not clean.
+
+The majority vote over the four type calls is the useful summary, and the
+share of labels that agree at each majority threshold is the quantity that
+matters for a cascade (Figure~\ref{fig:gatemaj}): a 2-of-4 majority exists
+for every gated comment, a 3-of-4 consensus for 79\%, and unanimity for
+only 36\%. Requiring 3-of-4 agreement therefore halves the effective
+positive stream and keeps the type label stable. Each model matches the
+majority on 73--85\% of its type calls (Jev 85\%, GLM 73\%).
+
+On the large-scale sample the gate is even more selective: 58 of 2{,}001
+comments (2.9\%), of which Jev and GLM agree on the type in 64\%. The gate
+thus concentrates the analysis where it is needed, at roughly 3\% of the
+comments, without losing the ability to compare all four models on a common
+set.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{fig11_gate_confusion.pdf}
+\caption{Matrix of confusion matrices for the gated condition (matrix
+sample, Condition~B): rows and columns are the four models' type labels on
+exactly the 33 comments Jev's gate let through. Weak agreement on this set is
+the point of the figure.}
+\label{fig:gatecm}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\linewidth]{fig12_gate_majority.pdf}
+\caption{Gated type calls: share of gated comments reaching a 2-, 3- or 4-of-4
+majority (a) and each model's agreement with the majority type (b).}
+\label{fig:gatemaj}
 \end{figure}
 
 \section{Two validation experiments}
@@ -594,11 +711,15 @@ export OPENROUTER_API_KEY=...
 python3 src/build_dataset.py --target 1200 --n-accounts-per-party 8 \\
     --out sample_matrix
 python3 src/run_benchmark.py --models jev-1.13 gpt-6-luna \\
-    deepseek-v4.1-flash --codebooks A B --conditions A B --workers 12 \\
-    --run-name full
+    deepseek-v4.1-flash glm-5.3-flash --codebooks A B \\
+    --conditions A B --workers 12 --run-name full
 python3 src/dedup_one.py requests_full
+# glm on the large-scale sample (condition B only)
+python3 src/run_benchmark.py --models glm-5.3-flash --codebooks A B \\
+    --conditions B --sample sample_big.jsonl --run-name glm_big
 python3 src/analyze_extended.py
 python3 src/analyze_big.py
+python3 src/analyze_gate.py
 python3 src/exp_reliability.py 45
 python3 src/exp_paraphrase.py 35
 python3 src/figures.py
@@ -614,8 +735,9 @@ cd report && ./make.sh
 ABSTRACT = (
     "Public concern about political TikTok comment sections suggests that "
     "psychological reactance is common. Two benchmarks show the opposite. On "
-    f"{SM.get('reached', 1200)} party-stratified comments, models coded between "
-    "about 3 and 7\\% as reactance under strict, theory-anchored coding; a "
+    f"{SM.get('reached', 1200)} party-stratified comments, four models coded between "
+    "about 2.8 and 10.8\\% as reactance under strict, theory-anchored coding; the "
+    "newest backend, GLM-5.3-Flash, is the least conservative (9--11\\%). A "
     "second, comment-only pass over "
     f"{SB.get('reached', 2001)} comments yields "
     f"{nz(a_prev, 2)}\\% (95\\% CI [{nz(a_ci[0], 2)}; {nz(a_ci[1], 2)}]). "
@@ -623,15 +745,22 @@ ABSTRACT = (
     "moves prevalence by under two percentage points, in the same direction for "
     "all models. Jev, a Decision-API backend, answers in 0.46\\,s and costs "
     "\\$0.061 per 1{,}000 comments and \\emph{as the only backend} returns "
-    "calibrated class probabilities, so a threshold lifts precision from 9\\% "
-    "to about 70\\%. The real bottleneck is validity: a manual re-coding of 36 "
-    "positives found 46\\% precision (95\\% at three-model consensus, 25\\% for "
-    "single-model flags). Two sharpenings of the type codebook derived from that "
+    "calibrated class probabilities, so a threshold lifts precision from 14\\% "
+    "to nearly 80\\% at t=0.6. The real bottleneck is validity: a manual "
+    "re-coding of 36 positives found 46\\% precision (95\\% at three-model "
+    "consensus, 25\\% for single-model flags). GLM-5.3-Flash flags 61 further "
+    "comments that no other model would have called reactance (Section~\\ref{sec:glm}); "
+    "under the three-model audit these are precisely the solitary flags of "
+    "lowest precision. Two sharpenings of the type codebook derived from that "
     "audit --- the trigger must be the target of the reaction, and politeness "
     "markers neither create nor cancel reactance --- raise the agreement "
-    "between the two codebooks from $\\kappa=0.10$--$0.60$ to $\\kappa=0.98$."
+    "between the two codebooks from $\\kappa=0.10$--$0.60$ to $\\kappa=0.98$. "
+    "A gating variant (Section~\\ref{sec:gate}) runs a cheap Jev binary pass "
+    "first and classifies the type, across all four models, only on the "
+    "$\\approx$ 3\\% it lets through; type agreement is then 58--70\\% raw "
+    "with a four-model majority reaching consensus on 79\\% of the gated "
+    "comments."
 )
-
 
 RELIABILITY_TEXT = (
     f"Identical inputs were coded twice on oversampled positives and a matched "
