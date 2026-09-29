@@ -2359,5 +2359,609 @@
    "n": 1458,
    "pct": 2.47
   }
+ ],
+ "codebook_confusion": [
+  {
+   "model": "deepseek-v4.1-flash",
+   "cond": "A",
+   "n": 1200,
+   "labels_A": [
+    "nein",
+    "ja"
+   ],
+   "labels_B": [
+    "keine_reaktanz",
+    "konfrontation_angriff",
+    "ablenkung_whataboutism",
+    "delegierung_hilflosigkeit",
+    "vermeidung_rueckzug",
+    "reflektierte_rechtfertigung",
+    "konstruktive_kritik"
+   ],
+   "labels_B_collapsed": [
+    "keine_reaktanz",
+    "reaktant"
+   ],
+   "raw_2x7": [
+    [
+     1111,
+     12,
+     2,
+     1,
+     0,
+     0,
+     0
+    ],
+    [
+     48,
+     23,
+     3,
+     0,
+     0,
+     0,
+     0
+    ]
+   ],
+   "norm_2x7": [
+    [
+     0.9866785079928952,
+     0.010657193605683837,
+     0.0017761989342806395,
+     0.0008880994671403197,
+     0.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.6486486486486487,
+     0.3108108108108108,
+     0.04054054054054054,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   ],
+   "raw_2x2": [
+    [
+     1111,
+     15
+    ],
+    [
+     48,
+     26
+    ]
+   ],
+   "norm_2x2": [
+    [
+     0.9866785079928952,
+     0.013321492007104795
+    ],
+    [
+     0.6486486486486487,
+     0.35135135135135137
+    ]
+   ],
+   "fp_tp": 0.58,
+   "both": 26,
+   "fp": 15,
+   "fn": 48,
+   "precision": 0.6341,
+   "recall": 0.3514
+  },
+  {
+   "model": "gpt-6-luna",
+   "cond": "A",
+   "n": 1200,
+   "labels_A": [
+    "nein",
+    "ja"
+   ],
+   "labels_B": [
+    "keine_reaktanz",
+    "konfrontation_angriff",
+    "ablenkung_whataboutism",
+    "delegierung_hilflosigkeit",
+    "vermeidung_rueckzug",
+    "reflektierte_rechtfertigung",
+    "konstruktive_kritik"
+   ],
+   "labels_B_collapsed": [
+    "keine_reaktanz",
+    "reaktant"
+   ],
+   "raw_2x7": [
+    [
+     1119,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     60,
+     17,
+     0,
+     0,
+     0,
+     0,
+     2
+    ]
+   ],
+   "norm_2x7": [
+    [
+     0.9982158786797503,
+     0.0008920606601248885,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0008920606601248885
+    ],
+    [
+     0.759493670886076,
+     0.21518987341772153,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.02531645569620253
+    ]
+   ],
+   "raw_2x2": [
+    [
+     1119,
+     2
+    ],
+    [
+     60,
+     19
+    ]
+   ],
+   "norm_2x2": [
+    [
+     0.9982158786797503,
+     0.001784121320249777
+    ],
+    [
+     0.759493670886076,
+     0.24050632911392406
+    ]
+   ],
+   "fp_tp": 0.11,
+   "both": 19,
+   "fp": 2,
+   "fn": 60,
+   "precision": 0.9048,
+   "recall": 0.2405
+  },
+  {
+   "model": "jev-1.13",
+   "cond": "A",
+   "n": 1200,
+   "labels_A": [
+    "nein",
+    "ja"
+   ],
+   "labels_B": [
+    "keine_reaktanz",
+    "konfrontation_angriff",
+    "ablenkung_whataboutism",
+    "delegierung_hilflosigkeit",
+    "vermeidung_rueckzug",
+    "reflektierte_rechtfertigung",
+    "konstruktive_kritik"
+   ],
+   "labels_B_collapsed": [
+    "keine_reaktanz",
+    "reaktant"
+   ],
+   "raw_2x7": [
+    [
+     1146,
+     3,
+     0,
+     0,
+     0,
+     2,
+     3
+    ],
+    [
+     25,
+     19,
+     0,
+     1,
+     0,
+     1,
+     0
+    ]
+   ],
+   "norm_2x7": [
+    [
+     0.9930675909878682,
+     0.0025996533795493936,
+     0.0,
+     0.0,
+     0.0,
+     0.0017331022530329288,
+     0.0025996533795493936
+    ],
+    [
+     0.5434782608695652,
+     0.41304347826086957,
+     0.0,
+     0.021739130434782608,
+     0.0,
+     0.021739130434782608,
+     0.0
+    ]
+   ],
+   "raw_2x2": [
+    [
+     1146,
+     8
+    ],
+    [
+     25,
+     21
+    ]
+   ],
+   "norm_2x2": [
+    [
+     0.9930675909878682,
+     0.006932409012131715
+    ],
+    [
+     0.5434782608695652,
+     0.45652173913043476
+    ]
+   ],
+   "fp_tp": 0.38,
+   "both": 21,
+   "fp": 8,
+   "fn": 25,
+   "precision": 0.7241,
+   "recall": 0.4565
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "cond": "B",
+   "n": 1200,
+   "labels_A": [
+    "nein",
+    "ja"
+   ],
+   "labels_B": [
+    "keine_reaktanz",
+    "konfrontation_angriff",
+    "ablenkung_whataboutism",
+    "delegierung_hilflosigkeit",
+    "vermeidung_rueckzug",
+    "reflektierte_rechtfertigung",
+    "konstruktive_kritik"
+   ],
+   "labels_B_collapsed": [
+    "keine_reaktanz",
+    "reaktant"
+   ],
+   "raw_2x7": [
+    [
+     1125,
+     8,
+     0,
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     30,
+     29,
+     3,
+     0,
+     0,
+     1,
+     2
+    ]
+   ],
+   "norm_2x7": [
+    [
+     0.9911894273127754,
+     0.007048458149779736,
+     0.0,
+     0.000881057268722467,
+     0.0,
+     0.0,
+     0.000881057268722467
+    ],
+    [
+     0.46153846153846156,
+     0.4461538461538462,
+     0.046153846153846156,
+     0.0,
+     0.0,
+     0.015384615384615385,
+     0.03076923076923077
+    ]
+   ],
+   "raw_2x2": [
+    [
+     1125,
+     10
+    ],
+    [
+     30,
+     35
+    ]
+   ],
+   "norm_2x2": [
+    [
+     0.9911894273127754,
+     0.00881057268722467
+    ],
+    [
+     0.46153846153846156,
+     0.5384615384615384
+    ]
+   ],
+   "fp_tp": 0.29,
+   "both": 35,
+   "fp": 10,
+   "fn": 30,
+   "precision": 0.7778,
+   "recall": 0.5385
+  },
+  {
+   "model": "gpt-6-luna",
+   "cond": "B",
+   "n": 1200,
+   "labels_A": [
+    "nein",
+    "ja"
+   ],
+   "labels_B": [
+    "keine_reaktanz",
+    "konfrontation_angriff",
+    "ablenkung_whataboutism",
+    "delegierung_hilflosigkeit",
+    "vermeidung_rueckzug",
+    "reflektierte_rechtfertigung",
+    "konstruktive_kritik"
+   ],
+   "labels_B_collapsed": [
+    "keine_reaktanz",
+    "reaktant"
+   ],
+   "raw_2x7": [
+    [
+     1132,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     46,
+     19,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   ],
+   "norm_2x7": [
+    [
+     0.9973568281938326,
+     0.0026431718061674008,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.7076923076923077,
+     0.2923076923076923,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   ],
+   "raw_2x2": [
+    [
+     1132,
+     3
+    ],
+    [
+     46,
+     19
+    ]
+   ],
+   "norm_2x2": [
+    [
+     0.9973568281938326,
+     0.0026431718061674008
+    ],
+    [
+     0.7076923076923077,
+     0.2923076923076923
+    ]
+   ],
+   "fp_tp": 0.16,
+   "both": 19,
+   "fp": 3,
+   "fn": 46,
+   "precision": 0.8636,
+   "recall": 0.2923
+  },
+  {
+   "model": "jev-1.13",
+   "cond": "B",
+   "n": 1200,
+   "labels_A": [
+    "nein",
+    "ja"
+   ],
+   "labels_B": [
+    "keine_reaktanz",
+    "konfrontation_angriff",
+    "ablenkung_whataboutism",
+    "delegierung_hilflosigkeit",
+    "vermeidung_rueckzug",
+    "reflektierte_rechtfertigung",
+    "konstruktive_kritik"
+   ],
+   "labels_B_collapsed": [
+    "keine_reaktanz",
+    "reaktant"
+   ],
+   "raw_2x7": [
+    [
+     1157,
+     7,
+     0,
+     0,
+     0,
+     0,
+     3
+    ],
+    [
+     16,
+     15,
+     0,
+     0,
+     0,
+     1,
+     1
+    ]
+   ],
+   "norm_2x7": [
+    [
+     0.9914310197086547,
+     0.005998286203941731,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.002570694087403599
+    ],
+    [
+     0.48484848484848486,
+     0.45454545454545453,
+     0.0,
+     0.0,
+     0.0,
+     0.030303030303030304,
+     0.030303030303030304
+    ]
+   ],
+   "raw_2x2": [
+    [
+     1157,
+     10
+    ],
+    [
+     16,
+     17
+    ]
+   ],
+   "norm_2x2": [
+    [
+     0.9914310197086547,
+     0.00856898029134533
+    ],
+    [
+     0.48484848484848486,
+     0.5151515151515151
+    ]
+   ],
+   "fp_tp": 0.59,
+   "both": 17,
+   "fp": 10,
+   "fn": 16,
+   "precision": 0.6296,
+   "recall": 0.5152
+  }
+ ],
+ "binary_f1": [
+  {
+   "model": "deepseek-v4.1-flash",
+   "cond": "A",
+   "n": 1200,
+   "ref_positives": 53,
+   "tp": 50,
+   "fp": 24,
+   "fn": 3,
+   "precision": 0.6757,
+   "recall": 0.9434,
+   "f1": 0.7874
+  },
+  {
+   "model": "gpt-6-luna",
+   "cond": "A",
+   "n": 1200,
+   "ref_positives": 53,
+   "tp": 50,
+   "fp": 29,
+   "fn": 3,
+   "precision": 0.6329,
+   "recall": 0.9434,
+   "f1": 0.7576
+  },
+  {
+   "model": "jev-1.13",
+   "cond": "A",
+   "n": 1200,
+   "ref_positives": 53,
+   "tp": 33,
+   "fp": 13,
+   "fn": 20,
+   "precision": 0.7174,
+   "recall": 0.6226,
+   "f1": 0.6667
+  },
+  {
+   "model": "deepseek-v4.1-flash",
+   "cond": "B",
+   "n": 1200,
+   "ref_positives": 52,
+   "tp": 50,
+   "fp": 15,
+   "fn": 2,
+   "precision": 0.7692,
+   "recall": 0.9615,
+   "f1": 0.8547
+  },
+  {
+   "model": "gpt-6-luna",
+   "cond": "B",
+   "n": 1200,
+   "ref_positives": 52,
+   "tp": 49,
+   "fp": 16,
+   "fn": 3,
+   "precision": 0.7538,
+   "recall": 0.9423,
+   "f1": 0.8376
+  },
+  {
+   "model": "jev-1.13",
+   "cond": "B",
+   "n": 1200,
+   "ref_positives": 52,
+   "tp": 26,
+   "fp": 7,
+   "fn": 26,
+   "precision": 0.7879,
+   "recall": 0.5,
+   "f1": 0.6118
+  }
  ]
 }

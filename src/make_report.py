@@ -31,7 +31,7 @@ def kappa(a, b, labels):
 
 def main():
     preds = load(RES / "predictions_full.jsonl")
-    meta = json.load((REPO / "data/sample_meta.json").open())
+    meta = json.load((REPO / "data/sample_matrix_meta.json").open())
     models = sorted({p["model"] for p in preds})
     cells = defaultdict(list)
     for p in preds:
@@ -140,7 +140,7 @@ def main():
                     "p90": round(sorted(t)[int(0.9 * (len(t) - 1))], 3) if t else None})
 
     # --- reactance by party (codebook A, cond A) --------------------------
-    rows = [json.loads(l) for l in (REPO / "data/sample_comments.jsonl").open()]
+    rows = [json.loads(l) for l in (REPO / "data/sample_matrix.jsonl").open()]
     party_of = {r["uid"]: r["party"] for r in rows}
     for m in models:
         tally = defaultdict(lambda: [0, 0])

@@ -131,6 +131,8 @@ def main() -> None:
     ap.add_argument("--target", type=int, default=200)
     ap.add_argument("--seed", type=int, default=20260928)
     ap.add_argument("--n-accounts-per-party", type=int, default=3)
+    ap.add_argument("--out", default="sample_matrix",
+                    help="output stem in data/ (default sample_matrix)")
     args = ap.parse_args()
 
     rng = random.Random(args.seed)
@@ -220,7 +222,8 @@ def main() -> None:
             n_videos += 1
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    with open(OUT_DIR / "sample_comments.jsonl", "w", encoding="utf-8") as fh:
+    out_jsonl = OUT_DIR / f"{args.out}.jsonl"
+    with open(out_jsonl, "w", encoding="utf-8") as fh:
         for r in rows:
             fh.write(json.dumps(r, ensure_ascii=False) + "\n")
 
@@ -251,7 +254,9 @@ def main() -> None:
             "urls_and_mentions_stripped": True,
         },
     }
-    (OUT_DIR / "sample_meta.json").write_text(json.dumps(meta, indent=2, ensure_ascii=False), encoding="utf-8")
+    meta_path = OUT_DIR / f"{args.out}_meta.json"
+    meta_path.write_text(json.dumps(meta, indent=2, ensure_ascii=False),
+                         encoding="utf-8")
 
     print(json.dumps({k: v for k, v in meta.items() if k != "party_counts"}, indent=2, ensure_ascii=False))
     print("party_counts:", meta["party_counts"])

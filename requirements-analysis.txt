@@ -1,3 +1,5 @@
+# Extra dependencies for the analysis, figures and report. The core benchmark
+# matrix only needs `requests` (requirements.txt).
+numpy>=1.26
+matplotlib>=3.8
 scipy>=1.11
-pandas>=2.0
-seaborn>=0.13

@@ -115,7 +115,7 @@ def bootstrap_ci(vals, scale=100, n=2000, seed=11, alpha=0.05):
 def main():
     preds = load(RES / "predictions_full.jsonl")
     rows = {json.loads(l)["uid"]: json.loads(l)
-            for l in (REPO / "data/sample_comments.jsonl").open(encoding="utf-8")}
+            for l in (REPO / "data/sample_matrix.jsonl").open(encoding="utf-8")}
 
     models = sorted({p["model"] for p in preds})
     lab = {}
@@ -213,6 +213,80 @@ def main():
                 "fp_tp": round(fp / both, 2) if both else None,
                 "b_uses_A_labels": sum(1 for _, y in pairs if y in ("ja", "nein")),
             })
+
+    # ---------- 3b. codebook A x B full confusion (2 x 7 and collapsed 2 x 2) --
+    CB2 = ["konfrontation_angriff", "ablenkung_whataboutism",
+           "delegierung_hilflosigkeit", "vermeidung_rueckzug",
+           "reflektierte_rechtfertigung", "konstruktive_kritik"]
+    collapsed_lbl = ["keine_reaktanz", "reaktant"]
+    for cond in ("A", "B"):
+        for m in models:
+            uids = sorted([u for u in rows
+                           if (m, "A", cond, u) in lab and (m, "B", cond, u) in lab])
+            pairs = [(x, y) for x, y in
+                     zip(vec(m, "A", cond, uids), vec(m, "B", cond, uids))
+                     if x in LAB_A and y in LAB_B]
+            if not pairs:
+                continue
+            # full 2 x 7
+            ia = {"nein": 0, "ja": 1}
+            mtx = np.zeros((2, len(LAB_B)), dtype=int)
+            for x, y in pairs:
+                mtx[ia[x], LAB_B.index(y)] += 1
+            nrm = np.zeros_like(mtx, dtype=float)
+            for i in range(2):
+                s = mtx[i].sum()
+                if s:
+                    nrm[i] = mtx[i] / s
+            # collapsed 2 x 2 (A yes/no vs B reactant/none)
+            m2 = np.zeros((2, 2), dtype=int)
+            for x, y in pairs:
+                m2[ia[x], 0 if y == "keine_reaktanz" else 1] += 1
+            n2 = np.zeros_like(m2, dtype=float)
+            for i in range(2):
+                s = m2[i].sum()
+                if s:
+                    n2[i] = m2[i] / s
+            extra = next((c for c in out["codebook_pairwise"]
+                          if c["model"] == m and c["cond"] == cond), None)
+            out.setdefault("codebook_confusion", []).append({
+                "model": m, "cond": cond, "n": len(pairs),
+                "labels_A": LAB_A, "labels_B": LAB_B,
+                "labels_B_collapsed": collapsed_lbl,
+                "raw_2x7": mtx.tolist(), "norm_2x7": nrm.tolist(),
+                "raw_2x2": m2.tolist(), "norm_2x2": n2.tolist(),
+                "fp_tp": (extra or {}).get("fp_tp"),
+                "both": (extra or {}).get("both"), "fp": (extra or {}).get("fp"),
+                "fn": (extra or {}).get("fn"),
+                "precision": (round(m2[1, 1] / (m2[1, 1] + m2[0, 1]), 4)
+                              if (m2[1, 1] + m2[0, 1]) else None),
+                "recall": (round(m2[1, 1] / (m2[1, 1] + m2[1, 0]), 4)
+                           if (m2[1, 1] + m2[1, 0]) else None)})
+
+    # ---------- 3c. binary F1 against the consensus majority ----------------
+    for cond in ("A", "B"):
+        uids = [u for u in rows
+                if all((m, "A", cond, u) in lab for m in models)]
+        if not uids:
+            continue
+        ref = []
+        for u in uids:
+            v = [lab[(m, "A", cond, u)] for m in models]
+            ref.append("ja" if v.count("ja") > len(v) / 2 else "nein")
+        for m in models:
+            pred = [lab[(m, "A", cond, u)] for u in uids]
+            tp = sum(1 for a, b in zip(pred, ref) if a == "ja" and b == "ja")
+            fp_ = sum(1 for a, b in zip(pred, ref) if a == "ja" and b == "nein")
+            fn_ = sum(1 for a, b in zip(pred, ref) if a == "nein" and b == "ja")
+            pr = tp / (tp + fp_) if tp + fp_ else None
+            rc = tp / (tp + fn_) if tp + fn_ else None
+            out.setdefault("binary_f1", []).append({
+                "model": m, "cond": cond, "n": len(uids),
+                "ref_positives": ref.count("ja"), "tp": tp, "fp": fp_, "fn": fn_,
+                "precision": round(pr, 4) if pr is not None else None,
+                "recall": round(rc, 4) if rc is not None else None,
+                "f1": (round(2 * pr * rc / (pr + rc), 4)
+                       if pr and rc else None)})
 
     # ---------- 4. bootstrap CI on prevalence ------------------------------
     for cb, neg in (("A", "nein"), ("B", "keine_reaktanz")):
