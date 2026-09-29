@@ -83,16 +83,25 @@ function convert(src) {
     }
 
     // table: a header row followed by a separator row of dashes
+    // table: an optional caption line ("Table: ...") immediately above the
+    // header row becomes a <caption>, as in a journal article.
     if (line.includes('|') && i + 1 < lines.length &&
         /^\s*\|?[\s:|-]+\|[\s:|-]*$/.test(lines[i + 1])) {
       const cells = (r) => r.replace(/^\s*\|/, '').replace(/\|\s*$/, '').split('|').map(c => c.trim());
+      let cap = '';
+      if (i > 0 && /^Table:\s*/.test(lines[i - 1].trim())) {
+        cap = lines[i - 1].trim();
+        i--;   // consume the caption line
+      }
       const head = cells(line);
       i += 2;
       const rows = [];
       while (i < lines.length && lines[i].includes('|') && lines[i].trim() !== '') {
         rows.push(cells(lines[i])); i++;
       }
-      let h = '<table><thead><tr>' +
+      let h = '<table>' +
+        (cap ? '<caption>' + inline(cap.replace(/^Table:\s*/, 'Table ')) + '</caption>' : '') +
+        '<thead><tr>' +
         head.map((c, i) => '<th' + (isNum(c) ? ' class="num"' : '') + '>' +
           inline(c) + '</th>').join('') + '</tr></thead><tbody>';
       for (const r of rows) {
@@ -174,71 +183,76 @@ function inline(s) {
 }
 
 const css = `
-@page { size: A4; margin: 22mm 20mm 20mm 20mm; }
+/* A4 article geometry: 210x297mm, margins as in a typical preprint template.
+   The running head sits in the top margin, the page number in the bottom one. */
+@page { size: A4; margin: 25mm 20mm 20mm 20mm; }
+@page :first { margin: 22mm 20mm 20mm 20mm; }
+
 body {
-  font-family: "Bitstream Charter", "Charter", "Liberation Serif", Georgia, serif;
-  font-size: 10pt; line-height: 1.42; color: #111; margin: 0;
-  text-rendering: optimizeLegibility; font-variant-numeric: oldstyle-nums;
-  hyphens: auto;
+  font-family: "Nimbus Roman", "Liberation Serif", "Times New Roman", Times, serif;
+  font-size: 10pt; line-height: 1.34; color: #000; margin: 0;
+  text-align: justify; hyphens: auto; font-kerning: normal;
 }
 h1 {
-  font-size: 16pt; font-weight: 700; margin: 0 0 1mm 0; color: #000;
-  letter-spacing: -0.01em; line-height: 1.18;
+  font-size: 15pt; font-weight: 700; margin: 0 0 2mm 0; color: #000;
+  line-height: 1.2; letter-spacing: -0.005em; text-align: left;
 }
-.subtitle { font-size: 10.5pt; color: #444; margin: 0 0 1mm 0; font-style: italic; }
-.authors { font-size: 9pt; color: #333; margin: 2mm 0 0 0; }
-h2 {
-  font-size: 11.5pt; font-weight: 700; margin: 6.5mm 0 1.6mm 0; color: #000;
-  page-break-after: avoid; letter-spacing: 0.01em;
-}
-h3 { font-size: 10.2pt; font-weight: 700; margin: 4.5mm 0 1.2mm 0; color: #1a1a1a;
-     page-break-after: avoid; }
-h4 { font-size: 9.6pt; font-weight: 600; margin: 3.5mm 0 1mm 0; color: #333;
-     page-break-after: avoid; }
-p { margin: 0 0 2.1mm 0; text-align: justify; hyphens: auto; }
-ul, ol { margin: 0 0 2.4mm 0; padding-left: 5mm; }
-li { margin-bottom: 0.9mm; }
+.subtitle { font-size: 10pt; color: #333; margin: 0 0 1.5mm 0; font-style: italic;
+            text-align: left; }
+.authors { font-size: 9pt; color: #222; margin: 2.5mm 0 0 0; text-align: left;
+           font-style: normal; }
+h2 { font-size: 11pt; font-weight: 700; margin: 6mm 0 1.5mm 0; color: #000;
+     text-align: left; page-break-after: avoid; }
+h3 { font-size: 10pt; font-weight: 700; margin: 4.5mm 0 1mm 0; color: #000;
+     text-align: left; page-break-after: avoid; }
+h4 { font-size: 9.6pt; font-weight: 600; margin: 3.5mm 0 0.8mm 0; color: #222;
+     text-align: left; page-break-after: avoid; }
+p { margin: 0 0 0; text-align: justify; }
+p + p { margin-top: 2mm; }
+ul, ol { margin: 0 0 2.2mm 0; padding-left: 5mm; }
+li { margin-bottom: 0.8mm; text-align: left; }
 table {
-  border-collapse: collapse; width: 100%; margin: 2mm 0 3.5mm 0;
-  font-size: 8pt; page-break-inside: avoid;
-  font-variant-numeric: tabular-nums lining-nums;
+  border-collapse: collapse; width: 100%; margin: 1.5mm 0 3mm 0;
+  font-size: 7.8pt; page-break-inside: avoid; text-align: left;
 }
+caption { caption-side: top; font-size: 8.4pt; font-weight: 700; text-align: left;
+          padding-bottom: 1mm; }
 th {
-  background: #ececec; color: #000; text-align: left; padding: 1.3mm 1.6mm;
-  font-weight: 700; border-top: 0.7pt solid #444; border-bottom: 0.5pt solid #888;
+  background: #ebebeb; color: #000; text-align: left; padding: 1.1mm 1.5mm;
+  font-weight: 700; border-top: 0.8pt solid #333; border-bottom: 0.4pt solid #888;
 }
-td { padding: 1.1mm 1.6mm; border-bottom: 0.3pt solid #ccc; }
+td { padding: 0.9mm 1.5mm; border-bottom: 0.3pt solid #d0d0d0; }
 td.num, th.num { text-align: right; }
-tr:last-child td { border-bottom: 0.5pt solid #888; }
-table.tight { font-size: 7.2pt; }
-code {
-  font-family: "DejaVu Sans Mono", monospace; font-size: 7.6pt;
-  background: #f0f0f0; padding: 0.3mm 0.9mm; border-radius: 1pt;
-}
+tr:last-child td { border-bottom: 0.4pt solid #888; }
+code { font-family: "DejaVu Sans Mono", monospace; font-size: 7.4pt;
+       background: #f2f2f2; padding: 0.2mm 0.8mm; }
 pre {
-  background: #f7f7f7; border-left: 2pt solid #666; padding: 2.2mm 2.8mm;
-  white-space: pre-wrap; word-break: break-word; font-size: 7.2pt;
-  page-break-inside: avoid; margin: 2mm 0 3mm 0; line-height: 1.32;
+  background: #f7f7f7; border-left: 1.8pt solid #666; padding: 2mm 2.5mm;
+  white-space: pre-wrap; word-break: break-word; font-size: 7pt;
+  page-break-inside: avoid; margin: 1.5mm 0 2.5mm 0; line-height: 1.3;
 }
-blockquote {
-  border-left: 2pt solid #bbb; margin: 2mm 0; padding: 1.2mm 0 1.2mm 2.6mm;
-  color: #333; font-size: 9.2pt;
-}
-figure { margin: 3.5mm 0 1.5mm 0; text-align: center; page-break-inside: avoid; }
+blockquote { border-left: 1.8pt solid #bbb; margin: 1.5mm 0; padding: 1mm 0 1mm 2.4mm;
+             color: #333; font-size: 9.4pt; text-align: left; }
+figure { margin: 3mm 0 0 0; text-align: center; page-break-inside: avoid; }
 figure img { max-width: 100%; }
-figcaption {
-  font-size: 8.2pt; color: #333; text-align: left; margin: 1.2mm 0 3.5mm 0;
-  line-height: 1.34; page-break-inside: avoid;
-}
-hr { border: none; border-top: 0.4pt solid #bbb; margin: 5mm 0; }
-a { color: #1a4a6e; text-decoration: none; }
-.small { font-size: 8pt; color: #555; }
-.abstract {
-  background: #f6f7f8; border-left: 2.5pt solid #333; padding: 2.6mm 3mm;
-  margin: 3mm 0 4mm 0; font-size: 9.2pt; page-break-inside: avoid;
-}
-.abstract h4 { margin-top: 0; }
-.keyword { font-size: 8.6pt; color: #333; font-style: italic; margin: 1.5mm 0 0 0; }
+figcaption { font-size: 8pt; color: #222; text-align: left; margin: 1mm 0 3.5mm 0;
+            line-height: 1.3; page-break-inside: avoid; }
+hr { border: none; border-top: 0.4pt solid #bbb; margin: 4.5mm 0; }
+a { color: #000; text-decoration: none; }
+.small { font-size: 8pt; color: #444; }
+
+/* front matter */
+.abstract { margin: 4mm 0 0 0; font-size: 9.4pt; line-height: 1.36;
+            text-align: justify; page-break-inside: avoid; }
+.abstract h4 { margin: 0 0 1.2mm 0; font-size: 9.4pt; font-weight: 700; }
+.keyword { font-size: 8.6pt; color: #222; font-style: italic; margin: 2mm 0 0 0;
+           text-align: left; }
+.rule { border-top: 0.8pt solid #000; margin: 3mm 0 2mm 0; }
+
+/* references */
+.refs { font-size: 8.6pt; line-height: 1.3; }
+.refs div { margin-bottom: 1.2mm; text-align: left; padding-left: 5mm;
+            text-indent: -5mm; }
 `;
 
 const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${css}</style></head>

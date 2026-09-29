@@ -1,0 +1,181 @@
+{
+ "binary_f1_vs_consensus": [
+  {
+   "precision": 0.6757,
+   "recall": 0.9434,
+   "f1": 0.7874,
+   "tp": 50,
+   "fp": 24,
+   "fn": 3,
+   "model": "deepseek-v4.1-flash",
+   "cond": "A",
+   "n": 1200,
+   "ref_positives": 53
+  },
+  {
+   "precision": 0.6329,
+   "recall": 0.9434,
+   "f1": 0.7576,
+   "tp": 50,
+   "fp": 29,
+   "fn": 3,
+   "model": "gpt-6-luna",
+   "cond": "A",
+   "n": 1200,
+   "ref_positives": 53
+  },
+  {
+   "precision": 0.7174,
+   "recall": 0.6226,
+   "f1": 0.6667,
+   "tp": 33,
+   "fp": 13,
+   "fn": 20,
+   "model": "jev-1.13",
+   "cond": "A",
+   "n": 1200,
+   "ref_positives": 53
+  },
+  {
+   "precision": 0.7692,
+   "recall": 0.9615,
+   "f1": 0.8547,
+   "tp": 50,
+   "fp": 15,
+   "fn": 2,
+   "model": "deepseek-v4.1-flash",
+   "cond": "B",
+   "n": 1200,
+   "ref_positives": 52
+  },
+  {
+   "precision": 0.7538,
+   "recall": 0.9423,
+   "f1": 0.8376,
+   "tp": 49,
+   "fp": 16,
+   "fn": 3,
+   "model": "gpt-6-luna",
+   "cond": "B",
+   "n": 1200,
+   "ref_positives": 52
+  },
+  {
+   "precision": 0.7879,
+   "recall": 0.5,
+   "f1": 0.6118,
+   "tp": 26,
+   "fp": 7,
+   "fn": 26,
+   "model": "jev-1.13",
+   "cond": "B",
+   "n": 1200,
+   "ref_positives": 52
+  }
+ ],
+ "big_run": {
+  "n_comments": 2001,
+  "n_requests": 4002,
+  "cost_usd": 0.3024,
+  "sample": {
+   "accounts": 114,
+   "parties": 16,
+   "videos": 667,
+   "party_counts": {
+    "AfD": 327,
+    "FDP": 318,
+    "CDU": 252,
+    "Grüne": 240,
+    "CSU": 228,
+    "Linke": 192,
+    "SPD": 165,
+    "BSW": 75,
+    "FreieWähler": 63,
+    "parteilos": 63,
+    "ÖVP": 21,
+    "Tierschutz": 21,
+    "ödp": 12,
+    "ÖDP": 9,
+    "unabhängig": 9,
+    "DiePartei": 6
+   }
+  },
+  "codebook_A": {
+   "n": 2001,
+   "n_positive": 58,
+   "prevalence_pct": 2.9,
+   "ci95": [
+    2.2,
+    3.6
+   ]
+  },
+  "codebook_B": {
+   "n": 2001,
+   "n_positive": 25,
+   "prevalence_pct": 1.25,
+   "distribution": {
+    "keine_reaktanz": 1976,
+    "konfrontation_angriff": 18,
+    "ablenkung_whataboutism": 0,
+    "delegierung_hilflosigkeit": 0,
+    "vermeidung_rueckzug": 6,
+    "reflektierte_rechtfertigung": 1,
+    "konstruktive_kritik": 0
+   }
+  },
+  "A_vs_B": {
+   "n": 2001,
+   "both": 23,
+   "fp": 2,
+   "fn": 35,
+   "both_none": 1941,
+   "raw_agreement_pct": 98.15,
+   "cohens_kappa": 0.9815,
+   "fp_tp": 0.09
+  },
+  "B_as_binary_vs_A": {
+   "precision": 0.92,
+   "recall": 0.3966,
+   "f1": 0.5542,
+   "tp": 23,
+   "fp": 2,
+   "fn": 35
+  },
+  "codebook_B_support": {
+   "keine_reaktanz": 1976,
+   "konfrontation_angriff": 18,
+   "ablenkung_whataboutism": 0,
+   "delegierung_hilflosigkeit": 0,
+   "vermeidung_rueckzug": 6,
+   "reflektierte_rechtfertigung": 1,
+   "konstruktive_kritik": 0
+  },
+  "confidence_bands": {
+   "0.1-0.3": {
+    "n": 191,
+    "n_positive": 0,
+    "rate_pct": 0.0
+   },
+   "0.3-0.6": {
+    "n": 76,
+    "n_positive": 13,
+    "rate_pct": 17.11
+   },
+   "0.6-0.9": {
+    "n": 35,
+    "n_positive": 35,
+    "rate_pct": 100.0
+   },
+   "<0.1": {
+    "n": 1521,
+    "n_positive": 0,
+    "rate_pct": 0.0
+   },
+   ">=0.9": {
+    "n": 8,
+    "n_positive": 8,
+    "rate_pct": 100.0
+   }
+  }
+ }
+}

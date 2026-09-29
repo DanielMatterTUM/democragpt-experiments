@@ -1,3 +1,4 @@
+# SUP-TITLES STRIPPED -- figures carry no title; the report caption does.
 """Scientific figures (matplotlib + seaborn), vector PDF + 300dpi PNG.
 
 Design: white background, thin rules, greyscale-safe palette, one visual claim
@@ -118,8 +119,7 @@ def fig1():
         ax.set_ylim(0, 9.6)
         ax.axhline(np.mean(y), color=GREY, lw=0.6, ls=(0, (4, 3)), zorder=1)
     axes[0].set_ylabel("Prävalenz (%) mit 95-%-Bootstrap-KI")
-    fig.suptitle("Abb. 1  Prävalenz psychologischer Reaktanz (Codebook A, n = 1.200)",
-                 fontsize=9.2, y=1.06)
+    # SUP-TITLE REMOVED: the report caption supplies it
     save(fig, "fig1_prevalence")
 
 
@@ -170,8 +170,7 @@ def fig2():
     a2.set_ylabel("Anteil an allen Positiven (%)")
     a2.set_ylim(0, 66)
     a2.set_title("b  Verteilung der 119 Positiven", loc="left", pad=6)
-    fig.suptitle("Abb. 2  Fehlalarme konzentrieren sich auf schwache Mehrheiten",
-                 fontsize=9.2, y=1.05)
+    # SUP-TITLE REMOVED: the report caption supplies it
     save(fig, "fig2_precision")
 
 
@@ -201,9 +200,8 @@ def fig3():
     ax.set_ylim(0, 112)
     ax.legend(ncol=3, frameon=False, loc="lower center",
               bbox_to_anchor=(0.5, -0.42))
-    fig.suptitle("Abb. 3  Bei 3–7 % Prävalenz ist Cohen's κ unbrauchbar, "
-                 "Gwet's AC1 nicht", fontsize=9.2, y=1.04)
-    fig.tight_layout(rect=(0, 0.04, 1, 0.95))
+    # SUP-TITLE REMOVED: the report caption supplies it
+    fig.tight_layout(rect=(0, 0.04, 1, 1.0))
     save(fig, "fig3_agreement")
 
 
@@ -247,9 +245,8 @@ def fig4():
         ax.set_title(ttl, loc="left", pad=6)
         ax.set_ylim(*yl)
         ax.legend(frameon=False, loc="upper left")
-    fig.suptitle("Abb. 4  Jev ist gleichzeitig das schnellste und das günstigste "
-                 "Backend", fontsize=9.2, y=1.05)
-    fig.tight_layout(rect=(0, 0, 1, 0.94))
+    # SUP-TITLE REMOVED: the report caption supplies it
+    fig.tight_layout(rect=(0, 0, 1, 1.0))
     save(fig, "fig4_cost_latency")
 
 
@@ -278,10 +275,8 @@ def fig5():
             ax.set_xlabel("Modell B (Spalte)", fontsize=6.8)
             ax.set_ylabel("Modell A (Zeile)", fontsize=6.8)
             ax.tick_params(labelsize=5.8, rotation=0)
-        fig.suptitle(f"Abb. 5  Verwirrungsmatrizen Modell × Modell, Codebook {cb}, "
-                     f"Condition A (absolut, n = {sel[0]['n']})",
-                     fontsize=8.8, y=1.04)
-        fig.tight_layout(rect=(0, 0, 1, 0.90))
+    # SUP-TITLE REMOVED: the report caption supplies it
+        fig.tight_layout(rect=(0, 0, 1, 1.0))
         save(fig, f"fig5_confusion_model_{cb}")
 
     # normalised version for codebook B (7x7 needs row normalisation to read)
@@ -301,9 +296,8 @@ def fig5():
             ax.tick_params(labelsize=5.8, rotation=0)
             ax.set_xlabel("Modell B", fontsize=6.8)
             ax.set_ylabel("Modell A (zeilennormalisiert)", fontsize=6.8)
-        fig.suptitle("Abb. 6  Zeilennormalisierte Verwirrungsmatrizen, Codebook B, "
-                     "Condition A (Recall je wahrer Klasse)", fontsize=8.8, y=1.04)
-        fig.tight_layout(rect=(0, 0, 1, 0.92))
+    # SUP-TITLE REMOVED: the report caption supplies it
+        fig.tight_layout(rect=(0, 0, 1, 1.0))
         save(fig, "fig6_confusion_model_B_norm")
 
 
@@ -350,9 +344,8 @@ def fig7():
     a2.set_ylabel("Präzision gegen Mehrheitsvote")
     a2.set_title("b  Schwellwert-Trade-off", loc="left", pad=6)
     a2.set_ylim(0, 100)
-    fig.suptitle("Abb. 7  Jev liefert brauchbare Konfidenz: eine Schwelle auf "
-                 "p(ja) hebt die Präzision stark an", fontsize=9.2, y=1.04)
-    fig.tight_layout(rect=(0, 0, 1, 0.94))
+    # SUP-TITLE REMOVED: the report caption supplies it
+    fig.tight_layout(rect=(0, 0, 1, 1.0))
     save(fig, "fig7_calibration")
 
 
@@ -402,10 +395,8 @@ def fig8():
         axes[1].set_ylabel("Label stabil bei Wiederholung (%)")
         axes[1].set_ylim(0, 108)
         axes[1].set_title("b  Wiederholungs- und Positions-Robustheit", loc="left", pad=6)
-    fig.suptitle("Abb. 8  Zwei zusätzliche Validierungsexperimente: "
-                 "misst das Instrument die Konstruktion oder die Formulierung?",
-                 fontsize=9.0, y=1.04)
-    fig.tight_layout(rect=(0, 0, 1, 0.93))
+    # SUP-TITLE REMOVED: the report caption supplies it
+    fig.tight_layout(rect=(0, 0, 1, 1.0))
     save(fig, "fig8_reliability")
 
 

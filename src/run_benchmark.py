@@ -52,7 +52,10 @@ MODEL_IDS = {**CHAT_MODELS, **JEV_MODELS}
 
 # Bump whenever a codebook's text changes. It is part of the cache key, so an
 # edited codebook can never silently reuse labels produced by the old wording.
-CODEBOOK_VERSION = "B-gate-v2"
+#   B-gate-v2  freedom-threat precondition (first fix)
+#   B-gate-v3  + target-not-topic gate, + politeness-marker gate (from the manual
+#              audit and the surface-robustness experiment)
+CODEBOOK_VERSION = "B-gate-v3"
 
 
 # --------------------------------------------------------------------------
