@@ -1,0 +1,64 @@
+{
+ "design": "oversampled positives + matched negative control; 3 Jev calls per comment (2 identical + 1 position-swapped)",
+ "model": "typesafe/jev-1.13",
+ "codebook": "A",
+ "n_comments": 196,
+ "E2_repeat_stability": {
+  "overall_pct": 98.47,
+  "positives_only_pct": 96.94,
+  "negatives_only_pct": 100.0,
+  "n_pairs": 196
+ },
+ "E3_position_agreement": {
+  "0": 100.0,
+  "1": 95.56,
+  "2": 100.0,
+  "3": 100.0
+ },
+ "per_stratum": {
+  "0": {
+   "n_pairs": 98,
+   "stability_pct": 100.0,
+   "n_flips": 0,
+   "label_counts_rep0": {
+    "nein": 98
+   },
+   "position_agree_pct": 100.0,
+   "mean_p_ja": 0.0692
+  },
+  "1": {
+   "n_pairs": 45,
+   "stability_pct": 97.78,
+   "n_flips": 1,
+   "label_counts_rep0": {
+    "nein": 32,
+    "ja": 13
+   },
+   "position_agree_pct": 95.56,
+   "mean_p_ja": 0.3062
+  },
+  "2": {
+   "n_pairs": 26,
+   "stability_pct": 92.31,
+   "n_flips": 2,
+   "label_counts_rep0": {
+    "nein": 20,
+    "ja": 6
+   },
+   "position_agree_pct": 100.0,
+   "mean_p_ja": 0.3277
+  },
+  "3": {
+   "n_pairs": 27,
+   "stability_pct": 100.0,
+   "n_flips": 0,
+   "label_counts_rep0": {
+    "ja": 27
+   },
+   "position_agree_pct": 100.0,
+   "mean_p_ja": 0.7678
+  }
+ },
+ "cost_usd": 0.0322,
+ "calls": 588
+}

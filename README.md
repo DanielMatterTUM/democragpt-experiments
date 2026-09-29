@@ -29,62 +29,32 @@ and cross-condition overlap is directly comparable.
 
 Final run: **2 codebooks × 2 conditions × 3 models × 1,200 comments = 14,400 requests.**
 
-**→ The formatted report is [`results/REPORT.pdf`](results/REPORT.pdf).**
-See `docs/results.md` for the written digest.
+**→ The formatted report is [`results/REPORT.pdf`](results/REPORT.pdf)** — 14 pages,
+journal style (serif, abstract, numbered sections, figures inline, detailed tables
+in Appendices A-C). Written digest: `docs/results.md`.
 
 ## Findings (short version)
 
-**How frequent is reactance?** Rare — **3–7 %**. Codebook A with transcript:
-gpt-6-luna 6,6 %, deepseek-v4.1-flash 6,2 %, jev-1.13 3,8 %. All three agree on the
-order of magnitude.
+**How frequent is reactance?** Rare — **2,8–6,6 %** (Codebook A, with transcript),
+with overlapping bootstrap CIs. The video transcript adds nothing: dropping it
+moves prevalence by <2 pp, in the same (negative) direction for all three models.
 
-**The video transcript adds almost nothing.** Condition A → B moves prevalence by
-under 1,2 percentage points, and all three models move in the *same* direction. For
-a detection pipeline the transcript is ~900 prompt tokens for no measurable gain.
+**Agreement is better than Cohen's κ suggests.** Raw agreement is 94,6–95,1 % but
+κ only 0,45–0,59 — a base-rate artefact at 3–7 % prevalence. **Gwet's AC1 gives
+0,94** and is the appropriate measure here.
 
-**Jev wins on both axes:** ~0,46 s and ~$0,061 per 1,000 comments — ~4,5× faster and
-~2,4× cheaper than the best chat model — and it is the only backend that returns
-per-class probabilities plus a confidence score, which enables a cascade design
-(escalate only low-confidence cases to a bigger model).
+**Jev wins on both axes** (~0,46 s, ~$0,061/1,000 comments) and is the only backend
+returning calibrated per-class probabilities — which turns out to matter more
+than the speed: a threshold on `p(ja)` lifts precision from 9 % to ~70 %.
 
-**Codebook B was fixed and re-validated.** Its first version had no link to the
-freedom-threat appraisal, so models coded ordinary political criticism as reactance
-(29–56 % vs Codebook A's 2–8 %). The gate fix plus a staged Jev-only validation run
-brought the A×B false-positive:true-positive ratio from **13–20× down to 0,1–0,6**.
+**But precision is the real problem.** A hand-coded audit of 36 positives puts
+precision at **46 %** (92 % at 3-model consensus, 25 % for single-model flags), and
+two thirds of all positives are single-model flags. Prevalence figures are upper
+bounds.
 
-### Codebook A — binary
-
-`ja` / `nein`. `ja` requires **both** a perceived freedom threat *and* an
-autonomy-restoring reaction (see `src/codebook.py:A_INSTRUCTIONS`).
-
-### Codebook B — type
-
-Built directly from the project's 8-archetype written-reactance typology
-("Wiki Reaktanz (allgemein)"), collapsed to 7 mutually exclusive labels:
-
-| label | project archetype(s) merged |
-|---|---|
-| `konfrontation_angriff` | Destruktiver Angreifer + Konstruktiver Angreifer |
-| `ablenkung_whataboutism` | Aggressiver Ablenker + Ablenkungs-Stratege |
-| `delegierung_hilflosigkeit` | Hilfloser Delegierer |
-| `vermeidung_rueckzug` | Vermeidender Rechtfertiger |
-| `reflektierte_rechtfertigung` | Reflektierter Rechtfertiger |
-| `konstruktive_kritik` | Konstruktiver Kritiker |
-| `keine_reaktanz` | — (no reactance) |
-
-Theory grounding (Brehm 1966 core definition, PRPM phases, the five trigger
-dimensions A–E) comes verbatim from the DemocraGPT Notion export; provenance is
-recorded in `docs/codebook_sources.md`.
-
----
-
-
-**⚠️ Precision audit — the prevalence figures are upper bounds.** 36 of the 119
-flagged positives were hand-coded. Estimated precision is **46 %**, and the error
-is strongly structured: 92 % precision where all three models agree, 50 % at a
-two-model majority, **25 % for single-model flags** — and two thirds of all
-positives are single-model flags. Consensus degree is therefore the most useful
-filter for a real pipeline. See `docs/results.md` and §6 of the report.
+**Two new validation experiments** (1,360 extra calls, $0,075): Jev is ≥ 92 %
+stable across identical repeats and insensitive to transcript position — but a
+neutral politeness frame flips **22–38 %** of positive codes.
 
 ## Data
 
@@ -114,24 +84,28 @@ python3 src/build_dataset.py --target 1200 --n-accounts-per-party 8
 ```bash
 export OPENROUTER_API_KEY=...        # or leave the key at /home/hermes/Desktop/democragptkey.txt
 
+# core matrix (only `requests` needed)
 python3 src/build_dataset.py --target 1200 --n-accounts-per-party 8
-
 python3 src/run_benchmark.py \
     --models jev-1.13 gpt-6-luna deepseek-v4.1-flash \
-    --codebooks A B --conditions A B \
-    --workers 12 --run-name full
+    --codebooks A B --conditions A B --workers 12 --run-name full
+python3 src/dedup_requests.py
 
-python3 src/dedup_requests.py     # collapse repair-run duplicates
-python3 src/analyze.py           # -> results/analysis.md + CSVs
-python3 src/make_report.py       # -> results/report_data.json
-python3 src/build_report_md.py   # -> results/REPORT.md
+# extended analysis + figures + report (needs requirements-analysis.txt)
+pip install -r requirements-analysis.txt          # scipy, pandas, seaborn
+python3 src/analyze.py                            # base tables
+python3 src/analyze_extended.py                   # confusion matrices, tests, calibration
+python3 src/exp_reliability.py 45                 # repeat + position robustness
+python3 src/exp_paraphrase.py 35                  # surface-form robustness
+/tmp/venv-an/bin/python src/make_figures_sci.py  # or any python with seaborn
+python3 src/build_report_paper.py                 # -> results/REPORT.md
 node tools/md2pdf.js results/REPORT.md results/REPORT.pdf
 ```
 
-Helpers: `src/check_gate_jev.py` (validate a codebook change cheaply with Jev only,
-before spending on the full matrix), `src/crosstab.py` (A×B crosstab),
-`src/diag.py` (parse rates), `src/probe_budget.py` (reasoning-budget probe),
-`src/plan_cost.py` (budget planning), `src/check_spend.sh` (live spend).
+Helpers: `src/check_gate_jev.py` (validate a codebook change cheaply with Jev only),
+`src/crosstab.py`, `src/diag.py`, `src/probe_budget.py`, `src/plan_cost.py`,
+`src/check_spend.sh`, `src/inspect_examples.py`, `src/audit_positives.py`,
+`src/make_audit_sample.py`, `src/score_audit.py`.
 
 `run_benchmark.py` records **every** request to `results/requests_full.jsonl` with
 wall-clock time, prompt/completion tokens, cost, provider, generation id, finish
@@ -142,17 +116,25 @@ keyed on `{model, codebook, CODEBOOK_VERSION, condition, state}` makes reruns fr
 ## Layout
 
 ```
-src/build_dataset.py     stratified sampler -> data/sample_comments.jsonl
-src/codebook.py          the codebook (chat prompts + Jev criteria)
-src/run_benchmark.py     OpenRouter runner (chat + Jev/Decisions API)
-src/analyze.py           aggregation -> results/analysis.md + CSVs
-src/make_report.py       figures -> results/report_data.json
-src/build_report_md.py   report markdown -> results/REPORT.md
-tools/md2pdf.js          markdown -> A4 PDF (headless Chrome)
-data/                    the sample + sampling metadata
-results/                 per-request logs, predictions, REPORT.pdf, analysis tables
-docs/codebook_sources.md provenance of every codebook statement
-docs/results.md          written results digest
+src/build_dataset.py       stratified sampler -> data/sample_comments.jsonl
+src/codebook.py            the codebook (chat prompts + Jev criteria)
+src/run_benchmark.py       OpenRouter runner (chat + Jev/Decisions API)
+src/analyze.py             base aggregation -> results/analysis.md + CSVs
+src/analyze_extended.py    confusion matrices, McNemar, bootstrap CIs,
+                           Gwet AC1, calibration, threshold sweep
+src/exp_reliability.py     repeat + transcript-position robustness (Jev)
+src/exp_paraphrase.py      surface-form robustness (Jev)
+src/inspect_examples.py    dump flagged positives
+src/audit_positives.py     positives stratified by consensus degree
+src/make_audit_sample.py   draw the 36-case audit sample
+src/score_audit.py         precision by stratum, stratum-weighted estimate
+src/make_figures_sci.py    figures (vector PDF + 300dpi PNG)
+src/build_report_paper.py  report -> results/REPORT.md
+tools/md2pdf.js            markdown -> A4 PDF, journal styling
+data/                      the sample + sampling metadata
+results/                   per-request logs, predictions, REPORT.pdf, figures
+docs/codebook_sources.md   provenance of every codebook statement
+docs/results.md            written results digest
 ```
 
 ## Cost

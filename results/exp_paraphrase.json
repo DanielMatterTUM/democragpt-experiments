@@ -1,0 +1,130 @@
+{
+ "design": "deterministic surface perturbations of the comment only; Jev codebook A, condition A",
+ "model": "typesafe/jev-1.13",
+ "n_comments": 193,
+ "calls": 772,
+ "variants": {
+  "T1_deemphasis": "ALL-CAPS runs and repeated punctuation collapsed",
+  "T2_politeness": "neutral politeness opener + hedging closer added",
+  "T3_defiller": "German filler particles removed"
+ },
+ "per_stratum": {
+  "0": {
+   "n": 105,
+   "T1_deemphasis": 100.0,
+   "T2_politeness": 98.1,
+   "T3_defiller": 100.0,
+   "all_variants_agree": 98.1,
+   "label_counts_orig": {
+    "nein": 105
+   }
+  },
+  "1": {
+   "n": 35,
+   "T1_deemphasis": 97.14,
+   "T2_politeness": 77.14,
+   "T3_defiller": 88.57,
+   "all_variants_agree": 68.57,
+   "label_counts_orig": {
+    "nein": 28,
+    "ja": 7
+   }
+  },
+  "2": {
+   "n": 26,
+   "T1_deemphasis": 92.31,
+   "T2_politeness": 61.54,
+   "T3_defiller": 88.46,
+   "all_variants_agree": 61.54,
+   "label_counts_orig": {
+    "ja": 7,
+    "nein": 19
+   }
+  },
+  "3": {
+   "n": 27,
+   "T1_deemphasis": 96.3,
+   "T2_politeness": 77.78,
+   "T3_defiller": 92.59,
+   "all_variants_agree": 77.78,
+   "label_counts_orig": {
+    "ja": 27
+   }
+  }
+ },
+ "stratum_meaning": {
+  "0": "negative control (no model flagged)",
+  "1": "flagged by 1 of 3 models",
+  "2": "flagged by 2 of 3",
+  "3": "flagged by all 3"
+ },
+ "cost_usd": 0.0426,
+ "examples": [
+  {
+   "uid": "f29594aac590",
+   "orig": "Diese Propaganda hat mehr Geld, als die ganze Wahl in Berlin bekommen",
+   "T2": "Also, Diese Propaganda hat mehr Geld, als die ganze Wahl in Berlin bekommen Aber das ist nur meine Meinung.",
+   "labels": {
+    "orig": "ja",
+    "T1_deemphasis": "ja",
+    "T2_politeness": "ja",
+    "T3_defiller": "ja"
+   }
+  },
+  {
+   "uid": "0ff28ae3c97c",
+   "orig": "Ich wähle alles außer euch 😆",
+   "T2": "Ich muss dazu sagen: Ich wähle alles außer euch 😆 Aber das ist nur meine Meinung.",
+   "labels": {
+    "orig": "ja",
+    "T1_deemphasis": "ja",
+    "T2_politeness": "ja",
+    "T3_defiller": "ja"
+   }
+  },
+  {
+   "uid": "c4371e812989",
+   "orig": "Meinen Sohn bekommen sie nicht !!!",
+   "T2": "Naja, Meinen Sohn bekommen sie nicht Aber das ist nur meine Meinung.",
+   "labels": {
+    "orig": "ja",
+    "T1_deemphasis": "ja",
+    "T2_politeness": "nein",
+    "T3_defiller": "ja"
+   }
+  },
+  {
+   "uid": "08221862dbd3",
+   "orig": "Wenn du drei 1.90 große Streifen-Polizisten vor meine Haustüre schickst überleg ichs mir..",
+   "T2": "Ehrlich gesagt, Wenn du drei 1.90 große Streifen-Polizisten vor meine Haustüre schickst überleg ichs mir. Aber das ist nur meine Meinung.",
+   "labels": {
+    "orig": "ja",
+    "T1_deemphasis": "ja",
+    "T2_politeness": "ja",
+    "T3_defiller": "ja"
+   }
+  },
+  {
+   "uid": "154b7ea414d7",
+   "orig": "Jetzt ist es das Wachstum,ich denke es ist Putin,der Klimawandel,die AFD, Trump,der Ukrainekrieg,ihre Fönfrisur usw......,meint ihr wirklich wir sind total verblödet.😂😂😂😂",
+   "T2": "Also, Jetzt ist es das Wachstum,ich denke es ist Putin,der Klimawandel,die Afd, Trump,der Ukrainekrieg,ihre Fönfrisur usw.,meint ihr wirklich wir sind total verblödet.😂😂😂😂 Ist halt meine Sicht auf die Sache.",
+   "labels": {
+    "orig": "ja",
+    "T1_deemphasis": "ja",
+    "T2_politeness": "ja",
+    "T3_defiller": "ja"
+   }
+  },
+  {
+   "uid": "8966c7954e9a",
+   "orig": "Ihr dürft nicht raus ihr.............",
+   "T2": "Ich muss dazu sagen: Ihr dürft nicht raus ihr. Ist halt meine Sicht auf die Sache.",
+   "labels": {
+    "orig": "ja",
+    "T1_deemphasis": "ja",
+    "T2_politeness": "ja",
+    "T3_defiller": "ja"
+   }
+  }
+ ]
+}
