@@ -1,0 +1,2284 @@
+{
+ "note": "Condition C: Jev's Codebook-A gate selects the comments; every model (incl. Jev) then classifies the reactance TYPE on exactly those comments. Pairwise 7x7 matrices and the majority vote are computed on that common gated set.",
+ "runs": {
+  "matrix": {
+   "n_comments": 1200,
+   "conditions": {
+    "A": {
+     "cond": "A",
+     "models": [
+      "jev-1.13",
+      "gpt-6-luna",
+      "deepseek-v4.1-flash",
+      "glm-5.3-flash"
+     ],
+     "jev_gated": [
+      {
+       "model": "jev-1.13",
+       "n_typed": 46,
+       "dist": {
+        "keine_reaktanz": 25,
+        "konfrontation_angriff": 19,
+        "ablenkung_whataboutism": 0,
+        "delegierung_hilflosigkeit": 1,
+        "vermeidung_rueckzug": 0,
+        "reflektierte_rechtfertigung": 1,
+        "konstruktive_kritik": 0
+       },
+       "reactant_share_pct": 45.65
+      },
+      {
+       "model": "gpt-6-luna",
+       "n_typed": 46,
+       "dist": {
+        "keine_reaktanz": 37,
+        "konfrontation_angriff": 9,
+        "ablenkung_whataboutism": 0,
+        "delegierung_hilflosigkeit": 0,
+        "vermeidung_rueckzug": 0,
+        "reflektierte_rechtfertigung": 0,
+        "konstruktive_kritik": 0
+       },
+       "reactant_share_pct": 19.57
+      },
+      {
+       "model": "deepseek-v4.1-flash",
+       "n_typed": 46,
+       "dist": {
+        "keine_reaktanz": 31,
+        "konfrontation_angriff": 15,
+        "ablenkung_whataboutism": 0,
+        "delegierung_hilflosigkeit": 0,
+        "vermeidung_rueckzug": 0,
+        "reflektierte_rechtfertigung": 0,
+        "konstruktive_kritik": 0
+       },
+       "reactant_share_pct": 32.61
+      },
+      {
+       "model": "glm-5.3-flash",
+       "n_typed": 46,
+       "dist": {
+        "keine_reaktanz": 26,
+        "konfrontation_angriff": 17,
+        "ablenkung_whataboutism": 1,
+        "delegierung_hilflosigkeit": 0,
+        "vermeidung_rueckzug": 2,
+        "reflektierte_rechtfertigung": 0,
+        "konstruktive_kritik": 0
+       },
+       "reactant_share_pct": 43.48
+      }
+     ],
+     "pairwise": [
+      {
+       "a": "jev-1.13",
+       "b": "gpt-6-luna",
+       "n": 46,
+       "raw": [
+        [
+         24,
+         1,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         11,
+         8,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         1,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         1,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       ],
+       "norm": [
+        [
+         0.96,
+         0.04,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.5789473684210527,
+         0.42105263157894735,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       ],
+       "raw_pct": 69.57,
+       "kappa": 0.3687
+      },
+      {
+       "a": "jev-1.13",
+       "b": "deepseek-v4.1-flash",
+       "n": 46,
+       "raw": [
+        [
+         23,
+         2,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         7,
+         12,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         1,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         1,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       ],
+       "norm": [
+        [
+         0.92,
+         0.08,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.3684210526315789,
+         0.631578947368421,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       ],
+       "raw_pct": 76.09,
+       "kappa": 0.5209
+      },
+      {
+       "a": "jev-1.13",
+       "b": "glm-5.3-flash",
+       "n": 46,
+       "raw": [
+        [
+         20,
+         3,
+         1,
+         0,
+         1,
+         0,
+         0
+        ],
+        [
+         5,
+         13,
+         0,
+         0,
+         1,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         1,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         1,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       ],
+       "norm": [
+        [
+         0.8,
+         0.12,
+         0.04,
+         0.0,
+         0.04,
+         0.0,
+         0.0
+        ],
+        [
+         0.2631578947368421,
+         0.6842105263157895,
+         0.0,
+         0.0,
+         0.05263157894736842,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       ],
+       "raw_pct": 71.74,
+       "kappa": 0.4768
+      },
+      {
+       "a": "gpt-6-luna",
+       "b": "deepseek-v4.1-flash",
+       "n": 46,
+       "raw": [
+        [
+         29,
+         8,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         2,
+         7,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       ],
+       "norm": [
+        [
+         0.7837837837837838,
+         0.21621621621621623,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.2222222222222222,
+         0.7777777777777778,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       ],
+       "raw_pct": 78.26,
+       "kappa": 0.4484
+      },
+      {
+       "a": "gpt-6-luna",
+       "b": "glm-5.3-flash",
+       "n": 46,
+       "raw": [
+        [
+         25,
+         9,
+         1,
+         0,
+         2,
+         0,
+         0
+        ],
+        [
+         1,
+         8,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       ],
+       "norm": [
+        [
+         0.6756756756756757,
+         0.24324324324324326,
+         0.02702702702702703,
+         0.0,
+         0.05405405405405406,
+         0.0,
+         0.0
+        ],
+        [
+         0.1111111111111111,
+         0.8888888888888888,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       ],
+       "raw_pct": 71.74,
+       "kappa": 0.4026
+      },
+      {
+       "a": "deepseek-v4.1-flash",
+       "b": "glm-5.3-flash",
+       "n": 46,
+       "raw": [
+        [
+         23,
+         7,
+         0,
+         0,
+         1,
+         0,
+         0
+        ],
+        [
+         3,
+         10,
+         1,
+         0,
+         1,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       ],
+       "norm": [
+        [
+         0.7419354838709677,
+         0.22580645161290322,
+         0.0,
+         0.0,
+         0.03225806451612903,
+         0.0,
+         0.0
+        ],
+        [
+         0.2,
+         0.6666666666666666,
+         0.06666666666666667,
+         0.0,
+         0.06666666666666667,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       ],
+       "raw_pct": 71.74,
+       "kappa": 0.4332
+      }
+     ],
+     "majority": {
+      "n_gated": 46,
+      "n_voters": 4,
+      "type_dist": {
+       "keine_reaktanz": 34,
+       "konfrontation_angriff": 12,
+       "ablenkung_whataboutism": 0,
+       "delegierung_hilflosigkeit": 0,
+       "vermeidung_rueckzug": 0,
+       "reflektierte_rechtfertigung": 0,
+       "konstruktive_kritik": 0
+      },
+      "by_threshold": [
+       {
+        "k": 2,
+        "n": 46,
+        "pct": 100.0
+       },
+       {
+        "k": 3,
+        "n": 38,
+        "pct": 82.61
+       },
+       {
+        "k": 4,
+        "n": 25,
+        "pct": 54.35
+       }
+      ],
+      "vs_majority": [
+       {
+        "model": "jev-1.13",
+        "n": 46,
+        "pct": 78.26
+       },
+       {
+        "model": "gpt-6-luna",
+        "n": 46,
+        "pct": 89.13
+       },
+       {
+        "model": "deepseek-v4.1-flash",
+        "n": 46,
+        "pct": 89.13
+       },
+       {
+        "model": "glm-5.3-flash",
+        "n": 46,
+        "pct": 80.43
+       }
+      ]
+     },
+     "own_gate": [
+      {
+       "model": "jev-1.13",
+       "gated": 46,
+       "gated_pct": 3.83,
+       "n_typed": 46,
+       "dist": {
+        "keine_reaktanz": 25,
+        "konfrontation_angriff": 19,
+        "ablenkung_whataboutism": 0,
+        "delegierung_hilflosigkeit": 1,
+        "vermeidung_rueckzug": 0,
+        "reflektierte_rechtfertigung": 1,
+        "konstruktive_kritik": 0
+       },
+       "reactant_share_pct": 45.65
+      },
+      {
+       "model": "gpt-6-luna",
+       "gated": 79,
+       "gated_pct": 6.58,
+       "n_typed": 79,
+       "dist": {
+        "keine_reaktanz": 60,
+        "konfrontation_angriff": 17,
+        "ablenkung_whataboutism": 0,
+        "delegierung_hilflosigkeit": 0,
+        "vermeidung_rueckzug": 0,
+        "reflektierte_rechtfertigung": 0,
+        "konstruktive_kritik": 2
+       },
+       "reactant_share_pct": 24.05
+      },
+      {
+       "model": "deepseek-v4.1-flash",
+       "gated": 74,
+       "gated_pct": 6.17,
+       "n_typed": 74,
+       "dist": {
+        "keine_reaktanz": 48,
+        "konfrontation_angriff": 23,
+        "ablenkung_whataboutism": 3,
+        "delegierung_hilflosigkeit": 0,
+        "vermeidung_rueckzug": 0,
+        "reflektierte_rechtfertigung": 0,
+        "konstruktive_kritik": 0
+       },
+       "reactant_share_pct": 35.14
+      },
+      {
+       "model": "glm-5.3-flash",
+       "gated": 130,
+       "gated_pct": 10.83,
+       "n_typed": 130,
+       "dist": {
+        "keine_reaktanz": 87,
+        "konfrontation_angriff": 34,
+        "ablenkung_whataboutism": 6,
+        "delegierung_hilflosigkeit": 0,
+        "vermeidung_rueckzug": 2,
+        "reflektierte_rechtfertigung": 0,
+        "konstruktive_kritik": 1
+       },
+       "reactant_share_pct": 33.08
+      }
+     ],
+     "n_comments": 1200,
+     "jev_gated_n": 46,
+     "jev_gated_pct": 3.83
+    },
+    "B": {
+     "cond": "B",
+     "models": [
+      "jev-1.13",
+      "gpt-6-luna",
+      "deepseek-v4.1-flash",
+      "glm-5.3-flash"
+     ],
+     "jev_gated": [
+      {
+       "model": "jev-1.13",
+       "n_typed": 33,
+       "dist": {
+        "keine_reaktanz": 16,
+        "konfrontation_angriff": 15,
+        "ablenkung_whataboutism": 0,
+        "delegierung_hilflosigkeit": 0,
+        "vermeidung_rueckzug": 0,
+        "reflektierte_rechtfertigung": 1,
+        "konstruktive_kritik": 1
+       },
+       "reactant_share_pct": 51.52
+      },
+      {
+       "model": "gpt-6-luna",
+       "n_typed": 33,
+       "dist": {
+        "keine_reaktanz": 26,
+        "konfrontation_angriff": 7,
+        "ablenkung_whataboutism": 0,
+        "delegierung_hilflosigkeit": 0,
+        "vermeidung_rueckzug": 0,
+        "reflektierte_rechtfertigung": 0,
+        "konstruktive_kritik": 0
+       },
+       "reactant_share_pct": 21.21
+      },
+      {
+       "model": "deepseek-v4.1-flash",
+       "n_typed": 33,
+       "dist": {
+        "keine_reaktanz": 16,
+        "konfrontation_angriff": 16,
+        "ablenkung_whataboutism": 0,
+        "delegierung_hilflosigkeit": 1,
+        "vermeidung_rueckzug": 0,
+        "reflektierte_rechtfertigung": 0,
+        "konstruktive_kritik": 0
+       },
+       "reactant_share_pct": 51.52
+      },
+      {
+       "model": "glm-5.3-flash",
+       "n_typed": 33,
+       "dist": {
+        "keine_reaktanz": 13,
+        "konfrontation_angriff": 18,
+        "ablenkung_whataboutism": 2,
+        "delegierung_hilflosigkeit": 0,
+        "vermeidung_rueckzug": 0,
+        "reflektierte_rechtfertigung": 0,
+        "konstruktive_kritik": 0
+       },
+       "reactant_share_pct": 60.61
+      }
+     ],
+     "pairwise": [
+      {
+       "a": "jev-1.13",
+       "b": "gpt-6-luna",
+       "n": 33,
+       "raw": [
+        [
+         15,
+         1,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         9,
+         6,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         1,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         1,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       ],
+       "norm": [
+        [
+         0.9375,
+         0.0625,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.6,
+         0.4,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       ],
+       "raw_pct": 63.64,
+       "kappa": 0.3029
+      },
+      {
+       "a": "jev-1.13",
+       "b": "deepseek-v4.1-flash",
+       "n": 33,
+       "raw": [
+        [
+         11,
+         4,
+         0,
+         1,
+         0,
+         0,
+         0
+        ],
+        [
+         3,
+         12,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         1,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         1,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       ],
+       "norm": [
+        [
+         0.6875,
+         0.25,
+         0.0,
+         0.0625,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.2,
+         0.8,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       ],
+       "raw_pct": 69.7,
+       "kappa": 0.4436
+      },
+      {
+       "a": "jev-1.13",
+       "b": "glm-5.3-flash",
+       "n": 33,
+       "raw": [
+        [
+         10,
+         5,
+         1,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         1,
+         13,
+         1,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         1,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         1,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       ],
+       "norm": [
+        [
+         0.625,
+         0.3125,
+         0.0625,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.06666666666666667,
+         0.8666666666666667,
+         0.06666666666666667,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       ],
+       "raw_pct": 69.7,
+       "kappa": 0.46
+      },
+      {
+       "a": "gpt-6-luna",
+       "b": "deepseek-v4.1-flash",
+       "n": 33,
+       "raw": [
+        [
+         14,
+         11,
+         0,
+         1,
+         0,
+         0,
+         0
+        ],
+        [
+         2,
+         5,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       ],
+       "norm": [
+        [
+         0.5384615384615384,
+         0.4230769230769231,
+         0.0,
+         0.038461538461538464,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.2857142857142857,
+         0.7142857142857143,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       ],
+       "raw_pct": 57.58,
+       "kappa": 0.1766
+      },
+      {
+       "a": "gpt-6-luna",
+       "b": "glm-5.3-flash",
+       "n": 33,
+       "raw": [
+        [
+         13,
+         11,
+         2,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         7,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       ],
+       "norm": [
+        [
+         0.5,
+         0.4230769230769231,
+         0.07692307692307693,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       ],
+       "raw_pct": 60.61,
+       "kappa": 0.3137
+      },
+      {
+       "a": "deepseek-v4.1-flash",
+       "b": "glm-5.3-flash",
+       "n": 33,
+       "raw": [
+        [
+         9,
+         7,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         3,
+         11,
+         2,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         1,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       ],
+       "norm": [
+        [
+         0.5625,
+         0.4375,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.1875,
+         0.6875,
+         0.125,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       ],
+       "raw_pct": 60.61,
+       "kappa": 0.2766
+      }
+     ],
+     "majority": {
+      "n_gated": 33,
+      "n_voters": 4,
+      "type_dist": {
+       "keine_reaktanz": 21,
+       "konfrontation_angriff": 12,
+       "ablenkung_whataboutism": 0,
+       "delegierung_hilflosigkeit": 0,
+       "vermeidung_rueckzug": 0,
+       "reflektierte_rechtfertigung": 0,
+       "konstruktive_kritik": 0
+      },
+      "by_threshold": [
+       {
+        "k": 2,
+        "n": 33,
+        "pct": 100.0
+       },
+       {
+        "k": 3,
+        "n": 26,
+        "pct": 78.79
+       },
+       {
+        "k": 4,
+        "n": 12,
+        "pct": 36.36
+       }
+      ],
+      "vs_majority": [
+       {
+        "model": "jev-1.13",
+        "n": 33,
+        "pct": 84.85
+       },
+       {
+        "model": "gpt-6-luna",
+        "n": 33,
+        "pct": 78.79
+       },
+       {
+        "model": "deepseek-v4.1-flash",
+        "n": 33,
+        "pct": 78.79
+       },
+       {
+        "model": "glm-5.3-flash",
+        "n": 33,
+        "pct": 72.73
+       }
+      ]
+     },
+     "own_gate": [
+      {
+       "model": "jev-1.13",
+       "gated": 33,
+       "gated_pct": 2.75,
+       "n_typed": 33,
+       "dist": {
+        "keine_reaktanz": 16,
+        "konfrontation_angriff": 15,
+        "ablenkung_whataboutism": 0,
+        "delegierung_hilflosigkeit": 0,
+        "vermeidung_rueckzug": 0,
+        "reflektierte_rechtfertigung": 1,
+        "konstruktive_kritik": 1
+       },
+       "reactant_share_pct": 51.52
+      },
+      {
+       "model": "gpt-6-luna",
+       "gated": 65,
+       "gated_pct": 5.42,
+       "n_typed": 65,
+       "dist": {
+        "keine_reaktanz": 46,
+        "konfrontation_angriff": 19,
+        "ablenkung_whataboutism": 0,
+        "delegierung_hilflosigkeit": 0,
+        "vermeidung_rueckzug": 0,
+        "reflektierte_rechtfertigung": 0,
+        "konstruktive_kritik": 0
+       },
+       "reactant_share_pct": 29.23
+      },
+      {
+       "model": "deepseek-v4.1-flash",
+       "gated": 65,
+       "gated_pct": 5.42,
+       "n_typed": 65,
+       "dist": {
+        "keine_reaktanz": 30,
+        "konfrontation_angriff": 29,
+        "ablenkung_whataboutism": 3,
+        "delegierung_hilflosigkeit": 0,
+        "vermeidung_rueckzug": 0,
+        "reflektierte_rechtfertigung": 1,
+        "konstruktive_kritik": 2
+       },
+       "reactant_share_pct": 53.85
+      },
+      {
+       "model": "glm-5.3-flash",
+       "gated": 109,
+       "gated_pct": 9.08,
+       "n_typed": 109,
+       "dist": {
+        "keine_reaktanz": 67,
+        "konfrontation_angriff": 37,
+        "ablenkung_whataboutism": 5,
+        "delegierung_hilflosigkeit": 0,
+        "vermeidung_rueckzug": 0,
+        "reflektierte_rechtfertigung": 0,
+        "konstruktive_kritik": 0
+       },
+       "reactant_share_pct": 38.53
+      }
+     ],
+     "n_comments": 1200,
+     "jev_gated_n": 33,
+     "jev_gated_pct": 2.75
+    }
+   }
+  },
+  "big": {
+   "n_comments": 2001,
+   "conditions": {
+    "B": {
+     "cond": "B",
+     "models": [
+      "jev-1.13",
+      "glm-5.3-flash"
+     ],
+     "jev_gated": [
+      {
+       "model": "jev-1.13",
+       "n_typed": 58,
+       "dist": {
+        "keine_reaktanz": 35,
+        "konfrontation_angriff": 16,
+        "ablenkung_whataboutism": 0,
+        "delegierung_hilflosigkeit": 0,
+        "vermeidung_rueckzug": 6,
+        "reflektierte_rechtfertigung": 1,
+        "konstruktive_kritik": 0
+       },
+       "reactant_share_pct": 39.66
+      },
+      {
+       "model": "glm-5.3-flash",
+       "n_typed": 58,
+       "dist": {
+        "keine_reaktanz": 22,
+        "konfrontation_angriff": 26,
+        "ablenkung_whataboutism": 3,
+        "delegierung_hilflosigkeit": 0,
+        "vermeidung_rueckzug": 6,
+        "reflektierte_rechtfertigung": 1,
+        "konstruktive_kritik": 0
+       },
+       "reactant_share_pct": 62.07
+      }
+     ],
+     "pairwise": [
+      {
+       "a": "jev-1.13",
+       "b": "glm-5.3-flash",
+       "n": 58,
+       "raw": [
+        [
+         19,
+         12,
+         2,
+         0,
+         1,
+         1,
+         0
+        ],
+        [
+         2,
+         13,
+         1,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         1,
+         0,
+         0,
+         0,
+         5,
+         0,
+         0
+        ],
+        [
+         0,
+         1,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       ],
+       "norm": [
+        [
+         0.5428571428571428,
+         0.34285714285714286,
+         0.05714285714285714,
+         0.0,
+         0.02857142857142857,
+         0.02857142857142857,
+         0.0
+        ],
+        [
+         0.125,
+         0.8125,
+         0.0625,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.16666666666666666,
+         0.0,
+         0.0,
+         0.0,
+         0.8333333333333334,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0
+        ]
+       ],
+       "raw_pct": 63.79,
+       "kappa": 0.4311
+      }
+     ],
+     "majority": {
+      "n_gated": 58,
+      "n_voters": 2,
+      "type_dist": {
+       "keine_reaktanz": 38,
+       "konfrontation_angriff": 15,
+       "ablenkung_whataboutism": 0,
+       "delegierung_hilflosigkeit": 0,
+       "vermeidung_rueckzug": 5,
+       "reflektierte_rechtfertigung": 0,
+       "konstruktive_kritik": 0
+      },
+      "by_threshold": [
+       {
+        "k": 2,
+        "n": 37,
+        "pct": 63.79
+       }
+      ],
+      "vs_majority": [
+       {
+        "model": "jev-1.13",
+        "n": 58,
+        "pct": 93.1
+       },
+       {
+        "model": "glm-5.3-flash",
+        "n": 58,
+        "pct": 70.69
+       }
+      ]
+     },
+     "own_gate": [
+      {
+       "model": "jev-1.13",
+       "gated": 58,
+       "gated_pct": 2.9,
+       "n_typed": 58,
+       "dist": {
+        "keine_reaktanz": 35,
+        "konfrontation_angriff": 16,
+        "ablenkung_whataboutism": 0,
+        "delegierung_hilflosigkeit": 0,
+        "vermeidung_rueckzug": 6,
+        "reflektierte_rechtfertigung": 1,
+        "konstruktive_kritik": 0
+       },
+       "reactant_share_pct": 39.66
+      },
+      {
+       "model": "glm-5.3-flash",
+       "gated": 189,
+       "gated_pct": 9.45,
+       "n_typed": 189,
+       "dist": {
+        "keine_reaktanz": 116,
+        "konfrontation_angriff": 60,
+        "ablenkung_whataboutism": 4,
+        "delegierung_hilflosigkeit": 0,
+        "vermeidung_rueckzug": 7,
+        "reflektierte_rechtfertigung": 1,
+        "konstruktive_kritik": 1
+       },
+       "reactant_share_pct": 38.62
+      }
+     ],
+     "n_comments": 2001,
+     "jev_gated_n": 58,
+     "jev_gated_pct": 2.9
+    }
+   }
+  }
+ }
+}

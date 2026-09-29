@@ -105,6 +105,7 @@ def _load(n, d=None):
 
 D = _load("report_data.json", {}) or {}
 X = _load("analysis_ext.json", {}) or {}
+GATE = _load("analysis_gate.json", {}) or {}
 BIG = (_load("analysis_big.json", {}) or {})
 AUD = _load("audit_linked.json", []) or []
 RELI = _load("exp_reliability.json", {}) or {}
@@ -157,6 +158,8 @@ def fig_prevalence():
     if not b:
         return
     models = _order({r["model"] for r in b})
+    hi_all = max((r["pct"] + (r["ci_hi"] - r["pct"]) for r in b), default=9)
+    ylim = min(16, max(9.6, hi_all + 1.6))
     fig, axes = plt.subplots(1, 2, figsize=(7.0, 2.8), sharey=True)
     for ax, cond, ttl in ((axes[0], "A", "(a)  with video transcript"),
                           (axes[1], "B", "(b)  comment text only")):
@@ -177,7 +180,7 @@ def fig_prevalence():
         ax.set_xticks(xs)
         ax.set_xticklabels([MSHORT.get(m, m) for m in models], fontsize=7)
         ax.set_title(ttl, loc="left")
-        ax.set_ylim(0, 9.6)
+        ax.set_ylim(0, ylim)
         ax.axhline(0, color="#333", lw=0.6)
     axes[0].set_ylabel("Reactance share (%)")
     fig.tight_layout()
@@ -191,11 +194,16 @@ def fig_audit():
     pool = {}
     for row in (X.get("_pool") or []):
         pool[row["uid"]] = row
+    # The audit was drawn from the 3-model positive set (glm was not part of
+    # the 36-case sample), so the strata counts must use those 3 models only;
+    # otherwise the panel (b) total no longer matches the audited pool.
+    AUDIT_MODELS = {"jev-1.13", "gpt-6-luna", "deepseek-v4.1-flash"}
     preds = [json.loads(l) for l in
              (RES / "predictions_full.jsonl").open(encoding="utf-8")]
     flags = {}
     for p in preds:
-        if p["codebook"] == "A" and p["condition"] == "A" and p["label"] == "ja":
+        if (p["codebook"] == "A" and p["condition"] == "A" and p["label"] == "ja"
+                and p["model"] in AUDIT_MODELS):
             flags.setdefault(p["uid"], set()).add(p["model"])
     sizes = [sum(1 for v in flags.values() if len(v) == k) for k in (3, 2, 1)]
     precs, ns = [], []
@@ -236,57 +244,86 @@ def fig_audit():
     _save(fig, "fig02_audit")
 
 
-# ===================================================== 3 agreement (dual axis)
+# ===================================================== 3 agreement (single 0-1 axis)
 def fig_agreement():
-    mp = X.get("model_pairwise", [])
-    if not mp:
+    """Raw agreement / kappa / AC1 per model pair (left two panels) and the
+    per-model F1 against the consensus majority (right panel). One 0-1 axis
+    for all numbers: raw agreement used to be a percentage on a second axis,
+    which is what made the dual scale; percentages are just 10x this scale.
+    F1 is a first-class citizen here, next to the other coefficients, instead
+    of a separate chapter."""
+    mp = [r for r in X.get("model_pairwise", []) if r["cond"] == "A"]
+    cons = [r for r in X.get("consensus_reference", [])]
+    if not mp and not cons:
         return
     ABBR = {"jev-1.13": "jev", "gpt-6-luna": "gpt6",
             "deepseek-v4.1-flash": "deep", "glm-5.3-flash": "glm"}
-    fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.0))
-    twins = []
-    for ax, cb in zip(axes, ("A", "B")):
-        data = [r for r in mp if r["cb"] == cb and r["cond"] == "A"]
-        if not data:
-            continue
-        ax2 = ax.twinx()
-        twins.append(ax2)
+    models = _order({r["model"] for r in cons})
+    n_cons = 1 if not models else 0
+    fig, axes = plt.subplots(1, 2 + (1 if models else 0), figsize=(8.2, 3.0))
+    if models:
+        axes = np.atleast_1d(axes)
+        p_axes = axes[:2]; f1_ax = axes[2]
+    else:
+        p_axes = axes
+    for ax, cb in zip(p_axes, ("A", "B")):
+        data = [r for r in mp if r["cb"] == cb]
         x = np.arange(len(data))
-        w = 0.3
-        raw = [d["raw_pct"] for d in data]
+        w = 0.2
+        raw = [d["raw_pct"] / 100 for d in data]
         kap = [d["kappa"] for d in data]
         ac1 = [d["ac1"] for d in data]
-        ax.bar(x - w / 2, raw, w, color="#cfdae1", edgecolor="#333",
-               linewidth=0.45, label="Raw agreement (%)", zorder=2)
-        for i, v in enumerate(raw):
-            ax.annotate(f"{v:.1f}", (x[i] - w / 2, v), textcoords="offset points",
-                        xytext=(0, 3), ha="center", fontsize=6.2)
-        ax.set_ylim(0, 112)
-        ax.set_ylabel("Raw agreement (%)", fontsize=7.6)
+        ax.bar(x - w, raw, w, color="#cfdae1", edgecolor="#333",
+               linewidth=0.45, label="Raw agreement", zorder=2)
+        ax.bar(x, kap, w, color=BLUE, edgecolor="#333",
+               linewidth=0.45, label="Cohen's $\\kappa$", zorder=2)
+        ax.bar(x + w, ac1, w, color=RUST, edgecolor="#333",
+               linewidth=0.45, label="Gwet's AC1", zorder=2)
+        for i in range(len(data)):
+            for j, v in enumerate((raw[i], kap[i], ac1[i])):
+                ax.annotate(f"{v:.2f}", (x[i] - w + j * w, v),
+                            textcoords="offset points", xytext=(0, 2),
+                            ha="center", fontsize=5.6)
+        ax.set_ylim(0, 1.12)
+        ax.set_ylabel("Agreement / coefficient (0-1)")
         ax.set_xticks(x)
         ax.set_xticklabels([f"{ABBR.get(d['a'], d['a'])}–{ABBR.get(d['b'], d['b'])}"
-                            for d in data], fontsize=6.6, rotation=20, ha="right")
-        ax.set_title(f"Codebook {cb}", loc="left")
-        ax2.plot(x - w / 2, kap, "o", color=BLUE, ms=4.6, label="Cohen's $\\kappa$",
-                 zorder=3)
-        ax2.plot(x + w / 2, ac1, "s", color=RUST, ms=4.6, label="Gwet's AC1", zorder=3)
-        for i in range(len(data)):
-            ax2.annotate(f"{kap[i]:.2f}", (x[i] - w / 2, kap[i]),
-                         textcoords="offset points", xytext=(0, -10), ha="center",
-                         fontsize=6.0, color=BLUE)
-            ax2.annotate(f"{ac1[i]:.2f}", (x[i] + w / 2, ac1[i]),
-                         textcoords="offset points", xytext=(0, 5), ha="center",
-                         fontsize=6.0, color=RUST)
-        ax2.set_ylim(0, 1.12)
-        ax2.set_ylabel("Chance-corrected (0–1)", fontsize=7.6)
-        ax2.grid(False)
-        ax2.spines["right"].set_visible(True)
-    h1, l1 = axes[0].get_legend_handles_labels()
-    h2, l2 = twins[0].get_legend_handles_labels()
-    fig.legend(h1 + h2, l1 + l2, ncol=3, loc="lower center",
-               bbox_to_anchor=(0.5, -0.04), handlelength=1.4)
-    fig.tight_layout(rect=(0, 0.09, 1, 1))
-    fig.subplots_adjust(wspace=0.55)
+                            for d in data], fontsize=6.4, rotation=25, ha="right")
+        ax.set_title(f"(a)  Codebook {cb}, pairs, Condition A", loc="left")
+        ax.spines[["top", "right"]].set_visible(False)
+    if models:
+        w2 = 0.2
+        xs = np.arange(len(models))
+        for j, (cb, off) in enumerate((("A", -w2), ("B", w2))):
+            vals, miss = [], []
+            for i, m in enumerate(models):
+                r = next((c for c in cons
+                          if c["model"] == m and c["cond"] == cb), None)
+                (vals.append(r["f1"]) if r else None)
+            ax_ = f1_ax
+            col = BLUE if cb == "A" else RUST
+            ax_.bar(xs + off, [v if v is not None else 0 for v in vals], w2,
+                    color=col, edgecolor="#333", linewidth=0.45,
+                    label=f"Codebook {cb}", zorder=2)
+            for i, m in enumerate(models):
+                r = next((c for c in cons if c["model"] == m and c["cond"] == cb), None)
+                if r and r["f1"] is not None:
+                    ax_.annotate(f"{r['f1']:.2f}", (xs[i] + off, r["f1"]),
+                                  textcoords="offset points", xytext=(0, 2),
+                                  ha="center", fontsize=5.6)
+        f1_ax.set_ylim(0, 1.12)
+        f1_ax.set_ylabel("F1 (0-1)")
+        f1_ax.set_xticks(xs)
+        f1_ax.set_xticklabels([MSHORT.get(m, m) for m in models], fontsize=6.6,
+                               rotation=15, ha="right")
+        f1_ax.set_title("(c)  F1 vs consensus majority", loc="left")
+        f1_ax.legend(loc="upper right", fontsize=6.4)
+        f1_ax.spines[["top", "right"]].set_visible(False)
+    h, l = p_axes[0].get_legend_handles_labels()
+    fig.legend(h, l, ncol=3, loc="lower center", bbox_to_anchor=(0.5, -0.02),
+               handlelength=1.4, columnspacing=1.2)
+    fig.tight_layout(rect=(0, 0.08, 1, 1))
+    fig.subplots_adjust(wspace=0.6)
     _save(fig, "fig03_agreement")
 
 
@@ -617,6 +654,134 @@ def fig_bigscale():
     _save(fig, "fig10_bigscale")
 
 
+# ===================================================== 11 gate confusion grid
+def fig_gate_matrix():
+    """Matrix of confusion matrices for the Jev-gated condition:
+    rows = model A's type call, cols = model B's, each cell the 7x7 confusion
+    of the comments Jev's gate let through. All four models annotate the SAME
+    (gated) set, so every cell has the same support."""
+    runs = GATE.get("runs", {})
+    r = (runs.get("matrix", {}).get("conditions") or {}).get("B")
+    if not r or not r.get("pairwise"):
+        return
+    models = _order(r["models"])
+    idx = {}
+    for pw in r["pairwise"]:
+        idx[(pw["a"], pw["b"])] = pw
+        idx[(pw["b"], pw["a"])] = pw
+    n = len(models)
+    short_lbl = [CLS.get(l, l) for l in LAB_B]
+    cell = 1.66
+    fig, axes = plt.subplots(n, n, figsize=(cell * n + 0.85, cell * n + 0.75))
+    axes = np.atleast_2d(axes)
+    vmax_all = 1
+    for i, ma in enumerate(models):
+        for j, mb in enumerate(models):
+            ax = axes[i, j]
+            if ma == mb:
+                ax.set_facecolor("#f2f2f2")
+                for s in ax.spines.values():
+                    s.set_visible(False)
+                ax.set_xticks([]); ax.set_yticks([])
+                ax.grid(False)
+                continue
+            pw = idx.get((ma, mb))
+            if not pw:
+                ax.axis("off")
+                continue
+            m = np.asarray(pw["raw"], dtype=float)
+            vmax_all = max(vmax_all, int(m.max()))
+            ax.imshow(m, cmap=SEQ_CMAP, norm=LogNorm(vmin=0.7, vmax=max(2, m.max())),
+                      interpolation="nearest", aspect="equal")
+            k = len(short_lbl)
+            ax.set_xticks(range(k))
+            ax.set_yticks(range(k))
+            ax.set_xticklabels(short_lbl if i == n - 1 else [], fontsize=6.4,
+                               rotation=45, ha="right")
+            ax.set_yticklabels(short_lbl if j == 0 else [], fontsize=6.4)
+            ax.grid(False)
+            for s in ax.spines.values():
+                s.set_visible(True)
+                s.set_linewidth(0.5)
+                s.set_color("#666666")
+            for a in range(k):
+                for b in range(k):
+                    v = m[a, b]
+                    if v:
+                        ax.text(b, a, f"{int(v)}", ha="center", va="center",
+                                fontsize=6.0,
+                                color="white" if v > vmax_all * 0.6 else "#22404f")
+                    if a != b and v > 0:
+                        ax.add_patch(Rectangle((b - 0.5, a - 0.5), 1, 1,
+                                               fill=False, edgecolor=RUST,
+                                               lw=0.8, zorder=5))
+            ax.set_title(f"n={pw['n']}  {pw['raw_pct']:.0f}%  $\\kappa$={pw['kappa']:.2f}",
+                         fontsize=6.2, pad=3)
+    for j, m in enumerate(models):
+        axes[0, j].annotate(MSHORT.get(m, m), xy=(0.5, 1.30),
+                            xycoords="axes fraction", ha="center", va="bottom",
+                            fontsize=7.0, fontweight="bold")
+    for i, m in enumerate(models):
+        axes[i, 0].annotate(MSHORT.get(m, m), xy=(-0.52, 0.5),
+                            xycoords="axes fraction", ha="center", va="center",
+                            fontsize=7.0, fontweight="bold", rotation=90)
+    sm = plt.cm.ScalarMappable(
+        cmap=SEQ_CMAP, norm=LogNorm(vmin=0.7, vmax=max(2, vmax_all)))
+    fig.subplots_adjust(left=0.10, right=0.98, top=0.92, bottom=0.15,
+                        wspace=0.30, hspace=0.34)
+    cax = fig.add_axes([0.32, 0.062, 0.42, 0.020])
+    cbar = fig.colorbar(sm, cax=cax, orientation="horizontal")
+    cbar.set_label("comments per cell (log scale)", fontsize=7, labelpad=2)
+    cbar.ax.tick_params(labelsize=6.4)
+    fig.legend(handles=[Line2D([], [], marker="s", markersize=6, linestyle="none",
+                               markerfacecolor="none", markeredgecolor=RUST,
+                               markeredgewidth=1.0, label="disagreement")],
+               loc="lower left", bbox_to_anchor=(0.02, 0.028), fontsize=6.8)
+    _save(fig, "fig11_gate_confusion")
+
+
+# ===================================================== 12 gate majority vote
+def fig_gate_majority():
+    """Share of Jev-gated comments whose type label reaches a k-of-n majority,
+    and per-model agreement with that majority (matrix sample, condition B)."""
+    r = ((GATE.get("runs", {}) or {}).get("matrix", {})
+         .get("conditions") or {}).get("B") or {}
+    maj = r.get("majority")
+    if not maj or not maj.get("by_threshold"):
+        return
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(7.0, 2.7))
+    thr = maj["by_threshold"]
+    xs = np.arange(len(thr))
+    vals = [t["pct"] for t in thr]
+    a1.bar(xs, vals, 0.5, color=[BAND["neg"], BAND["mid"], BLUE][:len(xs)],
+           edgecolor="#333", linewidth=0.5)
+    for i, (t, v) in enumerate(zip(thr, vals)):
+        a1.annotate(f"{v:.0f} %", (i, v), textcoords="offset points",
+                    xytext=(0, 3), ha="center", fontsize=7.2, fontweight="bold")
+        a1.annotate(f"n={t['n']}", (i, 3), ha="center", fontsize=6.2, color="white")
+    a1.set_xticks(xs)
+    a1.set_xticklabels([f"{t['k']} of {maj['n_voters']}" for t in thr], fontsize=7.0)
+    a1.set_ylabel("share of gated comments (%)")
+    a1.set_ylim(0, 112)
+    a1.set_title("(a)  Majority reached", loc="left")
+    per = maj["vs_majority"]
+    xs2 = np.arange(len(per))
+    a2.bar(xs2, [v["pct"] for v in per], 0.55,
+           color=[MODEL_COLOR.get(v["model"], GREY) for v in per],
+           edgecolor="#333", linewidth=0.5)
+    for i, v in enumerate(per):
+        a2.annotate(f"{v['pct']:.0f} %", (i, v["pct"]), textcoords="offset points",
+                    xytext=(0, 3), ha="center", fontsize=6.6, fontweight="bold")
+    a2.set_xticks(xs2)
+    a2.set_xticklabels([MSHORT.get(v["model"], v["model"]) for v in per],
+                       fontsize=6.4, rotation=12, ha="right")
+    a2.set_ylabel("agreement with majority (%)")
+    a2.set_ylim(0, 112)
+    a2.set_title("(b)  Per model", loc="left")
+    fig.tight_layout()
+    _save(fig, "fig12_gate_majority")
+
+
 ALL = (
     ("prevalence", fig_prevalence),
     ("audit", fig_audit),
@@ -629,6 +794,8 @@ ALL = (
     ("calibration", fig_calibration),
     ("reliability", fig_reliability),
     ("bigscale", fig_bigscale),
+    ("gate-confusion", fig_gate_matrix),
+    ("gate-majority", fig_gate_majority),
 )
 
 

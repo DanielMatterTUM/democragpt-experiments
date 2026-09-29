@@ -1,6 +1,14 @@
 # Results digest — reactance on TikTok comments
 
-**Final run (large scale):** 1,200 comments × 2 codebooks × 2 conditions × 3 models
+# Results digest — reactance on TikTok comments
+
+**Current run (2026-09-29):** 1,200 comments × 2 codebooks × 2 conditions × **4 models**
+(`gpt-6-luna`, `deepseek-v4.1-flash`, `jev-1.13`, **`glm-5.3-flash`**) = **19,200 requests**
+**(100 % parse rate),** plus 4,002 GLM calls on the large-scale sample; the gated
+condition (Jev-gate → type classification) recombines existing labels, no extra calls.
+
+**Versioned earlier:** 14,400 requests, 3 models.
+ 1,200 comments × 2 codebooks × 2 conditions × 3 models
 (`gpt-6-luna`, `deepseek-v4.1-flash`, `jev-1.13`) = **14,400 requests**,
 **100 % parse rate in every cell**.
 
@@ -164,3 +172,21 @@ output, is the obvious mitigation.
 on 36 cases — indicative, not a validated precision estimate. Files:
 `src/inspect_examples.py`, `src/audit_positives.py`, `src/make_audit_sample.py`,
 `src/score_audit.py`, `results/audit_verdicts.json`, `results/audit_linked.json`.
+
+---
+
+## 8. GLM-5.3-Flash and the gated condition (2026-09-29)
+
+- **GLM-5.3-Flash** is the least conservative model: 10.8 % reactance prevalence
+  (Condition A), 9.4 % on the 2,001 comment-only sample — two to three times the
+  other three models. F1 against the consensus only 0.52–0.54 (best 0.78, Jev 0.63).
+- **Gated condition (new):** a cheap Jev binary pass decides yes/no; only the
+  comments it marks positive (2.75 % matrix, 2.9 % large-scale) get the 7-way type
+  classification, by *all four* models including Jev. The matrix of confusion
+  matrices (`src/analyze_gate.py` → `results/analysis_gate.json`, fig11) shows only
+  58–70 % pairwise type agreement (κ 0.18–0.46) — the type layer is far noisier than
+  the binary one. A 3-of-4 majority is reached on 79 % of gated comments, unanimity
+  on 36 %; each model agrees with the majority on 73–85 % of its type calls.
+- **F1 is now a first-class agreement measure** (column in Table~agreement, panel
+  (c) of fig03) instead of a separate chapter; the agreement figure uses one 0–1
+  axis (raw agreement as a proportion, not a percentage).

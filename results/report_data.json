@@ -42,6 +42,7 @@
  },
  "models": [
   "deepseek-v4.1-flash",
+  "glm-5.3-flash",
   "gpt-6-luna",
   "jev-1.13"
  ],
@@ -57,6 +58,18 @@
    "lat": 4.085,
    "usd": 0.3988,
    "usd_1k": 0.3324
+  },
+  {
+   "cb": "A",
+   "cond": "A",
+   "model": "glm-5.3-flash",
+   "n": 1200,
+   "parse_pct": 100.0,
+   "n_pos": 130,
+   "prev_pct": 10.83,
+   "lat": 2.404,
+   "usd": 0.1425,
+   "usd_1k": 0.1187
   },
   {
    "cb": "A",
@@ -97,6 +110,18 @@
   {
    "cb": "A",
    "cond": "B",
+   "model": "glm-5.3-flash",
+   "n": 1200,
+   "parse_pct": 100.0,
+   "n_pos": 109,
+   "prev_pct": 9.08,
+   "lat": 2.312,
+   "usd": 0.0894,
+   "usd_1k": 0.0745
+  },
+  {
+   "cb": "A",
+   "cond": "B",
    "model": "gpt-6-luna",
    "n": 1200,
    "parse_pct": 100.0,
@@ -129,6 +154,18 @@
    "lat": 3.976,
    "usd": 0.3643,
    "usd_1k": 0.3036
+  },
+  {
+   "cb": "B",
+   "cond": "A",
+   "model": "glm-5.3-flash",
+   "n": 1200,
+   "parse_pct": 100.0,
+   "n_pos": 68,
+   "prev_pct": 5.67,
+   "lat": 2.29,
+   "usd": 0.1702,
+   "usd_1k": 0.1419
   },
   {
    "cb": "B",
@@ -169,6 +206,18 @@
   {
    "cb": "B",
    "cond": "B",
+   "model": "glm-5.3-flash",
+   "n": 1200,
+   "parse_pct": 100.0,
+   "n_pos": 65,
+   "prev_pct": 5.42,
+   "lat": 1.71,
+   "usd": 0.1202,
+   "usd_1k": 0.1002
+  },
+  {
+   "cb": "B",
+   "cond": "B",
    "model": "gpt-6-luna",
    "n": 1200,
    "parse_pct": 100.0,
@@ -204,6 +253,15 @@
   {
    "cb": "A",
    "cond": "A",
+   "model": "glm-5.3-flash",
+   "counts": {
+    "ja": 130,
+    "nein": 1070
+   }
+  },
+  {
+   "cb": "A",
+   "cond": "A",
    "model": "gpt-6-luna",
    "counts": {
     "ja": 79,
@@ -226,6 +284,15 @@
    "counts": {
     "ja": 65,
     "nein": 1135
+   }
+  },
+  {
+   "cb": "A",
+   "cond": "B",
+   "model": "glm-5.3-flash",
+   "counts": {
+    "ja": 109,
+    "nein": 1091
    }
   },
   {
@@ -258,6 +325,20 @@
     "reflektierte_rechtfertigung": 0,
     "konstruktive_kritik": 0,
     "keine_reaktanz": 1159
+   }
+  },
+  {
+   "cb": "B",
+   "cond": "A",
+   "model": "glm-5.3-flash",
+   "counts": {
+    "konfrontation_angriff": 39,
+    "ablenkung_whataboutism": 26,
+    "delegierung_hilflosigkeit": 0,
+    "vermeidung_rueckzug": 2,
+    "reflektierte_rechtfertigung": 0,
+    "konstruktive_kritik": 1,
+    "keine_reaktanz": 1132
    }
   },
   {
@@ -305,6 +386,20 @@
   {
    "cb": "B",
    "cond": "B",
+   "model": "glm-5.3-flash",
+   "counts": {
+    "konfrontation_angriff": 46,
+    "ablenkung_whataboutism": 17,
+    "delegierung_hilflosigkeit": 0,
+    "vermeidung_rueckzug": 1,
+    "reflektierte_rechtfertigung": 0,
+    "konstruktive_kritik": 1,
+    "keine_reaktanz": 1135
+   }
+  },
+  {
+   "cb": "B",
+   "cond": "B",
    "model": "gpt-6-luna",
    "counts": {
     "konfrontation_angriff": 22,
@@ -336,6 +431,15 @@
    "cb": "A",
    "cond": "A",
    "a": "deepseek-v4.1-flash",
+   "b": "glm-5.3-flash",
+   "n": 1200,
+   "agree": 92.0,
+   "kappa": 0.489
+  },
+  {
+   "cb": "A",
+   "cond": "A",
+   "a": "deepseek-v4.1-flash",
    "b": "gpt-6-luna",
    "n": 1200,
    "agree": 95.1,
@@ -353,11 +457,38 @@
   {
    "cb": "A",
    "cond": "A",
+   "a": "glm-5.3-flash",
+   "b": "gpt-6-luna",
+   "n": 1200,
+   "agree": 91.8,
+   "kappa": 0.484
+  },
+  {
+   "cb": "A",
+   "cond": "A",
+   "a": "glm-5.3-flash",
+   "b": "jev-1.13",
+   "n": 1200,
+   "agree": 90.5,
+   "kappa": 0.313
+  },
+  {
+   "cb": "A",
+   "cond": "A",
    "a": "gpt-6-luna",
    "b": "jev-1.13",
    "n": 1200,
    "agree": 94.6,
    "kappa": 0.454
+  },
+  {
+   "cb": "A",
+   "cond": "B",
+   "a": "deepseek-v4.1-flash",
+   "b": "glm-5.3-flash",
+   "n": 1200,
+   "agree": 93.3,
+   "kappa": 0.507
   },
   {
    "cb": "A",
@@ -380,11 +511,38 @@
   {
    "cb": "A",
    "cond": "B",
+   "a": "glm-5.3-flash",
+   "b": "gpt-6-luna",
+   "n": 1200,
+   "agree": 93.0,
+   "kappa": 0.482
+  },
+  {
+   "cb": "A",
+   "cond": "B",
+   "a": "glm-5.3-flash",
+   "b": "jev-1.13",
+   "n": 1200,
+   "agree": 91.8,
+   "kappa": 0.279
+  },
+  {
+   "cb": "A",
+   "cond": "B",
    "a": "gpt-6-luna",
    "b": "jev-1.13",
    "n": 1200,
    "agree": 95.7,
    "kappa": 0.449
+  },
+  {
+   "cb": "B",
+   "cond": "A",
+   "a": "deepseek-v4.1-flash",
+   "b": "glm-5.3-flash",
+   "n": 1200,
+   "agree": 94.5,
+   "kappa": 0.374
   },
   {
    "cb": "B",
@@ -407,11 +565,38 @@
   {
    "cb": "B",
    "cond": "A",
+   "a": "glm-5.3-flash",
+   "b": "gpt-6-luna",
+   "n": 1200,
+   "agree": 94.8,
+   "kappa": 0.289
+  },
+  {
+   "cb": "B",
+   "cond": "A",
+   "a": "glm-5.3-flash",
+   "b": "jev-1.13",
+   "n": 1200,
+   "agree": 94.4,
+   "kappa": 0.292
+  },
+  {
+   "cb": "B",
+   "cond": "A",
    "a": "gpt-6-luna",
    "b": "jev-1.13",
    "n": 1200,
    "agree": 97.6,
    "kappa": 0.41
+  },
+  {
+   "cb": "B",
+   "cond": "B",
+   "a": "deepseek-v4.1-flash",
+   "b": "glm-5.3-flash",
+   "n": 1200,
+   "agree": 95.2,
+   "kappa": 0.453
   },
   {
    "cb": "B",
@@ -430,6 +615,24 @@
    "n": 1200,
    "agree": 96.9,
    "kappa": 0.474
+  },
+  {
+   "cb": "B",
+   "cond": "B",
+   "a": "glm-5.3-flash",
+   "b": "gpt-6-luna",
+   "n": 1200,
+   "agree": 95.2,
+   "kappa": 0.317
+  },
+  {
+   "cb": "B",
+   "cond": "B",
+   "a": "glm-5.3-flash",
+   "b": "jev-1.13",
+   "n": 1200,
+   "agree": 95.2,
+   "kappa": 0.364
   },
   {
    "cb": "B",
@@ -461,6 +664,26 @@
    "fn": 30,
    "both_no": 1125,
    "ratio": 0.3
+  },
+  {
+   "model": "glm-5.3-flash",
+   "cond": "A",
+   "n": 1200,
+   "both": 43,
+   "fp": 25,
+   "fn": 87,
+   "both_no": 1045,
+   "ratio": 0.6
+  },
+  {
+   "model": "glm-5.3-flash",
+   "cond": "B",
+   "n": 1200,
+   "both": 42,
+   "fp": 23,
+   "fn": 67,
+   "both_no": 1068,
+   "ratio": 0.5
   },
   {
    "model": "gpt-6-luna",
@@ -539,6 +762,42 @@
    "usd": 0.2857,
    "mean": 3.924,
    "p90": 6.505
+  },
+  {
+   "model": "glm-5.3-flash",
+   "cb": "A",
+   "cond": "A",
+   "calls": 1381,
+   "usd": 0.1425,
+   "mean": 2.404,
+   "p90": 4.788
+  },
+  {
+   "model": "glm-5.3-flash",
+   "cb": "A",
+   "cond": "B",
+   "calls": 1385,
+   "usd": 0.0894,
+   "mean": 2.312,
+   "p90": 4.046
+  },
+  {
+   "model": "glm-5.3-flash",
+   "cb": "B",
+   "cond": "A",
+   "calls": 1381,
+   "usd": 0.1702,
+   "mean": 2.29,
+   "p90": 3.871
+  },
+  {
+   "model": "glm-5.3-flash",
+   "cb": "B",
+   "cond": "B",
+   "calls": 1385,
+   "usd": 0.1202,
+   "mean": 1.71,
+   "p90": 3.195
   },
   {
    "model": "gpt-6-luna",
@@ -711,6 +970,104 @@
    "n": 21,
    "pos": 1,
    "pct": 4.8
+  },
+  {
+   "model": "glm-5.3-flash",
+   "party": "AfD",
+   "n": 192,
+   "pos": 6,
+   "pct": 3.1
+  },
+  {
+   "model": "glm-5.3-flash",
+   "party": "Linke",
+   "n": 180,
+   "pos": 11,
+   "pct": 6.1
+  },
+  {
+   "model": "glm-5.3-flash",
+   "party": "CDU",
+   "n": 150,
+   "pos": 21,
+   "pct": 14.0
+  },
+  {
+   "model": "glm-5.3-flash",
+   "party": "FDP",
+   "n": 123,
+   "pos": 13,
+   "pct": 10.6
+  },
+  {
+   "model": "glm-5.3-flash",
+   "party": "Grüne",
+   "n": 108,
+   "pos": 13,
+   "pct": 12.0
+  },
+  {
+   "model": "glm-5.3-flash",
+   "party": "BSW",
+   "n": 93,
+   "pos": 8,
+   "pct": 8.6
+  },
+  {
+   "model": "glm-5.3-flash",
+   "party": "CSU",
+   "n": 84,
+   "pos": 19,
+   "pct": 22.6
+  },
+  {
+   "model": "glm-5.3-flash",
+   "party": "SPD",
+   "n": 78,
+   "pos": 12,
+   "pct": 15.4
+  },
+  {
+   "model": "glm-5.3-flash",
+   "party": "FreieWähler",
+   "n": 63,
+   "pos": 7,
+   "pct": 11.1
+  },
+  {
+   "model": "glm-5.3-flash",
+   "party": "DiePartei",
+   "n": 27,
+   "pos": 1,
+   "pct": 3.7
+  },
+  {
+   "model": "glm-5.3-flash",
+   "party": "Tierschutz",
+   "n": 21,
+   "pos": 0,
+   "pct": 0.0
+  },
+  {
+   "model": "glm-5.3-flash",
+   "party": "ÖVP",
+   "n": 21,
+   "pos": 6,
+   "pct": 28.6
+  },
+  {
+   "model": "glm-5.3-flash",
+   "party": "CDUCSU",
+   "n": 21,
+   "pos": 1,
+   "pct": 4.8
+  },
+  {
+   "model": "glm-5.3-flash",
+   "party": "parteilos",
+   "n": 21,
+   "pos": 5,
+   "pct": 23.8
   },
   {
    "model": "gpt-6-luna",
@@ -951,6 +1308,46 @@
    "party": "CSU"
   },
   {
+   "model": "glm-5.3-flash",
+   "text": "Dann hätten sie mal für ihre Freiheit kämpfen sollen. Sie doch eine 200000 Mann Armee!! Haben es vorgezogen, weg zu laufen. Und jetzt jammern sie hier rum!!!",
+   "party": "Linke"
+  },
+  {
+   "model": "glm-5.3-flash",
+   "text": "CDU ? Weder kommunal, im Kreis, im Land, im Bund, in Europa. niemals wieder bekommt dieser Verdummungsverein meine Stimme. 👍 💙💙",
+   "party": "CDU"
+  },
+  {
+   "model": "glm-5.3-flash",
+   "text": "Grüne Kriegsfetischisten dürfen nie wieder in Regierungsverantwortung kommen bevor unser Land komplett zerstört ist 😩",
+   "party": "Grüne"
+  },
+  {
+   "model": "glm-5.3-flash",
+   "text": "Meine Gemeinde in Sachsen Anhalt ist bereits GRÜNEN frei!! Weck mit diesen faschistischrn Subjekten und dieser Dreck gehört auf den Müllhaufen der Geschichte",
+   "party": "Grüne"
+  },
+  {
+   "model": "glm-5.3-flash",
+   "text": "der Osten hat höhere Ansprüche alls was du hier Lieferst..",
+   "party": "Grüne"
+  },
+  {
+   "model": "glm-5.3-flash",
+   "text": "nicht wir sondern ne kleine Minderheit nämlich ihr wollt",
+   "party": "Grüne"
+  },
+  {
+   "model": "glm-5.3-flash",
+   "text": "Immer wieder nur Vorschriften und verbote, es geht nur gemeinsam nicht mit der Brechstange und Ideologien , nur weil in der EU die Rohstoffe fehlen",
+   "party": "Grüne"
+  },
+  {
+   "model": "glm-5.3-flash",
+   "text": "Mal gut das wir in Deutschland noch eine Demokratie sind. Die Stimme kommen von unten und nicht von oben, das ist Demokratie. 👍",
+   "party": "Grüne"
+  },
+  {
    "model": "gpt-6-luna",
    "text": "Grüne Kriegsfetischisten dürfen nie wieder in Regierungsverantwortung kommen bevor unser Land komplett zerstört ist 😩",
    "party": "Grüne"
@@ -989,46 +1386,6 @@
    "model": "gpt-6-luna",
    "text": "Beide Stimmen am 23.02.2025 für die AFD 💙 💙 💙 💙 💙",
    "party": "FDP"
-  },
-  {
-   "model": "jev-1.13",
-   "text": "Immer wieder nur Vorschriften und verbote, es geht nur gemeinsam nicht mit der Brechstange und Ideologien , nur weil in der EU die Rohstoffe fehlen",
-   "party": "Grüne"
-  },
-  {
-   "model": "jev-1.13",
-   "text": "Ich kenne einen anderen Inhalt, sorry, Propaganda funktioniert nicht mehr. Die Bürger werden es euch danken!!!",
-   "party": "CSU"
-  },
-  {
-   "model": "jev-1.13",
-   "text": "sie sind nicht integrierbar und wollen nicht integriert werden",
-   "party": "AfD"
-  },
-  {
-   "model": "jev-1.13",
-   "text": "nix werde ich, meine Sprache bleibt altdeutsch und fertig",
-   "party": "AfD"
-  },
-  {
-   "model": "jev-1.13",
-   "text": "WER versteht hier WAS nicht ? ... wir haben verstanden, dass die GRÜNEN die Bevölkerung seit Jahren für DUMM verkaufen !!",
-   "party": "Grüne"
-  },
-  {
-   "model": "jev-1.13",
-   "text": "Wir lassen uns nicht einschüchtern ,es gibt nur eins blau, blau",
-   "party": "AfD"
-  },
-  {
-   "model": "jev-1.13",
-   "text": "Freiheit der Menschen 🤯 Menschen erschiessen andere Menschen weil sie auf die Maskenpflicht hinweisen. tolle Freiheit 👌",
-   "party": "ÖVP"
-  },
-  {
-   "model": "jev-1.13",
-   "text": "wir sollen masken tragen und politiker dürfen alles a frechheit is des",
-   "party": "ÖVP"
   }
  ]
 }
