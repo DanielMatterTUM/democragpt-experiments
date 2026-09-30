@@ -114,22 +114,29 @@ def pairwise_stats(rows_, cols_, labels):
 def plurality(labels, order):
     """Tie-safe plurality. Returns (winner_or_None, max_count, is_tie).
 
-    `is_tie` is True ONLY for a genuine split at the top among at least two
-    competing labels (e.g. 2-2, or 1-1, or 1-1-1): that is a tie and must not be
-    silently resolved by label order. A single vote (one model, one label) and
-    no votes at all are NOT ties -- they return (label, 1, False) / (None, 0,
-    False) respectively, so the "k-of-n" partitions below stay disjoint.
+    Any split for the highest count is a tie: 2-2, 1-1, 1-1-1, etc. A single
+    vote (one model, one label) and no votes at all are not ties. This matters
+    especially for sparse gated cases where two or three retaining models may
+    all choose different types.
     """
     c = Counter(labels)
     if not c:
         return None, 0, False
+    if len(labels) == 1:
+        return labels[0], 1, False
     best = max(c.values())
-    if best == 1:
-        return next(iter(c)), 1, False
     winners = [l for l in order if c.get(l) == best]
     if len(winners) != 1:
         return None, best, True
     return winners[0], best, False
+
+
+# Regression guards for the tie semantics used by the report.
+assert plurality(["a"], ["a", "b"] ) == ("a", 1, False)
+assert plurality(["a", "b"], ["a", "b"] ) == (None, 1, True)
+assert plurality(["a", "b", "c"], ["a", "b", "c"] ) == (None, 1, True)
+assert plurality(["a", "a", "b", "b"], ["a", "b"] ) == (None, 2, True)
+assert plurality(["a", "a", "b"], ["a", "b"] ) == ("a", 2, False)
 
 
 def _gate_consistency(gated, B, models):
@@ -185,7 +192,6 @@ def _pairwise_type(gated, B, models):
 def _type_consensus(gated, B, models):
     """Q3: per gated comment, the models that RETAINED the gate vote on the type
     (tie-safe plurality). Returns both the per-comment records and the summary."""
-    order = list(models)
     per = []
     for u in gated:
         votes = [B[m][u] for m in models if B.get(m, {}).get(u) in TYPE_LABELS]
@@ -200,7 +206,7 @@ def _type_consensus(gated, B, models):
     # Two SEPARATE distributions, reported side by side:
     #  (a) gate acceptance   : how many of the n_models retained the gate (1/4..4/4)
     #  (b) type-consensus strength: among the models that RETAINED the gate, how
-    #      many agreed on one type (a 2-2 split is a tie, not a 2-of-4 majority)
+    #      many agreed on one type (all split top counts are explicit ties)
     accept_dist = Counter(r["n_models_accepting_gate"] for r in per)
     gate_accept = {f"{k}-of-{n_models}": accept_dist.get(k, 0)
                    for k in range(n_models, -1, -1)}
@@ -220,7 +226,7 @@ def _type_consensus(gated, B, models):
         b = B.get(m, {})
         sel = [r for r in per
                if r["majority_type"] is not None and b.get(r["uid"]) in TYPE_LABELS]
-        n_tie = sum(1 for r in per if r["tie"] and r["majority_n"] >= 2)
+        n_tie = sum(1 for r in per if r["tie"])
         if not sel:
             per_model.append({"model": m, "n": 0, "n_ties_excluded": n_tie,
                               "pct": None})
