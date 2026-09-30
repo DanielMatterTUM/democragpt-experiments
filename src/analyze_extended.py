@@ -20,6 +20,7 @@ from __future__ import annotations
 import json
 import math
 from collections import Counter, defaultdict
+from datetime import datetime, timezone
 from itertools import combinations
 from pathlib import Path
 
@@ -127,6 +128,14 @@ def main():
         return [lab.get((m, cb, cond, u)) for u in uids]
 
     out = {"models": models,
+           "meta": {
+               "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+               "sample": "matrix", "n": len(rows),
+               "models": models,
+               "conditions": ["A", "B"],
+               "codebooks": ["A", "B"],
+               "source_files": ["predictions_full.jsonl", "sample_matrix.jsonl"],
+           },
            "model_pairwise": [],     # confusion matrices model x model
            "condition_pairwise": [],  # confusion matrices condition A x B
            "codebook_pairwise": [],   # codebook A x B
@@ -181,8 +190,18 @@ def main():
                 })
 
     # ---------- 2. condition A x B, per model & codebook --------------------
+    # Two questions are answered here, kept separate:
+    #   (i)  type-level agreement   (the full A or B label matrix)
+    #   (ii) binary case-level stability: are the SAME comments classified as
+    #        "reactant" in both conditions?  This is the 4-cell binary table
+    #        (A=no,B=no / A=no,B=yes / A=yes,B=no / A=yes,B=yes) plus the
+    #        prevalence shift and an exact McNemar. It is reported for BOTH
+    #        codebooks, because the transcript question is about reactance
+    #        presence, and Codebook B's "reactant vs none" collapse is a valid
+    #        binary reading of it.
     for cb in ("A", "B"):
         labels = LAB_A if cb == "A" else LAB_B
+        neg = "nein" if cb == "A" else "keine_reaktanz"
         for m in models:
             uids = sorted([u for u in rows
                            if (m, cb, "A", u) in lab and (m, cb, "B", u) in lab])
@@ -199,12 +218,27 @@ def main():
                    "raw_pct": round(100 * sum(1 for x, y in pairs if x == y) / len(pairs), 2),
                    "kappa": round(cohen_kappa(a, b, labels), 4),
                    "ac1": round(gwets_ac1(a, b, labels), 4)}
-            if cb == "A":
-                ba = [1 if x == "ja" else 0 for x in a]
-                bb = [1 if y == "ja" else 0 for y in b]
-                rec["mcnemar"] = mcnemar_exact(ba, bb)
-                rec["prev_A_pct"] = round(100 * np.mean(ba), 2)
-                rec["prev_B_pct"] = round(100 * np.mean(bb), 2)
+            # binary case-level view (shared by both codebooks)
+            ba = [1 if x != neg else 0 for x in a]
+            bb = [1 if y != neg else 0 for y in b]
+            cells = {"00": sum(1 for x, y in zip(ba, bb) if x == 0 and y == 0),
+                     "01": sum(1 for x, y in zip(ba, bb) if x == 0 and y == 1),
+                     "10": sum(1 for x, y in zip(ba, bb) if x == 1 and y == 0),
+                     "11": sum(1 for x, y in zip(ba, bb) if x == 1 and y == 1)}
+            agree_bin = (cells["00"] + cells["11"]) / len(pairs)
+            kk_bin = cohen_kappa(ba, bb, ["nein", "ja"])
+            rec["binary"] = {
+                "labels": ["nein", "ja"],
+                "n": len(pairs),
+                "A_no_B_no": cells["00"], "A_no_B_yes": cells["01"],
+                "A_yes_B_no": cells["10"], "A_yes_B_yes": cells["11"],
+                "case_agreement_pct": round(100 * agree_bin, 2),
+                "kappa_bin": round(kk_bin, 4) if kk_bin is not None else None,
+                "prev_A_pct": round(100 * float(np.mean(ba)), 2),
+                "prev_B_pct": round(100 * float(np.mean(bb)), 2),
+                "delta_prev_pct": round(100 * (float(np.mean(bb)) - float(np.mean(ba))), 2),
+                "mcnemar": mcnemar_exact(ba, bb),
+            }
             out["condition_pairwise"].append(rec)
 
     # ---------- 3. codebook A x B ------------------------------------------
@@ -454,12 +488,16 @@ def main():
         if b["cb"] == "A":
             print(f"  {b['model']:20s} cond{b['cond']} {b['pct']:5.2f}% "
                   f"[{b['ci_lo']}, {b['ci_hi']}]  n={b['n']}")
-    print("\n== McNemar A vs B condition (codebook A) ==")
+    print("\n== case-level A vs B (binary reactant/none, both codebooks) ==")
     for c in out["condition_pairwise"]:
-        if c.get("mcnemar"):
-            mm = c["mcnemar"]
-            print(f"  {c['model']:20s} prevA={c['prev_A_pct']}% prevB={c['prev_B_pct']}% "
-                  f"discordant {mm['b10']}/{mm['b01']} p={mm['p']}")
+        b = c.get("binary")
+        if not b:
+            continue
+        mm = b["mcnemar"]
+        print(f"  cb{c['cb']} {c['model']:20s} prevA={b['prev_A_pct']}% prevB={b['prev_B_pct']}% "
+              f"dA={b['delta_prev_pct']:+}  caseAgree={b['case_agreement_pct']}% "
+              f"(00/{b['A_no_B_no']}/{b['A_yes_B_no']}/{b['A_yes_B_yes']}) "
+              f"discordant {mm['b10']}/{mm['b01']} p={mm['p']}")
     print("\n== Gwet AC1 vs Cohen kappa (codebook A, cond A) ==")
     for mp in out["model_pairwise"]:
         if mp["cb"] == "A" and mp["cond"] == "A":

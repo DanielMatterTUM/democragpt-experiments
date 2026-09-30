@@ -1,0 +1,978 @@
+{
+ "meta": {
+  "audit_version": 2,
+  "generated_at": "2026-09-29T20:54:44+00:00",
+  "condition": "A",
+  "codebook": "A",
+  "sample": "matrix",
+  "models": [
+   "jev-1.13",
+   "gpt-6-luna",
+   "deepseek-v4.1-flash",
+   "glm-5.3-flash"
+  ],
+  "status": "PENDING_ANNOTATION",
+  "n_candidates": 180,
+  "n_audited": 0,
+  "strata_target": {
+   "4": {
+    "n_available": 24,
+    "n_drawn": 8
+   },
+   "3": {
+    "n_available": 26,
+    "n_drawn": 8
+   },
+   "2": {
+    "n_available": 25,
+    "n_drawn": 8
+   },
+   "1": {
+    "n_available": 105,
+    "n_drawn": 24,
+    "split_by_lone_model": {
+     "jev-1.13": 6,
+     "gpt-6-luna": 6,
+     "deepseek-v4.1-flash": 6,
+     "glm-5.3-flash": 6
+    },
+    "available_by_lone_model": {
+     "jev-1.13": 11,
+     "gpt-6-luna": 18,
+     "deepseek-v4.1-flash": 15,
+     "glm-5.3-flash": 61
+    }
+   }
+  },
+  "scope_note": "v2 covers the full four-model pool. Every verdict in this file is PENDING; none is annotated yet. Score it with score_audit_v2.py after the coding round.",
+  "source_files": [
+   "predictions_full.jsonl",
+   "sample_matrix.jsonl"
+  ],
+  "seed": 20260929
+ },
+ "sample": [
+  {
+   "uid": "85ec47fd10af",
+   "n_models": 4,
+   "stratum": "4",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash",
+    "gpt-6-luna",
+    "jev-1.13"
+   ],
+   "party": "CDU",
+   "chars": 55,
+   "text": "Wir zahlen kein Steuern mehr, machen sie was ihr wollen",
+   "transcript": "Wir wollen in der nächsten Woche das Infektionsschutzgesetz auf dem Weg bringen. Darüber gibt es eine ganz starke Diskussion, weil damit z.B. eine Ausgangssperre verbunden wäre, nach 21 Uhr, dass man dann erst mal nicht raus darf. Ich halte das dennoch für vollkommen richtig. Ich war gestern auf einer Intensivstation, wo Covid-Patienten liegen und habe auch mit verschiedenen Krankenhausgeschäftsfü"
+  },
+  {
+   "uid": "923edb1280f3",
+   "n_models": 4,
+   "stratum": "4",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash",
+    "gpt-6-luna",
+    "jev-1.13"
+   ],
+   "party": "Grüne",
+   "chars": 121,
+   "text": "WER versteht hier WAS nicht ? ... wir haben verstanden, dass die GRÜNEN die Bevölkerung seit Jahren für DUMM verkaufen !!",
+   "transcript": "Sie sagen, Klimaschutz kostet viel und macht arm. Das ist falsch. Naturkatastrophen, Dure und Hitzer, jeden kosten jetzt schon Milliarden. Aber eigentlich kann man sich die Müllersparen ihren ganzen Quatsch wieder und wieder zu falsifizieren. Denn es geht hier gar nicht darum. dass Sie es nicht verstehen oder verstehen wollen. Sie schreiben in die Würfel, wie die sind, um unser Bevölkerung für dum"
+  },
+  {
+   "uid": "5a01cdc015b8",
+   "n_models": 4,
+   "stratum": "4",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash",
+    "gpt-6-luna",
+    "jev-1.13"
+   ],
+   "party": "Linke",
+   "chars": 66,
+   "text": "Noch mehr Straßenschlachten und brennende Autos.. ja du, lass mal.",
+   "transcript": "Reiche gehen wählen, Rechte gehen wählen. Lobby's gehen wählen. Und du am neuen Juni sind Wahlen. Deine Stimme gegen Armut für Gerechtigkeit. Gerechtigkeit geht nur mit links. Deine Stimme zählt. Wir wählen links."
+  },
+  {
+   "uid": "8966c7954e9a",
+   "n_models": 4,
+   "stratum": "4",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash",
+    "gpt-6-luna",
+    "jev-1.13"
+   ],
+   "party": "CDU",
+   "chars": 37,
+   "text": "Ihr dürft nicht raus ihr.............",
+   "transcript": "Wir wollen in der nächsten Woche das Infektionsschutzgesetz auf dem Weg bringen. Darüber gibt es eine ganz starke Diskussion, weil damit z.B. eine Ausgangssperre verbunden wäre, nach 21 Uhr, dass man dann erst mal nicht raus darf. Ich halte das dennoch für vollkommen richtig. Ich war gestern auf einer Intensivstation, wo Covid-Patienten liegen und habe auch mit verschiedenen Krankenhausgeschäftsfü"
+  },
+  {
+   "uid": "154b7ea414d7",
+   "n_models": 4,
+   "stratum": "4",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash",
+    "gpt-6-luna",
+    "jev-1.13"
+   ],
+   "party": "SPD",
+   "chars": 170,
+   "text": "Jetzt ist es das Wachstum,ich denke es ist Putin,der Klimawandel,die AFD, Trump,der Ukrainekrieg,ihre Fönfrisur usw......,meint ihr wirklich wir sind total verblödet.😂😂😂😂",
+   "transcript": "Unsere Wirtschaft muss wieder wachsen. Wachstum schafft Arbeitsplätze und bewahrt uns zur Verteilungskämpfen. Und wachstum schützt unsere Demokratie. Denn wir wissen aus Studien, dass das Vertrauen in die Demokratie abnimmt und Menschen bereit sind, extremisten zu wählen, wenn Wachstum ausbleibt. Finanzminister Lars Klingball hat jetzt mit einem ersten Gesetzentwurf ernst gemacht, um unsere Untern"
+  },
+  {
+   "uid": "86d34c18cbe0",
+   "n_models": 4,
+   "stratum": "4",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash",
+    "gpt-6-luna",
+    "jev-1.13"
+   ],
+   "party": "CSU",
+   "chars": 192,
+   "text": "Worauf den noch überall was drauf schlagen. Die Mittelschicht die alles stämmt, pfeift aus dem letzten Loch. Wir werden nur noch ausgeblutet. Wasser ist ein freies Gut. Lernt man auch im BWL 😉",
+   "transcript": "Also, es ist ja so, dass wir selber planen, im Wassersehen einzuführen, weil ich kann nur sagen, ich hab in meinem ersten Semester als BVL-Studien gelernt, was nix kostet, ist nix wert. Und Wasser ist ein ganz wichtiges Gut, ein ganz wertvolles Gut. Deswegen halte ich es für richtig, dass wir maßvoll auch eine Abgabe darauf erheben, ziehen sind. Das ist nicht zu viel, das ist aber auch nicht mehr "
+  },
+  {
+   "uid": "43cd8d8a748c",
+   "n_models": 4,
+   "stratum": "4",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash",
+    "gpt-6-luna",
+    "jev-1.13"
+   ],
+   "party": "CSU",
+   "chars": 110,
+   "text": "Ich kenne einen anderen Inhalt, sorry, Propaganda funktioniert nicht mehr. Die Bürger werden es euch danken!!!",
+   "transcript": "Der Koalitionsvertrag steht fest. Respekt unseren Verhandlerninnen und Verhandlern von der CSU. Maßgebliche Dinge haben sie durchgesetzt. Zum Wohl des ganzen Landes. Danke an den Koalitionspartner, beide werden, paar Preise zahlen, aber insgesamt wird es gut."
+  },
+  {
+   "uid": "72fc8f292092",
+   "n_models": 4,
+   "stratum": "4",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash",
+    "gpt-6-luna",
+    "jev-1.13"
+   ],
+   "party": "CSU",
+   "chars": 121,
+   "text": "Man sollte das Problem bekämpfen und jeden der auffällig ist ausweisen. Das was er da sagt das ist ein Überwachungs Staat",
+   "transcript": "Ich glaube, nach den schrecklichen Anschlägen ist mittlerweile jedem klar, dass wir ein Problem mit islamistischem Terror haben. Deshalb hat der Innenausschuss gestern anträge, der CSU verabschiedet, wo nach wie insbesondere das Internet besser kontrollieren und die sozialen Medien entsprechend bloß forsten. Denn gerade auch bei einem der letzten Art und Tat, der hat der Täter sich zugemintralikal"
+  },
+  {
+   "uid": "a48282b9dbc6",
+   "n_models": 3,
+   "stratum": "3",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash",
+    "gpt-6-luna"
+   ],
+   "party": "CSU",
+   "chars": 47,
+   "text": "ich bin deutschland und ich muss einen Scheiss!",
+   "transcript": "Keiner weiß genau, was Russland vorhat. Viele waren auf sehr warrascht über die jetzige Situation. Dieser nicht provozierte Angriffskrieg, der jetzt auch sich zunehmen, gegen die Zivilbevölkerung richtet, ist massiv zu kritisieren und durch nichts so rechtfertig. Deswegen weiß auch keiner genau, ob eine Herausforderung für die NATO besteht, um aber klar zu machen, dass dies mit Entschloss dagegen "
+  },
+  {
+   "uid": "2759277c7ce2",
+   "n_models": 3,
+   "stratum": "3",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash",
+    "gpt-6-luna"
+   ],
+   "party": "AfD",
+   "chars": 150,
+   "text": "Die Zwangs Gebühren von ARD u. ZDF gehören abgeschafft werden .Sollten sich selbst Finanzieren und nicht der Bürger, vorallen nicht die Hohen Gehälter",
+   "transcript": "Aus Ihrer Sicht, aus Ihrer Sicht, und auch vielleicht auch aus Sicht ihrer Kumpel jetzt in den Rundfunk ansteiten. Auch Präsidentin, sehr geehrte Damen und Herren Abgeordnete, liebe Saalender, muss vielleicht ein bisschen Wasser in den Wein gießen. Das Lob liegt auf den öffentlichen Rundfunk. Kann ich aus den Reihen von SPD und CDU natürlich verstehen. Sie sind dort gut repräsentiert. Manchmal ist"
+  },
+  {
+   "uid": "a7f65b21befc",
+   "n_models": 3,
+   "stratum": "3",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash",
+    "jev-1.13"
+   ],
+   "party": "CDU",
+   "chars": 110,
+   "text": "naja dan sollen die Bundesregierung anfangen sich das Gift Zeug spritzen lassen ich nicht und mein kinder auch",
+   "transcript": "Viele fragen mich, wie sicher ist eigentlich die Corona-Impfstoff? Wenn er zugelassen ist, dann ist er absolut sicher. Für uns ist wichtig, dass die Zuvorlässigkeit, die Nutzlichkeit des Impfstoffes an erster Stelle steht und dass man keine Experimente macht. Deswegen gibt es auch bei der Zulassung einen treistufiges klinisches Verfahren allein, also wo man Tests in der Praxis durchführt, in der l"
+  },
+  {
+   "uid": "11bce973d570",
+   "n_models": 3,
+   "stratum": "3",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash",
+    "gpt-6-luna"
+   ],
+   "party": "CDU",
+   "chars": 30,
+   "text": "Beide Stimmen für die Grünen 💚",
+   "transcript": "Achse knöre ich. Wie wichtig ist denn jetzt die Erst- und die Zweitstimme? Wir brauchen diesmal beide Stimmen für die CDU. Selbst wenn ich die meisten Erstimmen bekommen sollte, bin ich nicht automatisch im Deutschen Bundestag und deswegen brauchen wir diesmal beide Stimmen für die CDU, damit ich den Wahlkreistipolz Niveau 1 wieder in Berlin vertreten darf. Was würde das denn bedeuten für unseren "
+  },
+  {
+   "uid": "55c0f2a1f9f6",
+   "n_models": 3,
+   "stratum": "3",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash",
+    "gpt-6-luna"
+   ],
+   "party": "FDP",
+   "chars": 34,
+   "text": "ich nehme die Strafe aus Prinzip 😉",
+   "transcript": "Zwangsarbeit für den Staat, es gibt es tatsächlich, wobei ich verpflichte jetzt gerade 84 Personen als Wahlhelfer und es ist tatsächlich so, wenn jemand hier berufen wird, durch mich als Vorsitzenden des Wahlausschusses bei der Bürgermeister war, dann muss er das auch machen, wenn sie jemand ohne wichtigen Grund nicht macht, könnte ich ihn sogar bestrafen. Aber die meisten machen das freiwillig, g"
+  },
+  {
+   "uid": "e64da5bb8587",
+   "n_models": 3,
+   "stratum": "3",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash",
+    "gpt-6-luna"
+   ],
+   "party": "Grüne",
+   "chars": 132,
+   "text": "*Friedrich Merz will Familien in die Obdachlosigkeit schicken.* wenn du so verzweifelt bist dass dir einfach jedes Mittel recht ist:",
+   "transcript": "Friedrich Merz will Familien in die Obdachlosigkeit schicken, weil ihm die Kosten der Unterkunft zu hoch sind. Dabei ist das eigentliche Problem, dass wir Milliarden Euro im mobilen Konzernen hinterher schmeißen. Friedrich Merz hat gesagt, dass er die Kosten der Unterkunft im Bürgergeld senken möchte. Das betrifft häufig Familien alleine Erziehende, die arbeiten gehen und weil das Geld nicht reich"
+  },
+  {
+   "uid": "b727bdd5ffe9",
+   "n_models": 3,
+   "stratum": "3",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash",
+    "gpt-6-luna"
+   ],
+   "party": "FreieWähler",
+   "chars": 101,
+   "text": "Dann würd uns gesagt das wir doch mit dem Fahrrad mobil sein können. Oder dafür gibt es doch den Opnv",
+   "transcript": "Und habt ihr dieses Monat schon getankt? Habt ihr vielleicht in Gold bezahlt? Oder euer Hausverkaufen müssen dafür? So schlimm ist es aktuell noch nicht. Aber 2 Euro, 2 Euro 10, 2 Euro, 20 ist aktuell standart an den Sachsäulen in Deutschland. Das muss sich zwingend ändern. Hier muss die Regierung in Deutschland schnellstmöglich handeln. Wir fordern die Ampel auf, jetzt Maßnahmen einzuleiten, dami"
+  },
+  {
+   "uid": "c4ab95489e86",
+   "n_models": 3,
+   "stratum": "3",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "gpt-6-luna",
+    "jev-1.13"
+   ],
+   "party": "CDU",
+   "chars": 38,
+   "text": "Hahahaha hinter de Mauer !????? Never.",
+   "transcript": "Am 23. Februar könnt ihr entscheiden, wer euch im Deutschen Bundestag vertreten soll. Mein Name ist Anna Eikinz und ich kann die Tiere für den Wahlkreis 67, bei der Salzlandkreis. Und falls ihr am 23. Februar schon was vor habt, mit Freunden unterwegs seid oder vielleicht einen Urlaub gebucht habt, dann macht unwürdige Briefwahl und wird mit zwei Stimmen CDU, damit ich euch vertreten darf. Und war"
+  },
+  {
+   "uid": "ad062422103f",
+   "n_models": 2,
+   "stratum": "2",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash"
+   ],
+   "party": "SPD",
+   "chars": 79,
+   "text": "wir wissen immer alles aus Studien kommt immer drauf an wer die Studien bezahlt",
+   "transcript": "Unsere Wirtschaft muss wieder wachsen. Wachstum schafft Arbeitsplätze und bewahrt uns zur Verteilungskämpfen. Und wachstum schützt unsere Demokratie. Denn wir wissen aus Studien, dass das Vertrauen in die Demokratie abnimmt und Menschen bereit sind, extremisten zu wählen, wenn Wachstum ausbleibt. Finanzminister Lars Klingball hat jetzt mit einem ersten Gesetzentwurf ernst gemacht, um unsere Untern"
+  },
+  {
+   "uid": "b422abfbbc6d",
+   "n_models": 2,
+   "stratum": "2",
+   "flagging_models": [
+    "glm-5.3-flash",
+    "gpt-6-luna"
+   ],
+   "party": "Linke",
+   "chars": 41,
+   "text": "Die Linke informieren ? 🤦 bin fassungslos",
+   "transcript": "Die AfD hat prominente Unterstützung mit Elon Musk. Der ist nicht ne Prominent, sondern auch der reichste Mensch der Welt. Und der Freunde von dem neuen werdenden Präsident Trump in den USA. Und wo schreibt der sein pamphlet auf? In der Welt, am Sonntag, dem Springerverlag. So weit, so bekannt. Der Springerverlag ist schon bekannt für rechte Hetze seit Jahr und Tag. Es ist dabei fast noch ermutige"
+  },
+  {
+   "uid": "f9441d6a8411",
+   "n_models": 2,
+   "stratum": "2",
+   "flagging_models": [
+    "glm-5.3-flash",
+    "gpt-6-luna"
+   ],
+   "party": "BSW",
+   "chars": 133,
+   "text": "der gesunde Stolz wurde mir von den amtierenden Politikern ausgetrieben. Ich kann dieses Land kaum noch ertragen. Unglaublich traurig",
+   "transcript": "Bist du eigentlich stolz auf dein Land? Und falls ja, wohauf genau? Also, ich musste eine Weile nachdenken, aber dann... Ich bin der Türinger und daher... Tata! Ich bin stolz auf mein Land, Jawohl! In Türingen wurde nämlich der Kindergaben erfunden und die Idee, die ist seitdem ein richter Exportschlager. Komm, hast du das Haus sein? Wie ist das aber jetzt, wenn wir an Deutschland denken? Was mach"
+  },
+  {
+   "uid": "b894b4d769f5",
+   "n_models": 2,
+   "stratum": "2",
+   "flagging_models": [
+    "glm-5.3-flash",
+    "gpt-6-luna"
+   ],
+   "party": "ÖVP",
+   "chars": 147,
+   "text": "Mega Projekt an der Schule wäre die Volkachulen zumindest wieder von Masken und Tests befreien. Es kann sich jeder Impfen lassen gibt keinen Grund…",
+   "transcript": "Und wir wollen ab Herbst des Megaprojekte Digitalisierung an der Schule angehen. Und das heißt nicht nur, dass Kinder, Laptops und Tablets bekommen, sondern es bedeutet vor allem massive Lehrerausbildung, einen schaffen eines digitalen Klassenraums und es wird die größte Veränderung seit der Einführung des kabel Schulpups. Ich glaube, es ist wichtig, dass wir als Volkspartei alles tun, dass wir qu"
+  },
+  {
+   "uid": "eec70748dd7d",
+   "n_models": 2,
+   "stratum": "2",
+   "flagging_models": [
+    "glm-5.3-flash",
+    "jev-1.13"
+   ],
+   "party": "Linke",
+   "chars": 182,
+   "text": "Ja, wir sprechen uns mal in ein paar Monaten mit der Ampelregierung wieder. Ihr werbt für Widerstand, stellt euch aber null dem Diskurs. Klar, die Argumente sind nicht so \"schlagend\"",
+   "transcript": "Am Wochenende findet der AfD-Bundespartei-Tach in Essen statt. Die AfD, eine verschissste Partei, will in den Pot um dort in Partei-Tach abzuhalten. Im Hort der arbeiteren Arbeiter will die AfD ihre recht ideologien verbreiten. Lass uns dagegen Widerstand leisten, den Widerstand formieren. Von ganz Deutschland kommen Busse nach Essen, aus Rosenheimen, meinem Wahlkreis, würde ein Bus nach Essen fah"
+  },
+  {
+   "uid": "39f4a42606ba",
+   "n_models": 2,
+   "stratum": "2",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash"
+   ],
+   "party": "CDU",
+   "chars": 37,
+   "text": "Achso ok jetzt Glaub ich es *(NICHT)*",
+   "transcript": "Viele fragen mich, wie sicher ist eigentlich die Corona-Impfstoff? Wenn er zugelassen ist, dann ist er absolut sicher. Für uns ist wichtig, dass die Zuvorlässigkeit, die Nutzlichkeit des Impfstoffes an erster Stelle steht und dass man keine Experimente macht. Deswegen gibt es auch bei der Zulassung einen treistufiges klinisches Verfahren allein, also wo man Tests in der Praxis durchführt, in der l"
+  },
+  {
+   "uid": "21ffe67f458e",
+   "n_models": 2,
+   "stratum": "2",
+   "flagging_models": [
+    "glm-5.3-flash",
+    "gpt-6-luna"
+   ],
+   "party": "FreieWähler",
+   "chars": 134,
+   "text": "Correctiv und DPA als Faktenchecker haben versagt. Mehrfach. Gerichtlich belegt. Hier geht es um grünlinke Beeinflussung, sonst nichts",
+   "transcript": "Fake News gefährden unsere Demokratie. Mark Zuckerberg hat angekündigt, auf Facebook, Instagram und Frats in Zukunft kein Faktencheck mehr durchzuführen. Wie finde ich das? Natürlich sehr bedenklich. Konkret bedreut es also, dass die Richtlinien vereinfacht werden, dass Verstöße in Zukunft nur noch nach Nutzerbeschwerden geprüft wird und dass er einen stärkeren Fokus auf politische und gesellschaf"
+  },
+  {
+   "uid": "5ab8106ad24c",
+   "n_models": 2,
+   "stratum": "2",
+   "flagging_models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash"
+   ],
+   "party": "Grüne",
+   "chars": 38,
+   "text": "Sind das jetzt auch gekaufte Leute 🤔🤔🤔",
+   "transcript": "Wir haben ja eine Monate lang darüber diskutiert. Die Verbote stehen so da nicht dran. Sie haben ja in Faktirsch das ist natürlich verbote. Sie anfangen 75% jetzt 65% Regenerative Energie für ihre Heizung nehmen müssen. Dann sind das faktische Verbote. Also es ist kein Heizungsverbot, das ist auch das Gebäudeenergie. Faktisch ist es ein Verbot gewesen und es ist mit 65 Prozent jetzt faktisch immer"
+  },
+  {
+   "uid": "955475e43a9b",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "jev-1.13"
+   ],
+   "party": "SPD",
+   "chars": 193,
+   "text": "Ich kann dieses Geschwafel nicht mehr hören. Es ist völlig klar dass die Ukraine als Pufferzone für die Sicherheit Russlands benötigt wird. Das sollte sich auch schlichten Gemütern erschließen.",
+   "transcript": "Putin will nicht ganz Europa. Ja, wieviel von Europa will er denn dann haben und wieviel von Europa billigt ihn Trump dann am Ende zu. Saudi Arabia sitzt man jetzt zusammen und versucht einen Friedensprozess für die Ukraine einzuleiten. Was ein mehr oder weniger irritiert sind die Signale aus den USA. Also der Sonderbeauftrag der Mitkopf finde ich schon spannend, wenn er sich äußert. Putin will ni"
+  },
+  {
+   "uid": "9030b95783b5",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "jev-1.13"
+   ],
+   "party": "AfD",
+   "chars": 68,
+   "text": "die Moderation geht garnicht , Frechheit so etwas ,keinerlei Respekt",
+   "transcript": "Immer noch wird die Asylzuwanderung und die Fachkräftbezuwanderung zusammengeworfen. Das geht nicht. Damit erzeugt man genau den Pulfaktor in den Ländern, in den Herkunftsländern, der dazu fühlt, dass Menschen sich auf den Weg machen, die hier keine Perspektive haben. Und ich muss auch meine Zahl korrigieren. Wir haben nicht 500, wir haben 5000 zu fort Ausreise, richtiger Ausländer in Türing. Das "
+  },
+  {
+   "uid": "63e7a58a4102",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "jev-1.13"
+   ],
+   "party": "Linke",
+   "chars": 68,
+   "text": "ach komm versucht mal die zu verstehen immer dises antieinstellung .",
+   "transcript": "Ich bin heute in Leipzig unterwegs. Wir wollen heute Nazis stören, unter anderem die Faschisten der AfD, Freie Sachsen, Pockenburg, Höphe und andere wollen heute vor dem Bundesverwaltungsgericht loslaufen. Doch der Gegenprotest ist natürlich schon vor Ort und wird auch auf der Route der Nazis, diese nicht ungehindert durch die Stadtlaufen ist. Die Fahrschuhe können erst mal nicht weiter laufen, we"
+  },
+  {
+   "uid": "b4ec9c66fe25",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "jev-1.13"
+   ],
+   "party": "ÖVP",
+   "chars": 119,
+   "text": "Freiheit der Menschen 🤯 Menschen erschiessen andere Menschen weil sie auf die Maskenpflicht hinweisen. tolle Freiheit 👌",
+   "transcript": "Ich glaube, es ist auch angebracht, einmal ehrlich auszusprechen. Es ist nicht zu 100 Prozent planbar, wie sich die Situation weiterentwickelt. Was gut ist, ist, dass wir wissen, dass die Impfung wirkt, dass wir auf die Impfung daher setzen müssen und dass wir sicherlich alles tun werden, um die Freiheit der Menschen, die geschützt sind, nicht einzuschränken, im Idealfall die Freiheit niemanden ei"
+  },
+  {
+   "uid": "c589125d2538",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "jev-1.13"
+   ],
+   "party": "AfD",
+   "chars": 63,
+   "text": "Wir lassen uns nicht einschüchtern ,es gibt nur eins blau, blau",
+   "transcript": "In der vergangenen Nacht wurde auf das AfD-Wahlkreis Büro hier im Rhein-Siekreis an Anschlag verübt. Die Scheibe der Tür wurde eingeschlagen, mutemasslich, buta-säure-satzumes gerochen. In der ganzen Bude verteilt es stinkt wirklich bestialisch. Nach dem gefährlichen Zwillenangriff auf eines der AfD-Mitgliedern mal letzte Woche ist das eine weitere der vielen faulen Früchte. Der Hass erfüllten Saa"
+  },
+  {
+   "uid": "79af501f72e6",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "jev-1.13"
+   ],
+   "party": "AfD",
+   "chars": 62,
+   "text": "sie sind nicht integrierbar und wollen nicht integriert werden",
+   "transcript": "Kontrollierte drei deutsche Staatsbürger als Familie mit türkischen Migrationshintergrund bei der Ausreise. Der zehnjährige Sohn zeigte seinen deutschen Reisepass, den Polizisten und kommentierte dies, wie folgtig zitiere. Das stimmt nicht, was das steht. Ich bin kein deutscher Zitatende. Auf Nachfrage des Polizisten bestätigten die gereizten Eltern das gesagte, dann noch einmal, wovon nach ein Pa"
+  },
+  {
+   "uid": "b4cb6160f2d2",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "gpt-6-luna"
+   ],
+   "party": "AfD",
+   "chars": 475,
+   "text": "Herr Becker Ich bin Afd Wähler und freue mich auf solch einer Partei die versucht für das Volk zu sein und nicht dagegen. Jetzt hätte ich gerne einen Rat von Ihnen. Meine Tochter meinte sozusagen ich sei ein Nazi ,da sie eine linkspaetei gewählt hatte. Dies ist natürlich für mich verletzend und traurig das meine eigene Tochter mich als Nazi betitelt. Wie oder was sollte ich tun. Habe versucht eine lockere Diskussionsrunde Runde untereinander zu eröffnen aber keine Chance",
+   "transcript": "Ja, ich glaube, ich darf nicht. Man muss ja über der Gütelinie bleiben, ne? Was macht ihr nachher daraus? Wird das dann quasi? Stellen Sie sich doch gerne einmal vor. Hallo, mein Name ist Kasten Becker. Ich bin 32 Jahre jung vom Beruf Elektroniker für Betriebstechnik und sitze für die AfD seit April bzw. März 2022 im saalischen Landtag. Was sind Ihre politischen Schwerpunkte? Was ich im Landtag ma"
+  },
+  {
+   "uid": "f2c3e1ff96fa",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "gpt-6-luna"
+   ],
+   "party": "FDP",
+   "chars": 115,
+   "text": "Bitte senkt die Abgeltungsteuer, will mehr Aktien kaufen bringt aber nichts wenn der Staat mir alles wegnimmt 💛🙏🙏🙏💛",
+   "transcript": "Was die politische Konkurrenz über das FDP-Wirtschaftspapier sagt? Bundesminister Lindhardt, ultimativ und öffentlich eine grundlegend andere Politik gefordert. Das musste man als Provokation empfinden in der Koalition, da darf er nichts zum Attragen kommen. Fragen wir die, die wirklich etwas von Wirtschaft verstehen. Wir unterstützen die exzellente Analyse im Wirtschaftswende-Papier. Die FDP hat "
+  },
+  {
+   "uid": "7c4998d140ad",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "gpt-6-luna"
+   ],
+   "party": "FreieWähler",
+   "chars": 139,
+   "text": "Ich fänds ja nicht schlimm wenns die Pflicht bei Neubau & bei geförderten Sanierungen gäbe. Aber doch nicht bei 200j. alten Fachwerkhäusern",
+   "transcript": "rote Karte für das Gebäude-Energie-Gesetz. Das von der andere geplante Gebäude-Energie-Gesetz ist ein Schlag für jeden Eigentümer. Das Krasi aus für Holzheizungen und der einseitige Zwang hin zu Wärmepumpen ist der falsche Weg. Bitte unterschreibt unsere Petition."
+  },
+  {
+   "uid": "d4a413b10589",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "gpt-6-luna"
+   ],
+   "party": "AfD",
+   "chars": 30,
+   "text": "Klingt toll wie in Nord Korea👍",
+   "transcript": "Guten Tag. Mein Name ist Rollbiedenau, Vorsitzender der AfD-Fraktion. Wir sind einigen noch und heute mal weit weg auf der Insel Mallorca. Hier treffen Sie auch mal ein Jens. Mit wahren Namen heißt er Jens Kerstan, er ist Grünen, Politiker und Umweltzenator in Hamburg. Und er hat hier auf Mallorca eine Finger wo er öfter ist. Und ich habe mit seinen Nachbarn geredet. Nein, er kommt nicht mit dem l"
+  },
+  {
+   "uid": "117932d4286b",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "gpt-6-luna"
+   ],
+   "party": "FreieWähler",
+   "chars": 196,
+   "text": "Wenn im echten leben etwas spontan kommt darf ich auch jegliche hilfsmittel nutzen bzw alles was ich dazu brauche. beim unangekündigten test wird davon ausgegangen dass ich mir jeden abend nochmal",
+   "transcript": "Unser Wohlstand erhält sie nicht von allein. Und weiterhin an der Spitze der Welt mitzuspielen braucht es eine gut ausgebildete Jugend. Daher verstehe ich auch die aktuellen Diskussion um die Abschaffung der unangekündigten Tests nicht. Spontaneere Ereignisse passieren immer im Leben. Und unangekündigte Tests sind unter anderem eine gute Möglichkeit, Jugend darauf vorzubereiten. Dadurch können auc"
+  },
+  {
+   "uid": "241211d1958f",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "gpt-6-luna"
+   ],
+   "party": "CDU",
+   "chars": 43,
+   "text": "BEIDE STIMMEN FÜR DIE AFD💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙",
+   "transcript": "Achse knöre ich. Wie wichtig ist denn jetzt die Erst- und die Zweitstimme? Wir brauchen diesmal beide Stimmen für die CDU. Selbst wenn ich die meisten Erstimmen bekommen sollte, bin ich nicht automatisch im Deutschen Bundestag und deswegen brauchen wir diesmal beide Stimmen für die CDU, damit ich den Wahlkreistipolz Niveau 1 wieder in Berlin vertreten darf. Was würde das denn bedeuten für unseren "
+  },
+  {
+   "uid": "7f4bbe6be93b",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "deepseek-v4.1-flash"
+   ],
+   "party": "Linke",
+   "chars": 100,
+   "text": "Ihr seid doch die Kinder und Enkel der SED? Habt Ihr die Maueropfer und Häftlinge schon entschädigt?",
+   "transcript": "Am Wochenende findet der AfD-Bundespartei-Tach in Essen statt. Die AfD, eine verschissste Partei, will in den Pot um dort in Partei-Tach abzuhalten. Im Hort der arbeiteren Arbeiter will die AfD ihre recht ideologien verbreiten. Lass uns dagegen Widerstand leisten, den Widerstand formieren. Von ganz Deutschland kommen Busse nach Essen, aus Rosenheimen, meinem Wahlkreis, würde ein Bus nach Essen fah"
+  },
+  {
+   "uid": "de7cc9ed2663",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "deepseek-v4.1-flash"
+   ],
+   "party": "AfD",
+   "chars": 108,
+   "text": "Bin für Abtreibung von Politikern, Beamten, Anwälten, Richtern, Ärzten und illegalen Einwanderern/Invasoren!",
+   "transcript": "Meine Damen und Herren, dieses deutsche Parlament redet heute darüber, das Thürten von Menschen zu legalisieren. So fordert es der Antrag von SPD und Grünen auf Seite 3 unter Punkt 1. Wie tief kann eine Zivilisation sinken? Sie wollen mehr chemische Abtreibung, sie wollen Ärzte zwingen Abtreibung durchzuführen, sogar Hausärzte sollen Abtreibung durchführen. Dieser Antrag ist der moralische Gefrihr"
+  },
+  {
+   "uid": "fb7bba3fcc86",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "deepseek-v4.1-flash"
+   ],
+   "party": "Linke",
+   "chars": 65,
+   "text": "daswegen BSW für richtige linke Politik statt Pseudolinke Politik",
+   "transcript": "Reiche gehen wählen, Rechte gehen wählen. Lobby's gehen wählen. Und du am neuen Juni sind Wahlen. Deine Stimme gegen Armut für Gerechtigkeit. Gerechtigkeit geht nur mit links. Deine Stimme zählt. Wir wählen links."
+  },
+  {
+   "uid": "573ade148edc",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "deepseek-v4.1-flash"
+   ],
+   "party": "Linke",
+   "chars": 231,
+   "text": "ich wähle morgen die echte politische Mitte im Land. eine echte politische Mitte die Verantwortung übernehmen möchte und weder radikal noch populistisch noch nationalistisch eingestellt ist 🙌. geht wählen für eine starke Demokratie",
+   "transcript": "Du belegst strategisch, SPD oder Grüne zu wählen, dann ist dieses Video für dich. SPD und Grüne sind gar nicht so sozial, wie sie immer tun. In der Regierungszeit von Rothgrün, in den Nuller Jahren, wo es keine Linkeobosition gegeben hat, haben sie den größten sozialer Bau in der Geschichte der Bundesrepublik durchgesetzt. SPD und Grüne sind immer weiter nach rechts gehocht. In der Regierungszeite"
+  },
+  {
+   "uid": "c45595b34d17",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "deepseek-v4.1-flash"
+   ],
+   "party": "SPD",
+   "chars": 139,
+   "text": "Also der Argumentation zu Grunde müsste ganz Deutschland streiken und nicht nur die GDL, die ganz Deutschland damit den letzten Nerv raubt.",
+   "transcript": "Ja ich weiß, viele Menschen ärgern sich gerade über die Streiks bei Busselbahn. Menschen kommen nicht mehr zur Arbeit oder stehen schon lang im Stau. Ich habe gestern beispielsweise über 2,5 Stunden gebraucht, um von Dortmund nach Düsseldorf zu kommen. Ja, ich habe mich auch geärgert. Im Grundsatz ist das völlig in Ordnung, denn das ist für eine gute Sache nämlich unser Streikrecht. Der Streikrech"
+  },
+  {
+   "uid": "367c29515d9d",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "deepseek-v4.1-flash"
+   ],
+   "party": "CSU",
+   "chars": 27,
+   "text": "Nimalscdu oder andere drei.",
+   "transcript": "Also ich finde wählen ist nicht nur ein demokratisches Recht, sondern sogar eine Pflicht. Und ich finde nur wie Welt darf dann auch über die Regierung meckern. Und deswegen am kommenden Sonntag, den 23. Februar, bitte CSU und Stefan Pilzinger wählen."
+  },
+  {
+   "uid": "ad16f3f440f5",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "glm-5.3-flash"
+   ],
+   "party": "BSW",
+   "chars": 63,
+   "text": "Das ist sehr unhöflich, aber glauben sie noch an Weinachtsmann?",
+   "transcript": "Während täglich viele unter ernährte Kinder im Gaza-Streifen in die Krankenhäuser eingeliefert werden, leugnet die Israelische Regierung einfach, dass es dort noch Hungersnot gibt. Wir hatten im Juli schon Berichte aus der UN, die gesagt haben, es gibt unheimlich viele, um die 12.000 Kinder herum, die also massiv mangel ernährt sind, unter 5 Jahre alt und 2500 von massiv. Und schon die World Peace"
+  },
+  {
+   "uid": "47bc15e64119",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "glm-5.3-flash"
+   ],
+   "party": "AfD",
+   "chars": 141,
+   "text": "Wenn Menschen sagen, der Wolf war vor uns hier, sag ich gerne, das es der TRex auch war. Trotzdem würde er heute nicht mehr hier rein passen.",
+   "transcript": "Haben Sie die Geschichte von Charlie gehört? Charlie ist nicht mehr. Charlie war ein Springfährt aus der Gemeinde Langlingen in Zelle. Bis vor drei Wochen, drei Wölfe haben den Kerngesunden-Wallach abends auf seiner Weide gejagt. Die Besitzerin rannte raus und versuchte, schreien die Wölfe zu vertreiben. Die Jagten dem Fährt aber weiterhin daher und hättsten es in einen Zaun. Der Draht durchschnit"
+  },
+  {
+   "uid": "2d64b23740e1",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "glm-5.3-flash"
+   ],
+   "party": "Grüne",
+   "chars": 66,
+   "text": "ich muss kotzen vor den wahlen,😂🤣🤣🤣🤣😡😡😡😡😡😡😡😡😡lugner one ausbildung",
+   "transcript": "Brandenburg braucht Größe. Echt jetzt? Und ich darf der Brandenburg braucht gute Schulen und Kitas, bezahlbare Wohnungen, besseren ÖPNV, ambitionierten Klimaschutz und eine nachhaltige Wirtschaftsförderung."
+  },
+  {
+   "uid": "6580b01ac35e",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "glm-5.3-flash"
+   ],
+   "party": "Linke",
+   "chars": 38,
+   "text": "Nur noch 🇩🇪 keine kommunisten mehr !!!",
+   "transcript": "Viele junge Gesichter bei den Linken, der Grund hier für dürfte, sie sein. Heidi Reichineck, Spitzenkandidat in aller Linken und eigentlich an der Seite von Bundespartei-Chef Jan van Arten. Der Corona bedingt heute aber nicht dabei sein konnte. Reichineck kommt bei jungen Menschen und in den sozialen Medien an. Mit mieten Deckelunterstreichung der Mehrwertsteuer bei Lebensmitteln ziehen die Linken"
+  },
+  {
+   "uid": "67d182d93c29",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "glm-5.3-flash"
+   ],
+   "party": "ÖVP",
+   "chars": 50,
+   "text": "suppa ist ihr Sohn schon geimpft auf was wartst du",
+   "transcript": "Abschließend meinen Appell an alle, die noch zögern, die sich noch nicht sicher sind. Bitte lassen sie sich impfen, sie schützen sich damit selbst. Sie leisten vor allem aber auch einen Beitrag zum Gemeinwohl. All diese Maßnahmen, die wir setzen, sind niemals Schikane. Sie haben niemals das Ziel, irgendjemanden mutwillig einzuschränken, sondern sie sind notwendig, damit wir einen Lockdown für alle"
+  },
+  {
+   "uid": "e668b820a172",
+   "n_models": 1,
+   "stratum": "1",
+   "flagging_models": [
+    "glm-5.3-flash"
+   ],
+   "party": "CDU",
+   "chars": 62,
+   "text": "schwarz rot gold ist und bleibt unsere Flagge und keine andere",
+   "transcript": "Also was mich die Tage wirklich aufgeregt hat, das war unser ex-minister Präsident Bodorama mit seiner Forderung sowohl Schwarz-Rutt Gold als auch die Nationalhymne abschaffen zu wollen und das obwohl wir ja in Thüringen gerade 1989 eine friedliche Wiedervereinigung unter Schwarz-Rutt Gold mit Einigkeit und Recht und Freiheit hatten. Meine Eltern mit dieser Pfanne auf die Straße gezogen sind mit g"
+  }
+ ],
+ "verdicts": {
+  "4": [
+   {
+    "uid": "85ec47fd10af",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "923edb1280f3",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "5a01cdc015b8",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "8966c7954e9a",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "154b7ea414d7",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "86d34c18cbe0",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "43cd8d8a748c",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "72fc8f292092",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   }
+  ],
+  "3": [
+   {
+    "uid": "a48282b9dbc6",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "2759277c7ce2",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "a7f65b21befc",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "11bce973d570",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "55c0f2a1f9f6",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "e64da5bb8587",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "b727bdd5ffe9",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "c4ab95489e86",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   }
+  ],
+  "2": [
+   {
+    "uid": "ad062422103f",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "b422abfbbc6d",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "f9441d6a8411",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "b894b4d769f5",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "eec70748dd7d",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "39f4a42606ba",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "21ffe67f458e",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "5ab8106ad24c",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   }
+  ],
+  "1": [
+   {
+    "uid": "955475e43a9b",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "9030b95783b5",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "63e7a58a4102",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "b4ec9c66fe25",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "c589125d2538",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "79af501f72e6",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "b4cb6160f2d2",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "f2c3e1ff96fa",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "7c4998d140ad",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "d4a413b10589",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "117932d4286b",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "241211d1958f",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "7f4bbe6be93b",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "de7cc9ed2663",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "fb7bba3fcc86",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "573ade148edc",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "c45595b34d17",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "367c29515d9d",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "ad16f3f440f5",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "47bc15e64119",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "2d64b23740e1",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "6580b01ac35e",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "67d182d93c29",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   },
+   {
+    "uid": "e668b820a172",
+    "verdict": "PENDING",
+    "label": null,
+    "why": "(not yet coded in v2)"
+   }
+  ]
+ }
+}

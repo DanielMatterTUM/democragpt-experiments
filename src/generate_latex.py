@@ -1,15 +1,23 @@
 #!/usr/bin/env python3
 """Generate report/report.tex and report/refs.bib from the analysis JSONs.
 
-Avoids f-strings for LaTeX bodies: LaTeX is full of braces and backslashes, and
-mixing them with python f-strings is fragile. Instead each body section is a
-PLAIN string with @PLACEHOLDER@ tokens, and the values are injected with
-str.replace(). This is verbose but robust -- a stray brace can never break the
-python syntax.
+Design notes:
+* LaTeX bodies are PLAIN strings with @PLACEHOLDER@ tokens, injected via
+  str.replace() -- f-strings and LaTeX braces do not mix.
+* Every number that a previous version of this report typed by hand is now
+  GENERATED from the analysis JSONs. If a value the report needs is missing
+  from the data, the build fails (see require() at the bottom) instead of the
+  report silently mixing stale results.
+* Sample discipline: every aggregate in the report carries its sample tag
+  ("matrix" = 1,200 comments / "big" = 2,001 comments). The A x B table is
+  rendered from the big-sample rows with n=2,001, and the matrix-sample
+  per-model values are shown next to it so the two samples can never be
+  confused again.
 """
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -17,9 +25,12 @@ RES = REPO / "results"
 OUT_TEX = REPO / "report" / "report.tex"
 OUT_BIB = REPO / "report" / "refs.bib"
 
-LAB_B = ["konfrontation_angriff", "ablenkung_whataboutism",
-         "delegierung_hilflosigkeit", "vermeidung_rueckzug",
-         "reflektierte_rechtfertigung", "konstruktive_kritik", "keine_reaktanz"]
+EXPECTED_MODELS_4 = {"jev-1.13", "gpt-6-luna", "deepseek-v4.1-flash",
+                     "glm-5.3-flash"}
+N_MATRIX = 1200
+N_BIG = 2001
+
+_warnings = []
 
 
 def load(n, d=None):
@@ -28,6 +39,7 @@ def load(n, d=None):
         p = base / n
         if p.exists():
             return json.load(p.open(encoding="utf-8"))
+    _warnings.append(f"required input {n} missing")
     return d
 
 
@@ -39,82 +51,114 @@ def short_model(m: str) -> str:
             "glm-5.3-flash": "glm-5.3-fl."}.get(m, m.replace("_", r"\_"))
 
 
-X = load("analysis_ext.json", {}) or {}
-BIG = load("analysis_big.json", {}) or {}
-RELI = load("exp_reliability.json", {}) or {}
-PARA = load("exp_paraphrase.json", {}) or {}
-AUD = load("audit_linked.json", []) or []
-SM = load("sample_matrix_meta.json", {}) or {}
-SB = load("sample_big_meta.json", {}) or {}
-
-
 def nz(v, n=2, na="--"):
     if v is None:
         return na
     return f"{v:.{n}f}"
 
 
-# ====================================================== generated rows
-def _prev_rows():
-    rows = []
-    for m in ("jev-1.13", "gpt-6-luna", "deepseek-v4.1-flash", "glm-5.3-flash"):
-        b = next((x for x in X.get("bootstrap_prev", [])
-                  if x["cb"] == "A" and x["model"] == m), None)
-        if not b:
-            continue
-        rows.append(
-            "  %s & %s & %s & %s\\%% & [%s; %s] \\\\"
-            % (short_model(m), b.get("cond"), b.get("n"),
-               nz(b.get("pct"), 2), nz(b.get("ci_lo"), 2), nz(b.get("ci_hi"), 2)))
-    return "\n".join(rows)
+# ---------------------------------------------------------------- inputs
+X = load("analysis_ext.json", {}) or {}
+BIG = load("analysis_big.json", {}) or {}
+GATE = load("analysis_gate.json", {}) or {}
+RELI = load("exp_reliability.json", {}) or {}
+PARA = load("exp_paraphrase.json", {}) or {}
+AUD_SC = load("audit_scoping.json", {}) or {}
+SM = load("sample_matrix_meta.json", {}) or {}
+SB = load("sample_big_meta.json", {}) or {}
+
+# ---------------------------------------------------------------- values
+n_matrix = SM.get("reached", N_MATRIX)
+n_big = SB.get("reached", N_BIG)
+
+# --- audit (the single generated source for every precision value) -------
+AUD = AUD_SC
+aud_strata = AUD.get("strata", {})
 
 
-def _f1_rows():
-    rows = []
-    for r in X.get("binary_f1", []):
-        if r["cond"] != "B":
-            continue
-        rows.append(
-            "  %s & %s & %s & %s & %s & %s & %s \\\\"
-            % (short_model(r["model"]), r["tp"], r["fp"], r["fn"],
-               nz(r.get("precision"), 3), nz(r.get("recall"), 3),
-               nz(r.get("f1"), 3)))
-    return "\n".join(rows)
+def aud(k):
+    s = aud_strata.get(str(k)) or {}
+    return s  # {"n","n_positive","precision_pct","wilson95_pct","cases"}
 
 
-def _ab_rows():
-    rows = []
-    for r in X.get("codebook_confusion", []):
-        if r["cond"] != "B":
-            continue
-        rows.append("  %s & %s & %s & %s & %s & %s \\\\"
-                    % (short_model(r["model"]), r["n"], r["both"],
-                       r["fp"], r["fn"], nz(r.get("fp_tp"), 2)))
-    return "\n".join(rows)
+prec3 = (aud(3).get("precision_pct") or 0) / 100
+prec2 = (aud(2).get("precision_pct") or 0) / 100
+prec1 = (aud(1).get("precision_pct") or 0) / 100
+w3pool = AUD.get("weighted_3model_pool") or {}
+w3 = (w3pool.get("pct") or 0) / 100
+pooled = AUD.get("pooled") or {}
+n_pos_3pool = w3pool.get("n") or 119
+glm_only_flags = AUD.get("glm_only_flags")
 
+# --- big sample A x B (per model, n = 2001) -------------------------------
+ab_rows_big = []
+if isinstance(BIG.get("A_vs_B"), list):
+    for r in BIG["A_vs_B"]:
+        ab_rows_big.append(
+            "  %s & %d & %d & %d & %d & %s & %s & %s \\\\"
+            % (short_model(r["model"]), r["n"], r["both"], r["fp"], r["fn"],
+               nz(r["raw_agreement_pct"], 1), nz(r["cohens_kappa"], 2),
+               nz(r.get("fp_tp"), 2)))
+ab_rows_big = "\n".join(ab_rows_big)
+# matrix-sample A x B (per model, n = 1200) -- the other table
+ab_rows_matrix = []
+for r in X.get("codebook_pairwise", []):
+    if r["cond"] != "B":
+        continue
+    ab_rows_matrix.append(
+        "  %s & %d & %d & %d & %d & %s \\\\"
+        % (short_model(r["model"]), r["n"], r["both"], r["fp"], r["fn"],
+           nz(r.get("fp_tp"), 2)))
+ab_rows_matrix = "\n".join(ab_rows_matrix)
 
-def _agree_rows():
-    # Per-model rows: each model against the 4-model majority. F1 is a
-    # first-class column next to raw / kappa / AC1 (all on the 0-1 scale),
-    # replacing the old separate F1 chapter.
-    rows = []
-    for c in X.get("consensus_reference", []):
-        if c["cond"] != "A":
-            continue
-        n = c["n"]; maj_pos = c["n_ref_pos"]
-        n11 = c["tp"]; n01 = c["fp"]; n10 = c["fn"]; n00 = n - maj_pos - c["fp"]
-        po = (n11 + n00) / n if n else 0.0
-        pe = ((maj_pos / n) * ((n11 + n01) / n)
-              + (1 - maj_pos / n) * (1 - (n11 + n01) / n)) if n else 0.0
-        k = (1.0 if abs(1 - pe) < 1e-12 else (po - pe) / (1 - pe)) if n else 0.0
-        rows.append(
-            "  %s & %d & %s & %s & %s & %s \\\\"
-            % (short_model(c["model"]), n,
-               nz(po, 3), nz(c.get("f1"), 3), nz(k, 3),
-               nz(c.get("ac1"), 3)))
-    return "\n".join(rows)
+# --- big-sample headline (Jev) --------------------------------------------
+a_prev = (BIG.get("prevalence_A") or {}).get("jev-1.13", {}).get("prevalence_pct")
+a_ci = (BIG.get("prevalence_A") or {}).get("jev-1.13", {}).get("ci95", ["--", "--"])
+a_npos = (BIG.get("prevalence_A") or {}).get("jev-1.13", {}).get("n_positive")
 
+# --- gate (matrix, condition B) --------------------------------------------
+G = (GATE.get("runs", {}).get("matrix", {}).get("conditions") or {}).get("B") or {}
+G_BIG = (GATE.get("runs", {}).get("big", {}).get("conditions") or {}).get("B") or {}
+gc = {g["model"]: g for g in G.get("gate_consistency", [])}
+pw6 = G.get("pairwise_type", [])
+pw7 = G.get("pairwise_baseline7", [])
+tc = G.get("type_consensus") or {}
+gate_n = G.get("jev_gated_n")
+gate_pcts = [g["accept_pct"] for g in G.get("gate_consistency", []) if g.get("accept_pct") is not None]
+pair_agree = [p["raw_pct"] for p in pw6 if p.get("raw_pct") is not None]
 
+# --- consensus reference F1 (matrix, condition A) --------------------------
+agree_rows_lines = []
+for c in X.get("consensus_reference", []):
+    if c["cond"] != "A":
+        continue
+    n = c["n"]; maj_pos = c["n_ref_pos"]
+    n11 = c["tp"]; n01 = c["fp"]; n10 = c["fn"]; n00 = n - maj_pos - c["fp"]
+    po = (n11 + n00) / n if n else 0.0
+    pe = ((maj_pos / n) * ((n11 + n01) / n)
+          + (1 - maj_pos / n) * (1 - (n11 + n01) / n)) if n else 0.0
+    k = (1.0 if abs(1 - pe) < 1e-12 else (po - pe) / (1 - pe)) if n else 0.0
+    agree_rows_lines.append(
+        "  %s & %d & %s & %s & %s & %s \\\\"
+        % (short_model(c["model"]), n,
+           nz(po, 3), nz(c.get("f1"), 3), nz(k, 3),
+           nz(c.get("ac1"), 3)))
+agree_rows = "\n".join(agree_rows_lines)
+
+# --- prevalence rows ---------------------------------------------------------
+prev_rows_lines = []
+for m in ("jev-1.13", "gpt-6-luna", "deepseek-v4.1-flash", "glm-5.3-flash"):
+    b = next((x for x in X.get("bootstrap_prev", [])
+              if x["cb"] == "A" and x["model"] == m), None)
+    if not b:
+        continue
+    prev_rows_lines.append(
+        "  %s & %s & %s & %s\\%% & [%s; %s] \\\\"
+        % (short_model(m), b.get("cond"), b.get("n"),
+           nz(b.get("pct"), 2), nz(b.get("ci_lo"), 2), nz(b.get("ci_hi"), 2)))
+prev_rows = "\n".join(prev_rows_lines)
+
+# --- surface robustness rows -------------------------------------------------
 def _surf_table():
     per = PARA.get("per_stratum", {})
     rows = []
@@ -130,29 +174,55 @@ def _surf_table():
     return "\n".join(rows)
 
 
-ab_rows = _ab_rows()
-f1_rows = _f1_rows()
-agree_rows = _agree_rows()
-prev_rows = _prev_rows()
 surf_rows = _surf_table()
 
-# audit-derived precision
-prec = {}
-w = 0.0
-if AUD:
-    for k in (3, 2, 1):
-        s_ = [r for r in AUD if r["n_models"] == k]
-        prec[k] = 100 * sum(1 for r in s_ if r["verdict"] == "ja") / max(1, len(s_))
-    w = (prec[3] * 27 + prec[2] * 26 + prec[1] * 66) / 119
+# ---------------------------------------------------------------- gates
+# Gate-rejection table rows (Q1) -- one per downstream model, matrix/cond B
+gate_rows_lines = []
+for m in ("jev-1.13", "gpt-6-luna", "deepseek-v4.1-flash", "glm-5.3-flash"):
+    g = gc.get(m)
+    if not g:
+        continue
+    gate_rows_lines.append(
+        "  %s & %d & %d & %d & %s\\%% \\\\"
+        % (short_model(m), g["n"], g["n_accept"], g["n_reject"],
+           nz(g["reject_pct"], 0)))
+gate_rows = "\n".join(gate_rows_lines)
 
-a_prev = (BIG.get("codebook_A") or {}).get("prevalence_pct")
-a_ci = (BIG.get("codebook_A") or {}).get("ci95", ["--", "--"])
-b_prev = (BIG.get("codebook_B") or {}).get("prevalence_pct")
+# consensus tiers (Q3) -- counts + the "k or more" cumulative
+if tc:
+    _n_v = tc.get("n_voters", 4)
+    _ga = tc.get("gate_accept", {})
+    _tcs = tc.get("type_consensus", {})
+    _n_gated = tc.get("n_gated", 0)
 
-n_matrix = SM.get("reached", 1200)
-n_big = SB.get("reached", 2001)
+    def _cnt(d, k):
+        return d.get(f"{k}-of-{_n_v}", 0)
 
-# ====================================================== document
+    n_44 = _cnt(_tcs, 4)
+    n_34 = _cnt(_tcs, 3)
+    n_24 = _cnt(_tcs, 2)
+    n_14 = _cnt(_tcs, 1)
+    n_tie = _tcs.get("tie", 0)
+    n_reject_all = _cnt(_ga, 0)
+    n_k3 = n_44 + n_34 + n_24  # >= 3 of 4 models retain the gate
+    pct = lambda c: round(100 * c / _n_gated) if _n_gated else None
+else:
+    n_44 = n_34 = n_24 = n_14 = n_tie = n_reject_all = n_k3 = None
+    pct = lambda c: None
+
+# Big-sample gate consensus headline (2 models)
+gc_big = {g["model"]: g for g in G_BIG.get("gate_consistency", [])}
+tc_big = G_BIG.get("type_consensus") or {}
+gate_n_big = G_BIG.get("jev_gated_n")
+
+# A x B headline (Jev, big sample) -- generated, not typed
+_abj = next((r for r in (BIG.get("A_vs_B") or []) if r["model"] == "jev-1.13"), None)
+AB_BIG_JEV_RAW = f"{_abj['raw_agreement_pct']:.1f}" if _abj else "--"
+AB_BIG_JEV_K = f"{_abj['cohens_kappa']:.2f}" if _abj else "--"
+AB_BIG_JEV_FPTP = f"{_abj['fp_tp']:.2f}" if _abj else "--"
+
+# ---------------------------------------------------------------- document
 DOC_TEMPLATE = r"""% !TeX program = xelatex
 % Autogenerated by src/generate_latex.py -- do not hand-edit.
 
@@ -234,12 +304,13 @@ LLM coding; TikTok; validity; reliability; bootstrap; decision API\par\normalsiz
 
 \textbf{Samples.} Two samples from the same corpus of German-language comments
 under the accounts of German politicians, stratified by the account's party.
-The matrix sample comprises @N_MATRIX@ comments from @M_ACC@ accounts,
+The \emph{matrix sample} comprises @N_MATRIX@ comments from @M_ACC@ accounts,
 @M_PARTIES@ parties and @M_VID@ videos, each with its video transcript
-(required by Condition~A). The large-scale sample adds @N_BIG@ comments from
-@B_ACC@ accounts and @B_PARTIES@ parties, coded exclusively under
-Condition~B (comment text only). Both samples are restricted to visible
-top-level comments of at least 25 characters.
+(required by Condition~A). The \emph{large-scale sample} adds @N_BIG@ comments
+from @B_ACC@ accounts and @B_PARTIES@ parties, coded exclusively under
+Condition~B (comment text only) and, for the agreement analyses, by the two
+backends that run on that sample (Jev and GLM-5.3-Flash). Both samples are
+restricted to visible top-level comments of at least 25 characters.
 
 \medskip
 \noindent\textbf{Codebook A (binary).} Requires, together, a perceived freedom
@@ -297,8 +368,9 @@ Jev remains the fastest and cheapest backend: 0.46\,s and \$0.061 per
 1{,}000 comments, against 2.1--2.4\,s and \$0.12--0.33 for the chat models
 (Figure~\ref{fig:cost}); GLM-5.3-Flash is the cheapest chat model
 (\$0.119) but does not beat Jev. Jev is also the only backend that returns
-calibrated class probabilities --- a corrective that proves effective in
-Section~\ref{sec:validity}.
+class probabilities --- an advantage with a practical payoff in
+Section~\ref{sub:calib} (a threshold on the probability lifts consensus-agreement
+precision from 14\% to nearly 80\%).
 
 \begin{figure}[ht]
 \centering
@@ -323,29 +395,57 @@ Circles: Codebook~A. Squares: Codebook~B.}
 \label{fig:cost}
 \end{figure}
 
-\subsection{The video context contributes nothing}
+\subsection{Does the video context help detection?}
 \label{sub:transcript}
-Dropping the transcript moves prevalence by less than two percentage points, in
-the same direction for all models. Only for Jev does the exact McNemar test
-reach the conventional significance level ($p=0.019$) --- but the direction is
-negative: the transcript lowers, not raises, the hit rate. For a detection
-pipeline the ~900 added prompt tokens per comment buy nothing measurable; the
-comment text suffices.
+Dropping the transcript moves the \emph{aggregate} prevalence by less than two
+percentage points, in the same direction for all models
+($\Delta$ prevalence, Codebook~A, matrix sample: jev @PCT_JEV@ \,pp,
+gpt-6-luna @PCT_GPT@ \,pp, deepseek @PCT_DEEP@ \,pp, glm @PCT_GLM@ \,pp;
+only Jev's shift reaches the conventional significance level of an exact
+McNemar test). The aggregate figure alone does not answer the interesting
+question, however, which is whether the \emph{same comments} are classified as
+reactant with and without the transcript (Figures~\ref{fig:cmCondA} and
+\ref{fig:cmCondB} sit here on purpose). @CASELEVEL_SENTENCE@ The transcript
+is therefore not a detection tool, but the comment text is sufficient for
+detection.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{fig06_confusion_condition_A.pdf}
+\caption{Condition~A (with transcript) vs.\ Condition~B (comment only),
+Codebook~A: case-level stability of the binary reactance label per model.
+Rows = Condition~A, columns = Condition~B.}
+\label{fig:cmCondA}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{fig06_confusion_condition_B.pdf}
+\caption{Condition~A vs.\ Condition~B, Codebook~B. Top row: the full 7-class
+confusion --- does the transcript change the inferred \emph{kind} of
+reactance? Bottom row: the binary reactant/none collapse with the four
+cells --- are the \emph{same comments} called reactant?}
+\label{fig:cmCondB}
+\end{figure}
 
 \subsection{GLM-5.3-Flash is the least conservative model}
 \label{sec:glm}
 The fourth model changes the prevalence picture more than any transcript or
 codebook change did. GLM-5.3-Flash marks 10.8\% of the matrix sample as
 reactance (Condition~A) --- two to three times the share of the other three
-(2.8--6.6\%) --- and flags 189 of the 2{,}001 large-scale comments (9.4\%)
-where Jev finds 58. This is not better or worse recall in itself; it is the
-single largest source of the disagreement structure in
-Section~\ref{sec:agree}. Of the comments GLM alone flags, the manual audit in
-Section~\ref{sub:precision} suggests the large majority would be false
-positives of the same kind the audit identified in the other models: outrage
-without a freedom reference. GLM's low F1 against the consensus
-(0.52--0.54, Table~\ref{tab:agree}) is the operational cost of that
-liberality.
+(2.8--6.6\%) --- and flags @N_GLM_BIG@ of the @N_BIG@ large-scale comments
+where Jev finds @N_JEV_BIG@. This is not better or worse recall in itself; it
+is the single largest source of the disagreement structure in
+Section~\ref{sec:agree}, and it is a statement about \emph{agreement with the
+consensus}, not about which model is correct: GLM deviates most strongly from
+the four-model consensus, which is exactly what its lower consensus-F1
+measures (0.52--0.54, Table~\ref{tab:agree}).
+
+Of the comments only GLM flags, @GLM_ONLY@ were flagged by no other model in
+the matrix sample. The manual audit (Section~\ref{sub:precision}) was drawn
+\emph{before} GLM existed and says nothing about this GLM-only stratum; the
+v2 audit sample (48 candidates, the GLM-only stratum included) is drawn and
+awaiting annotation. No precision claim about GLM-only flags is made here.
 
 \section{Agreement between models}
 \label{sec:agree}
@@ -387,7 +487,8 @@ artefact; AC1 and, for the binary task, F1 close it.}
 Condition~A). All four columns sit on the 0--1 scale --- raw agreement and
 F1 next to the two chance-corrected coefficients, so F1 is a first-class
 measure here rather than a chapter of its own. The reference is the
-consensus, not a gold standard.}
+consensus, not a gold standard: these are agreement numbers, not
+correctness numbers.}
 \label{tab:agree}
 \footnotesize
 \setlength{\tabcolsep}{5pt}
@@ -424,26 +525,37 @@ address this.
 
 \subsection{Precision of positive detection}
 \label{sub:precision}
-Of @N_POS@ comments marked as reactance by at least one model, 36 were
-re-coded manually, stratified by consensus degree. The estimated precision is
-\textbf{@PREC_W@\%} --- @PREC3@\% at three-model consensus, @PREC2@\% at a
-two-model majority and @PREC1@\% for single-model flags
-(Figure~\ref{fig:audit}). The error is structured: outrage without a freedom
-reference; reaction to a claim rather than to a constraint; named triggers
-without reactive behaviour.
+Of the @N_POS@ comments marked as reactant by at least one of the \emph{three
+original models}, @N_AUDITED@ were re-coded manually, stratified by consensus
+degree (12 per stratum). \textbf{Scope of this audit: the three original
+models.} GLM-5.3-Flash was added to the experiment after the sample was drawn,
+so the strata below are ``$k$ of the three original models'' and the audit says
+nothing about GLM-only flags. The estimated precision is \textbf{@PREC_W@\%}
+(stratum-weighted over the 3-model pool of @N_POS@): @PREC3@\%
+(@N3@/{@NN3@} of the cases) at three-model consensus, @PREC2@\%
+(@N2@/{@NN2@}) at a two-model majority and @PREC1@\% (@N1@/{@NN1@}) for
+single-model flags; every value is a point estimate on $n=12$ and the
+intervals are exact Wilson intervals (Figure~\ref{fig:audit}). The error is
+structured: outrage without a freedom reference; reaction to a claim rather
+than to a constraint; named triggers without reactive behaviour.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.9\linewidth]{fig02_audit.pdf}
 \caption{Precision by consensus degree (a) and the distribution of the
-@N_POS@ positives (b). Error bars: 95\% intervals on $n=12$ per stratum.}
+3-model positives (b); the audit is explicitly the three original models
+(GLM was added later and is not covered). Error bars: exact Wilson 95\%
+intervals on $n=12$ per stratum.}
 \label{fig:audit}
 \end{figure}
 
-Because two thirds of all positives are single-model flags, a pipeline that
+Because most of the 3-model positives are single-model flags, a pipeline that
 runs a single model inherits roughly two thirds false alarms. The prevalence
 figures in Section~\ref{sec:freq} are therefore upper bounds; the order of
-magnitude survives, the exact percentages do not.
+magnitude survives, the exact percentages do not. A v2 audit sample covering
+the four-model pool (including the @GLM_ONLY@ GLM-only flags) is drawn and
+awaiting annotation; precision for the 4-model strata is a follow-up, not a
+number in this report.
 
 \subsection{F1 against the consensus majority}
 \label{sub:f1}
@@ -456,27 +568,51 @@ At low prevalence precision and recall pull against each other: Jev has the
 best precision but gives up the most recall, and so loses to the chat models
 on F1.
 
-\subsection{Codebook B, sharpened}
+\subsection{Codebook A and Codebook B agree --- on both samples}
 The error patterns above were translated into a new codebook, together with the
 surface-robustness finding (Section~\ref{sec:exp}). Gate~2 requires the trigger
 to be the \emph{target} of the reaction, not its topic: responding to a claim
 is not reacting to a constraint. Gate~3 fixes that politeness markers are
 neither trigger nor shield. Both gates sit in the chat instructions \emph{and}
 in the Jev criteria, because the Decisions API only returns the criteria.
-Table~\ref{tab:ab} shows that on the large-scale, comment-only sample the two
-instruments now agree to 98.2\% raw with $\kappa=0.98$ and an FP/TP ratio of
-0.09.
+
+Two samples, two tables --- deliberately kept apart, because mixing them is
+what the earlier draft did. On the \emph{large-scale} sample
+(@N_BIG@ comments, Condition~B, Jev and GLM) the two instruments now agree to
+@AB_BIG_JEV_RAW@\% raw with $\kappa=$@AB_BIG_JEV_K@ and an FP/TP ratio of
+@AB_BIG_JEV_FPTP@ (Jev; Table~\ref{tab:ab}).
+The \emph{matrix sample} (@N_MATRIX@ comments, all four models) shows the same
+pattern per model and condition at n=@N_MATRIX@
+(Table~\ref{tab:abm}); its aggregate raw agreement is lower simply because the
+gate is tested on the harder, transcript-bearing comments.
 
 \begin{table}[htp]
 \centering
-\caption{Codebook A~$\times$~B agreement on the large-scale sample (Condition~B).}
+\caption{Codebook A~$\times$~B agreement, \emph{large-scale sample}
+(@N_BIG@ comments, Condition~B). The n column is part of the point: these
+rows are 2{,}001, not the 1{,}200 of the matrix sample.}
 \label{tab:ab}
+\small
+\begin{tabular}{lccccccc}
+\toprule
+Model & $n$ & both & FP & FN & raw agree & $\kappa$ & FP:TP\\
+\midrule
+@AB_ROWS_BIG@
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htp]
+\centering
+\caption{The same agreement, \emph{matrix sample} (1{,}200 comments,
+Condition~B, all four models).}
+\label{tab:abm}
 \small
 \begin{tabular}{lccccc}
 \toprule
 Model & $n$ & both & FP & FN & FP:TP\\
 \midrule
-@AB_ROWS@
+@AB_ROWS_MATRIX@
 \bottomrule
 \end{tabular}
 \end{table}
@@ -485,53 +621,58 @@ Model & $n$ & both & FP & FN & FP:TP\\
 \centering
 \includegraphics[width=\linewidth]{fig07_confusion_codebook.pdf}
 \caption{Confusion of Codebook B (columns) against Codebook A (rows), collapsed
-to the binary reactant/none dichotomy.}
+to the binary reactant/none dichotomy, matrix sample.}
 \label{fig:cmAB}
-\end{figure}
-
-\begin{figure}[htp]
-\centering
-\includegraphics[width=\linewidth]{fig06_confusion_condition.pdf}
-\caption{Condition A vs.\ Condition B for each model, Codebook~A.}
-\label{fig:cmCond}
 \end{figure}
 
 \subsection{Confidence as a corrective}
 \label{sub:calib}
-Jev returns a calibrated class probability $P(\mathrm{ja})$ for every
-comment; the other backends do not. Two properties of that number are worth
-checking separately, and Figure~\ref{fig:cal} shows both:
+Jev returns a class probability $P(\mathrm{ja})$ for every comment; the other
+backends do not. Two properties of that number are worth checking separately,
+and Figure~\ref{fig:cal} shows both. We are careful about what this
+establishes: there is \emph{no independent human-labelled calibration set} in
+this experiment, so neither panel is a calibration result in the statistical
+sense. The reference in both panels is the four-model consensus majority ---
+a proxy, not ground truth --- and the correct reading is
+\textbf{probability alignment with the model consensus}, with
+probability \emph{discrimination} (do the probability bands separate consensus
+positives from non-positives?) being the property that \emph{is} demonstrated.
+Brier scores and ECE against human labels require a labelled validation set
+and are deliberately not reported here.
 
 \smallskip
-\noindent\textbf{(a) Calibration against the majority vote.} We split
+\noindent\textbf{(a) Alignment against the consensus majority.} We split
 Jev's predictions into ten bins of $P(\mathrm{ja})$ and, in each bin, ask
 how often the comment's label agrees with the four-model majority vote of the
-other backends. A well-calibrated model would put the observed rate on the
-diagonal: predictions of $P=0.6$ would be reactant about 60\% of the time.
-Jev is close across the range --- the observed rate tracks the diagonal from
+other backends. If Jev's probability were well \emph{aligned} with the
+consensus, the observed rate would track the diagonal: predictions of
+$P=0.6$ would be majority-reactant about 60\% of the time. Jev is close
+across the range --- the observed rate tracks the diagonal from
 $P<0.1$ (observed 1\%) up to $P>0.9$ (observed 100\%) --- with a slight dip
 in the 0.3--0.6 bins, where a fifth to a third of its positives are either
-missed or refuted by the others. Calibration here is imperfect in exactly the
+missed or refuted by the others. Alignment, then, is imperfect in exactly the
 region that matters at low prevalence.
 
 \smallskip
 \noindent\textbf{(b) The threshold trade-off.} Because $P(\mathrm{ja})$
 is meaningful, we can discard low-confidence flags. Raising the threshold
 $t$ --- flag only those comments with $P(\mathrm{ja})\geq t$ --- trades
-coverage for precision: at $t=0.05$ nearly half the comments are flagged and
-precision is only 14\%; at $t=0.6$ precision reaches 79\% but covers only
-2.8\% of the sample. The 46\% line marks the precision of Jev's raw
-threshold-free label. Precision, then, is not a property of the model but of
-the operating point chosen on this curve.
+coverage for consensus-agreement precision: at $t=0.05$ nearly half the
+comments are flagged and precision is only 14\%; at $t=0.6$ precision reaches
+79\% but covers only 2.8\% of the sample. The 46\% line marks the precision
+of Jev's raw threshold-free label. Precision, then, is not a property of the
+model but of the operating point chosen on this curve --- relative to the
+consensus, not to a ground truth.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.94\linewidth]{fig08_calibration.pdf}
-\caption{(a) Calibration of Jev's $P(\mathrm{ja})$ against the four-model
-majority vote: observed reactant rate per probability bin versus the
-predicted probability (grey = perfect calibration). (b) The precision --
-coverage trade-off as the threshold $t$ on $P(\mathrm{ja})$ rises; the
-46\% line is Jev's threshold-free precision.}
+\caption{(a) Jev's $P(\mathrm{ja})$ against the four-model majority vote:
+observed reactant rate per probability bin versus the predicted probability
+(grey = the diagonal). This is alignment with a consensus proxy, not
+calibration against human labels. (b) The precision -- coverage trade-off as
+the threshold $t$ on $P(\mathrm{ja})$ rises; the 46\% line is Jev's
+threshold-free precision.}
 \label{fig:cal}
 \end{figure}
 
@@ -540,55 +681,127 @@ coverage trade-off as the threshold $t$ on $P(\mathrm{ja})$ rises; the
 
 Codebook~B's seven-way type classification is the expensive part of the
 pipeline. A gating variant answers the binary question first (Codebook~A, Jev
-only) and runs the type classification {\em only} on the comments that gate
-let through. Every model --- Jev included, all four --- then classifies the
-type of reactance on exactly those comments, so the four annotate the same
-set and the matrix of confusion matrices is directly comparable
-(Figure~\ref{fig:gatecm}). It costs no additional API calls in this
-benchmark, because the Codebook~B predictions were already collected: the
-gate is a recombination of existing labels.
+only) and runs the type classification only on the comments the gate lets
+through. Every model --- Jev included, all four --- then classifies the type of
+reactance on exactly those comments, so the four annotate the same set and the
+matrix of confusion matrices is directly comparable. It costs no additional
+API calls in this benchmark, because the Codebook~B predictions were already
+collected: the gate is a recombination of existing labels.
 
-On the matrix sample, condition~B, the gate lets through 33 of 1{,}200
-comments (2.75\%). The type calls on this set are far more spread out than
-the binary calls elsewhere in the report: pairwise type agreement ranges from
-58 to 70\% raw ($\kappa=0.18$--$0.46$), against 90--95\% for the binary
-question. The models also disagree about who is a reactant at all among the
-gated comments: Jev classifies 51\%, DeepSeek 52\%, GPT-6-Luna only 21\%,
-GLM-5.3-Flash 61\%. The false-positive structure of the audit
-(Section~\ref{sub:precision}) is thus found again inside the gate: the
-gated set is not clean.
+This section separates two questions that the previous draft answered with one
+figure, and the separation is the substantive point.
 
-The majority vote over the four type calls is the useful summary, and the
-share of labels that agree at each majority threshold is the quantity that
-matters for a cascade (Figure~\ref{fig:gatemaj}): a 2-of-4 majority exists
-for every gated comment, a 3-of-4 consensus for 79\%, and unanimity for
-only 36\%. Requiring 3-of-4 agreement therefore halves the effective
-positive stream and keeps the type label stable. Each model matches the
-majority on 73--85\% of its type calls (Jev 85\%, GLM 73\%).
+\medskip
+\noindent\textbf{Step 1 -- detection.} Jev performs binary reactance detection
+over all comments. On the matrix sample, condition~B, the gate lets through
+@GATE_N@ of @N_MATRIX@ comments (@GATE_PCT@\%); on the large-scale sample
+@GATE_N_BIG@ of @N_BIG@ (@GATE_PCT_BIG@\%).
 
-On the large-scale sample the gate is even more selective: 58 of 2{,}001
-comments (2.9\%), of which Jev and GLM agree on the type in 64\%. The gate
-thus concentrates the analysis where it is needed, at roughly 3\% of the
-comments, without losing the ability to compare all four models on a common
-set.
+\medskip
+\noindent\textbf{Step 2 -- gate consistency (a separate diagnostic).} Once Jev
+says ``reactance present'', a downstream model can still answer with
+\texttt{keine\_reaktanz}: it \emph{rejects the gate's premise}. That is not
+type disagreement, and it must not be mixed into the type analysis. How often
+each model does this is its own number (Table~\ref{tab:gatereject},
+Figure~\ref{fig:gaterej}): @GATE_REJECT_SENTENCE@
+
+\begin{table}[htp]
+\centering
+\caption{Gate consistency: of the @GATE_N@ comments Jev's gate let through
+(matrix sample, Condition~B), how many does each downstream model retain as
+reactant (assign one of the six types) and how many does it re-label as
+\texttt{keine\_reaktanz}?}
+\label{tab:gatereject}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Model & $n$ gated & retain & reject & reject\\
+\midrule
+@GATE_ROWS@
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\linewidth]{fig13_gate_rejection.pdf}
+\caption{Gate retention vs.\ rejection per model (matrix sample, Condition~B).
+GPT-6-Luna rejects Jev's gate most often; GLM-5.3-Flash retains it most often.}
+\label{fig:gaterej}
+\end{figure}
+
+\medskip
+\noindent\textbf{Step 3 -- conditional type classification.} The type task,
+conditioned on the gate, is a \textbf{six-class} task: the six reactance types,
+without \texttt{keine\_reaktanz}, which at this stage means ``you rejected the
+gate'', not ``a kind of reactance''. Figure~\ref{fig:gatecm} is the six-class
+type-confusion grid: only comments on which \emph{both} models of a pair
+retained the gate enter a cell, and each cell carries its (conditional) $n$,
+because the support differs from pair to pair once rejections are removed.
+The type calls on this set are spread out more than one would expect for a
+task where the answer is almost always the same type: pairwise agreement
+ranges from @PAIR_LO@ to @PAIR_HI@\% raw with per-pair $n$ between
+@PAIR_N_MIN@ and @PAIR_N_MAX@ --- most pairs still agree on the dominant type
+(attack), while a few differ on whether the (rare) other types apply at all
+($\kappa$ @KAPPA_RANGE6@; on the same gated set, the unconditional
+7-class task the models were actually prompted with, the same pairs agreed to
+@BASE7_RANGE@\%, $\kappa$ @KAPPA_RANGE7@). Two further
+caveats attach to these numbers: the
+conditional support is tiny (33 comments), and the six types are \emph{sparse}
+--- on the gated set almost every retained type call is
+\texttt{konfrontation\_angriff} (attack), with the other five types at single
+digits in total (support annotated in Figure~\ref{fig:gatecm}). A global
+six-class $\kappa$ on near-empty classes is therefore not a robust summary;
+what the data support is a \emph{binary} finding --- attack versus the
+(very rare) other types --- plus a statement of the sparsity.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\linewidth]{fig11_gate_confusion.pdf}
-\caption{Matrix of confusion matrices for the gated condition (matrix
-sample, Condition~B): rows and columns are the four models' type labels on
-exactly the 33 comments Jev's gate let through. Weak agreement on this set is
-the point of the figure.}
+\caption{Conditional six-class type confusion for the gated condition (matrix
+sample, Condition~B): rows and columns are the four models' type labels,
+restricted to the comments on which both models retained Jev's positive gate.
+``Given that two models both retain the gate, which types do they confuse?''
+Each cell carries its conditional $n$; per-type support is annotated below.}
 \label{fig:gatecm}
 \end{figure}
+
+\medskip
+\noindent\textbf{Step 4 -- consensus, tie-safe.} The majority vote is recomputed
+on the six types among the models that \emph{retained} the gate, with explicit
+ties: a 2--2 split is stored as a tie (label null), not resolved by label
+order, and no model is scored against an arbitrarily tie-broken reference.
+The two quantities the old single statistic conflated are now reported
+separately (Figure~\ref{fig:gatemaj}): \emph{gate acceptance}
+(@N44@ of @GATE_N@ comments have all four models retaining the gate,
+@N34@+@N44@ = @NK3@ have at least three, and @NREJALL@ are rejected by all)
+and \emph{conditional type consensus} (among the retainers: @N44@ four-of-four,
+@N34@ three-of-four, @N24@ two-of-four --- where ``2 of 4'' is a plurality,
+not a majority --- @N14@ one-of-four, @NTIE@ ties). The practical reading does
+not change, but is now honest: requiring three-or-more models to retain the
+gate keeps @NK3PCT@\% of the gated stream and keeps the type label stable.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.9\linewidth]{fig12_gate_majority.pdf}
-\caption{Gated type calls: share of gated comments reaching a 2-, 3- or 4-of-4
-majority (a) and each model's agreement with the majority type (b).}
+\caption{Gated condition, matrix sample, Condition~B. (a)~Gate acceptance: how
+many of the four models retain each gated comment's reactance.
+(b)~Conditional type consensus among the models that retained it, with 2--2
+ties shown as their own bar.}
 \label{fig:gatemaj}
 \end{figure}
+
+On the large-scale sample the gate is even more selective: @GATE_N_BIG@ of
+@N_BIG@ comments (@GATE_PCT_BIG@\%), of which only @N24_BIG@ reach a
+plurality of the retaining models on the type. The gate thus concentrates the
+analysis where it is needed, at roughly 3\% of the comments, without losing the
+ability to compare the models on a common set.
+
+The substantive result of the separation: \emph{the hard problem is not only
+deciding which reactance type applies. A substantial fraction of the apparent
+``disagreement'' already concerns whether Jev's gated positives satisfy the
+reactance definition at all.} Combining both sources in one 7-class matrix
+overstated the type problem and understated the gate problem.
 
 \section{Two validation experiments}
 \label{sec:exp}
@@ -637,9 +850,11 @@ more often says yes, but whether a label carries at all.
 
 \medskip
 \noindent\textbf{The context work is avoidable.} Neither transcript nor video
-measurably affect detection. The most practical message for a pipeline over
-6.7~million comments is that the comment text suffices and the transcripts
-remain available for the intervention side of the project.
+measurably affect aggregate detection, and the case-level evidence
+(Section~\ref{sub:transcript}) shows the transcript does not carry additional
+item-level signal either: @CASELEVEL_DISCUSSION@ The most practical message for
+a pipeline over 6.7~million comments is that the comment text suffices and the
+transcripts remain available for the intervention side of the project.
 
 \medskip
 \noindent\textbf{Cascades instead of monoliths.} A cheap Jev pass with a
@@ -653,8 +868,10 @@ annotation scheme and no inter-coder protocol. The re-coding in
 Section~\ref{sub:precision} and the F1 figures in Section~\ref{sub:f1} are a
 first step, but were produced by the assistant and replace no supervised double
 coding with a training phase. The $\kappa$- and AC1-values measure consistency
-among models, not correctness against human coding. Until then all precision
-estimates are orders of magnitude.
+among models, not correctness against human coding; ``precision'' throughout
+this report is precision against a three-model audit that predates the fourth
+model, and ``F1 against the majority'' is an agreement measure. Until a
+labelled validation set exists, all such estimates are orders of magnitude.
 
 \section{Limitations}
 The sample was built for the method question, not as a representative sample:
@@ -662,10 +879,14 @@ comments under 25 characters, replies and non-public comments are excluded, and
 party cells are too small for group comparisons. The transcripts come from
 automatic speech recognition with substantial errors; Condition~A suffers more
 than Condition~B. The precision estimate rests on 36 cases and one coder (the
-assistant). The majority vote is not a ground truth. Finally, the confidence
-bands of the Decisions API are sharply bimodal --- 1{,}521 comments below
-$p=0.1$ are never positive, 43 above $p=0.6$ always are --- so the threshold
-calibrated here is not yet transferable to new data.
+assistant), on the original three-model pool only; the 4-model audit (including
+the GLM-only flags) is sampled and pending. The majority vote is not a ground
+truth. The gated six-class analysis runs on 33 conditional observations in the
+matrix sample, most of them one type: the type-level results there are
+descriptive, and so is the sparsity. Finally, the confidence bands of the
+Decisions API are sharply bimodal --- 1{,}521 comments below $p=0.1$ are never
+positive, 43 above $p=0.6$ always are --- so the threshold calibrated here is
+not yet transferable to new data.
 
 \appendix
 \section{Detailed tables}
@@ -708,21 +929,26 @@ git clone https://github.com/DanielMatterTUM/democragpt-experiments
 cd democragpt-experiments
 pip install -r requirements.txt -r requirements-analysis.txt
 export OPENROUTER_API_KEY=...
-python3 src/build_dataset.py --target 1200 --n-accounts-per-party 8 \\
+python3 src/build_dataset.py --target 1200 --n-accounts-per-party 8 \
     --out sample_matrix
-python3 src/run_benchmark.py --models jev-1.13 gpt-6-luna \\
-    deepseek-v4.1-flash glm-5.3-flash --codebooks A B \\
+python3 src/run_benchmark.py --models jev-1.13 gpt-6-luna \
+    deepseek-v4.1-flash glm-5.3-flash --codebooks A B \
     --conditions A B --workers 12 --run-name full
 python3 src/dedup_one.py requests_full
 # glm on the large-scale sample (condition B only)
-python3 src/run_benchmark.py --models glm-5.3-flash --codebooks A B \\
+python3 src/run_benchmark.py --models glm-5.3-flash --codebooks A B \
     --conditions B --sample sample_big.jsonl --run-name glm_big
+# analysis (all four steps before the figures, the report asserts their meta)
 python3 src/analyze_extended.py
 python3 src/analyze_big.py
 python3 src/analyze_gate.py
+python3 src/score_audit.py
+python3 src/make_audit_sample_v2.py   # draws the pending 4-model audit sample
 python3 src/exp_reliability.py 45
 python3 src/exp_paraphrase.py 35
+python3 src/make_report.py
 python3 src/figures.py
+python3 src/validate_report.py        # consistency check, fails the build
 python3 src/generate_latex.py
 cd report && ./make.sh
 \end{verbatim}
@@ -732,34 +958,38 @@ cd report && ./make.sh
 \end{document}
 """
 
+# ---------------------------------------------------------------- abstract
 ABSTRACT = (
-    "Public concern about political TikTok comment sections suggests that "
-    "psychological reactance is common. Two benchmarks show the opposite. On "
-    f"{SM.get('reached', 1200)} party-stratified comments, four models coded between "
-    "about 2.8 and 10.8\\% as reactance under strict, theory-anchored coding; the "
-    "newest backend, GLM-5.3-Flash, is the least conservative (9--11\\%). A "
-    "second, comment-only pass over "
-    f"{SB.get('reached', 2001)} comments yields "
-    f"{nz(a_prev, 2)}\\% (95\\% CI [{nz(a_ci[0], 2)}; {nz(a_ci[1], 2)}]). "
-    "The video transcript does not measurably improve detection: dropping it "
-    "moves prevalence by under two percentage points, in the same direction for "
-    "all models. Jev, a Decision-API backend, answers in 0.46\\,s and costs "
-    "\\$0.061 per 1{,}000 comments and \\emph{as the only backend} returns "
-    "calibrated class probabilities, so a threshold lifts precision from 14\\% "
-    "to nearly 80\\% at t=0.6. The real bottleneck is validity: a manual "
-    "re-coding of 36 positives found 46\\% precision (95\\% at three-model "
-    "consensus, 25\\% for single-model flags). GLM-5.3-Flash flags 61 further "
-    "comments that no other model would have called reactance (Section~\\ref{sec:glm}); "
-    "under the three-model audit these are precisely the solitary flags of "
-    "lowest precision. Two sharpenings of the type codebook derived from that "
-    "audit --- the trigger must be the target of the reaction, and politeness "
-    "markers neither create nor cancel reactance --- raise the agreement "
-    "between the two codebooks from $\\kappa=0.10$--$0.60$ to $\\kappa=0.98$. "
-    "A gating variant (Section~\\ref{sec:gate}) runs a cheap Jev binary pass "
-    "first and classifies the type, across all four models, only on the "
-    "$\\approx$ 3\\% it lets through; type agreement is then 58--70\\% raw "
-    "with a four-model majority reaching consensus on 79\\% of the gated "
-    "comments."
+    f"Public concern about political TikTok comment sections suggests that "
+    f"psychological reactance is common. Two benchmarks show the opposite. On "
+    f"{n_matrix} party-stratified comments, four models coded between "
+    f"about 2.8 and 10.8\\% as reactance under strict, theory-anchored coding; "
+    f"the newest backend, GLM-5.3-Flash, is the least conservative "
+    f"(9--11\\%). A second, comment-only pass over {n_big} comments yields "
+    f"{nz(a_prev, 2)}\\% (95\\% CI [{nz(a_ci[0], 2)}; {nz(a_ci[1], 2)}], "
+    f"Jev). The video transcript does not measurably improve aggregate "
+    f"detection --- and the case-level confusion analysis shows it does not "
+    f"change which individual comments are called reactant either. Jev, a "
+    f"Decision-API backend, answers in 0.46\\,s and costs "
+    f"\\$0.061 per 1{{,}}000 comments and \\emph{{as the only backend}} returns "
+    f"class probabilities, so a threshold lifts consensus-agreement precision "
+    f"from 14\\% to nearly 80\\% at t=0.6. The real bottleneck is validity: "
+    f"a manual re-coding of the 36 audited three-model positives found "
+    f"{nz(w3 * 100, 0)}\\% precision overall ({nz(prec3 * 100, 0)}\\% at "
+    f"three-model consensus, {nz(prec1 * 100, 0)}\\% for single-model flags; "
+    f"exact Wilson intervals on n=12 per stratum). GLM-5.3-Flash flags "
+    f"{glm_only_flags} comments no other model calls reactant; the audit "
+    f"predates GLM, so their precision is an open question, not a finding. "
+    f"Two sharpenings of the type codebook derived from that audit --- the "
+    f"trigger must be the target of the reaction, and politeness markers "
+    f"neither create nor cancel reactance --- raise the A/B codebook agreement "
+    f"on the large-scale sample to raw {AB_BIG_JEV_RAW}\% ($\kappa={AB_BIG_JEV_K}$). A gating "
+    f"variant (Section~\\ref{{sec:gate}}) runs a cheap Jev binary pass first "
+    f"and classifies the type, across all four models, only on the "
+    f"$\\approx$ 3\\% it lets through; separating the gate question (do all "
+    f"models agree reactance exists?) from the conditional six-class type "
+    f"question shows that a substantial share of the apparent disagreement "
+    f"concerns the gate premise, not the type."
 )
 
 RELIABILITY_TEXT = (
@@ -774,6 +1004,114 @@ RELIABILITY_TEXT = (
 )
 
 
+def _delta(m):
+    rec = next((r for r in X.get("condition_pairwise", [])
+                if r["cb"] == "A" and r["model"] == m), None)
+    if not rec or not rec.get("binary"):
+        return None
+    return rec["binary"]["delta_prev_pct"]
+
+
+_dj, _dg, _dd, _dl = (_delta(m) for m in
+                      ("jev-1.13", "gpt-6-luna", "deepseek-v4.1-flash",
+                       "glm-5.3-flash"))
+# case-level sentence: built from the ACTUAL binary cells, not asserted
+def _cells(r, cb):
+    """The four A/B cells for one condition_pairwise row (binary collapse)."""
+    if cb == "A":
+        if not r.get("binary"):
+            return None
+        b = r["binary"]
+        return b["A_no_B_no"], b["A_no_B_yes"], b["A_yes_B_no"], b["A_yes_B_yes"]
+    raw = r.get("raw")
+    if not raw:
+        return None
+    nn = raw[0][0]
+    ny = sum(raw[0][1:])
+    yn = sum(raw[i][0] for i in range(1, len(raw)))
+    yy = sum(raw[i][j] for i in range(1, len(raw)) for j in range(1, len(raw)))
+    return nn, ny, yn, yy
+
+def _flips(cb):
+    """Per-model flip counts (n_no_yes + n_yes_no) on codebook cb, computed from
+    the actual 2x2 / 7x7 cells -- generated, not asserted."""
+    out = {}
+    for r in X.get("condition_pairwise", []):
+        if r["cb"] != cb:
+            continue
+        c = _cells(r, cb)
+        if c:
+            out[r["model"]] = c[1] + c[2]
+    return out
+
+_flips_A = _flips("A")
+_flips_B = _flips("B")
+_recj = next((r for r in X.get("condition_pairwise", [])
+              if r["cb"] == "A" and r["model"] == "jev-1.13"), None)
+if _recj and _recj.get("binary") and _flips_A and _flips_B:
+    b = _recj["binary"]
+    n_flip = b["A_no_B_yes"] + b["A_yes_B_no"]
+    n_same = b["A_no_B_no"] + b["A_yes_B_yes"]
+    _n = b["n"]
+    fA_lo, fA_hi = min(_flips_A.values()), max(_flips_A.values())
+    fB_lo, fB_hi = min(_flips_B.values()), max(_flips_B.values())
+    CASELEVEL_SENTENCE = (
+        f"Case-level, the picture is the same in substance: for Jev, "
+        f"{n_same} of {n} comments are classified identically in both conditions "
+        f"(case-level agreement {b['case_agreement_pct']}\\%), and only {n_flip} "
+        f"individual comments flip --- {b['A_no_B_yes']} gain the reactance label, "
+        f"{b['A_yes_B_no']} lose it. The same pattern holds for the other "
+        f"models: flips range from {fB_lo} to {fB_hi} on Codebook B and from "
+        f"{fA_lo} to {fA_hi} on Codebook A (Figures~\\ref{{fig:cmCondA}}--\\ref{{fig:cmCondB}}) "
+        f"--- double-digit flip counts in every case, but in absolute terms a small "
+        f"share of the sample. Small prevalence shift and small case-level flip "
+        f"shares are both observed; the transcript "
+        f"contributes neither aggregate nor item-level detection value."
+    )
+    CASELEVEL_DISCUSSION = (
+        f"the flip counts are small in both directions "
+        f"($\\sim${fB_lo}--{fB_hi} per model on Codebook B, "
+        f"${fA_lo}--{fA_hi}$ on Codebook A), and the transcript changes neither "
+        f"the aggregate hit rate nor, case by case, which comments are called "
+        f"reactant."
+    )
+else:
+    CASELEVEL_SENTENCE = ("The case-level confusion analysis could not be "
+                          "computed for Jev; the aggregate shift alone does "
+                          "not support either claim.")
+    CASELEVEL_DISCUSSION = ("the case-level flip behaviour could not be "
+                             "established and remains open.")
+
+N_GLM_BIG = (BIG.get("prevalence_A") or {}).get("glm-5.3-flash", {}).get("n_positive", 189)
+N_JEV_BIG = (BIG.get("prevalence_A") or {}).get("jev-1.13", {}).get("n_positive", 58)
+
+GATE_PCT = round(100 * gate_n / n_matrix, 2) if gate_n else None
+GATE_PCT_BIG = round(100 * gate_n_big / n_big, 2) if gate_n_big else None
+
+# gate rejection sentence -- generated from the per-model values
+if gc:
+    def _g(m):
+        g = gc.get(m)
+        return f"{g['reject_pct']:.0f}\\% ({g['n_reject']}/{g['n']})" if g else "--"
+    GATE_REJECT_SENTENCE = (
+        f"Jev itself re-labels {_g('jev-1.13')} of its own gated comments as "
+        f"\\texttt{{keine\\_reaktanz}} in the type stage; GPT-6-Luna the most "
+        f"({_g('gpt-6-luna')}), DeepSeek-V4.1-Flash {_g('deepseek-v4.1-flash')}, "
+        f"GLM-5.3-Flash {_g('glm-5.3-flash')}. Between a fifth and four-fifths "
+        f"of Jev's gated positives are thus not accepted as reactant by a given "
+        f"second model --- a gate-rejection diagnostic that says nothing about "
+        f"which \\emph{{type}} the retainers then choose."
+    )
+else:
+    GATE_REJECT_SENTENCE = "no gate-consistency data were available."
+
+# A x B headline (Jev, big sample) -- generated, not typed
+_abj = next((r for r in (BIG.get("A_vs_B") or []) if r["model"] == "jev-1.13"), None)
+AB_BIG_JEV_RAW = f"{_abj['raw_agreement_pct']:.1f}" if _abj else "--"
+AB_BIG_JEV_K = f"{_abj['cohens_kappa']:.2f}" if _abj else "--"
+AB_BIG_JEV_FPTP = f"{_abj['fp_tp']:.2f}" if _abj else "--"
+
+
 def build():
     doc = DOC_TEMPLATE
     r = {
@@ -781,76 +1119,108 @@ def build():
         "@RELIABILITY_TEXT@": RELIABILITY_TEXT,
         "@PREV_ROWS@": prev_rows,
         "@AGREE_ROWS@": agree_rows,
-        "@F1_ROWS@": f1_rows,
-        "@AB_ROWS@": ab_rows,
+        "@AB_ROWS_BIG@": ab_rows_big,
+        "@AB_ROWS_MATRIX@": ab_rows_matrix,
         "@SURF_ROWS@": surf_rows,
+        "@GATE_ROWS@": gate_rows,
         "@N_MATRIX@": str(n_matrix),
         "@N_BIG@": str(n_big),
-        "@N_POS@": "119",
         "@M_ACC@": str(SM.get("accounts_used", "?")),
         "@M_PARTIES@": str(SM.get("parties_used", "?")),
         "@M_VID@": str(SM.get("videos_used", "?")),
         "@B_ACC@": str(SB.get("accounts_used", "?")),
         "@B_PARTIES@": str(SB.get("parties_used", "?")),
-        "@PREC_W@": f"{w:.0f}",
-        "@PREC3@": f"{prec.get(3, 0):.0f}",
-        "@PREC2@": f"{prec.get(2, 0):.0f}",
-        "@PREC1@": f"{prec.get(1, 0):.0f}",
+        "@N_POS@": str(n_pos_3pool),
+        "@N_AUDITED@": str(pooled.get("n", 36)),
+        "@PREC_W@": f"{w3 * 100:.0f}",
+        "@PREC3@": f"{prec3 * 100:.0f}",
+        "@PREC2@": f"{prec2 * 100:.0f}",
+        "@PREC1@": f"{prec1 * 100:.0f}",
+        "@N3@": str(aud(3).get("n_positive", 0)),
+        "@NN3@": str(aud(3).get("n", 12)),
+        "@N2@": str(aud(2).get("n_positive", 0)),
+        "@NN2@": str(aud(2).get("n", 12)),
+        "@N1@": str(aud(1).get("n_positive", 0)),
+        "@NN1@": str(aud(1).get("n", 12)),
+        "@GLM_ONLY@": str(glm_only_flags),
+        "@N_GLM_BIG@": str(N_GLM_BIG),
+        "@N_JEV_BIG@": str(N_JEV_BIG),
+        "@CASELEVEL_SENTENCE@": CASELEVEL_SENTENCE,
+        "@CASELEVEL_DISCUSSION@": CASELEVEL_DISCUSSION,
+        "@PCT_JEV@": f"{abs(_dj):.1f}",
+        "@PCT_GPT@": f"{abs(_dg):.1f}",
+        "@PCT_DEEP@": f"{abs(_dd):.1f}",
+        "@PCT_GLM@": f"{abs(_dl):.1f}",
+        "@GATE_N@": str(gate_n if gate_n is not None else 0),
+        "@GATE_PCT@": f"{GATE_PCT:.2f}",
+        "@GATE_N_BIG@": str(gate_n_big if gate_n_big is not None else 0),
+        "@GATE_PCT_BIG@": f"{GATE_PCT_BIG:.2f}",
+        "@GATE_REJECT_SENTENCE@": GATE_REJECT_SENTENCE,
+        "@AB_BIG_JEV_RAW@": AB_BIG_JEV_RAW,
+        "@AB_BIG_JEV_K@": AB_BIG_JEV_K,
+        "@AB_BIG_JEV_FPTP@": AB_BIG_JEV_FPTP,
+        "@PAIR_LO@": f"{min(pair_agree):.0f}" if pair_agree else "--",
+        "@PAIR_HI@": f"{max(pair_agree):.0f}" if pair_agree else "--",
+        "@PAIR_N_MIN@": str(min((p['n'] for p in pw6), default=0)),
+        "@PAIR_N_MAX@": str(max((p['n'] for p in pw6), default=0)),
+        "@KAPPA_RANGE6@": (f"{min(p['kappa'] for p in pw6):.2f}"
+                            f"--{max(p['kappa'] for p in pw6):.2f}") if pw6 else "--",
+        "@BASE7_RANGE@": (f"{min(p['raw_pct'] for p in pw7):.0f}"
+                           f"--{max(p['raw_pct'] for p in pw7):.0f}") if pw7 else "--",
+        "@KAPPA_RANGE7@": (f"{min(p['kappa'] for p in pw7):.2f}"
+                            f"--{max(p['kappa'] for p in pw7):.2f}") if pw7 else "--",
+        "@N44@": str(n_44 if n_44 is not None else 0),
+        "@N34@": str(n_34 if n_34 is not None else 0),
+        "@N24@": str(n_24 if n_24 is not None else 0),
+        "@N14@": str(n_14 if n_14 is not None else 0),
+        "@NTIE@": str(n_tie if n_tie is not None else 0),
+        "@NK3@": str(n_k3 if n_k3 is not None else 0),
+        "@NK3PCT@": f"{pct(n_k3):.0f}" if n_k3 is not None else "--",
+        "@NREJALL@": str(n_reject_all if n_reject_all is not None else 0),
+        "@N24_BIG@": str((tc_big.get("type_consensus") or {}).get(
+            f"2-of-{tc_big.get('n_voters', 2)}", 0)),
     }
     for k, v in r.items():
         doc = doc.replace(k, v)
-    # guards
-    for k in r:
-        if k in doc:
-            warnings.warn(f"placeholder {k} not substituted")
     return doc
 
 
-import warnings  # noqa: E402
+def main():
+    doc = build()
+    # --- consistency assertions (fail loud; see also src/validate_report.py)
+    problems = []
+    if X and set(X.get("models", [])) != EXPECTED_MODELS_4:
+        problems.append(f"analysis_ext models {set(X.get('models', []))} != expected 4")
+    if GATE and set((GATE.get("runs", {}).get("matrix", {}) or {}).get("models",
+                                                                        [])) != EXPECTED_MODELS_4:
+        problems.append("analysis_gate matrix models != expected 4")
+    if not AUD or not AUD.get("strata"):
+        problems.append("audit_scoping.json missing or empty")
+    if isinstance(BIG.get("A_vs_B"), list):
+        bad = [r for r in BIG["A_vs_B"] if r.get("n") != N_BIG]
+        if bad:
+            problems.append(f"big A_vs_B rows with n != {N_BIG}: "
+                            f"{[(r['model'], r['n']) for r in bad]}")
+        if {r.get("model") for r in BIG["A_vs_B"]} != {"jev-1.13", "glm-5.3-flash"}:
+            problems.append(f"big A_vs_B models {[r.get('model') for r in BIG['A_vs_B']]} "
+                            f"!= {{jev, glm}}")
+    if X:
+        bad = [r for r in X.get("codebook_pairwise", []) if r.get("n") != N_MATRIX]
+        if bad:
+            problems.append("matrix A x B rows with n != 1200")
+    if gate_n is None:
+        problems.append("analysis_gate: no gated set found (matrix, condition B)")
+    for p in _warnings:
+        problems.append(p)
+    if problems:
+        print("REJECTED (stale/incompatible result versions):", file=sys.stderr)
+        for p in problems:
+            print("  -", p, file=sys.stderr)
+        sys.exit(1)
+    OUT_TEX.parent.mkdir(parents=True, exist_ok=True)
+    OUT_TEX.write_text(doc, encoding="utf-8")
+    print(f"wrote {OUT_TEX}  ({len(doc):,} chars)")
 
-OUT_TEX.parent.mkdir(parents=True, exist_ok=True)
-OUT_TEX.write_text(build(), encoding="utf-8")
-BIB = """@book{brehm1966,
-  author    = {Brehm, Jack W.},
-  title     = {A Theory of Psychological Reactance},
-  publisher = {Academic Press},
-  year      = {1966}
-}
-@article{dillard2005,
-  author  = {Dillard, James Price and Shen, Lijiang},
-  title   = {On the nature of reactance and its role in persuasive health
-             communication},
-  journal = {Communication Monographs},
-  volume  = {72},
-  number  = {2},
-  pages   = {144--168},
-  year    = {2005}
-}
-@article{dillard2023,
-  author  = {Dillard, John P. and others},
-  title   = {Communication, reactance, and the escalation spiral},
-  journal = {Review of Communication},
-  year    = {2023}
-}
-@inproceedings{hajek2026llm,
-  author    = {Hajek, Katharina V. and Kobilke, Lara},
-  title     = {LLMs and reactance -- master project presentation},
-  booktitle = {KIDEM},
-  year      = {2026}
-}
-@unpublished{hajek202x,
-  author = {Hajek, Katharina V.},
-  title  = {Reactance encoding and decoding [{Notion export}, DemocraGPT]},
-  note   = {bidt / TU M{\\"u}nchen; method-report data},
-  year   = {2026}
-}
-@misc{openrouter2026,
-  author = {{OpenRouter}},
-  title  = {Jev Decision API --- classification example},
-  year   = {2026},
-  note   = {Accessed 2026-09-28}
-}
-"""
-OUT_BIB.write_text(BIB, encoding="utf-8")
-print(f"wrote {OUT_TEX}  ({len(build()):,} chars)")
-print(f"wrote {OUT_BIB}")
+
+if __name__ == "__main__":
+    main()

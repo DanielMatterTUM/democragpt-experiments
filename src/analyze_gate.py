@@ -1,35 +1,45 @@
 #!/usr/bin/env python3
-"""Experiment B (new condition C): Jev-gated type classification.
+"""Condition C (gated): Jev-gated TYPE classification, split into two questions.
 
-Condition C ("gate"): a cheap binary first pass decides which comments get the
-costly 7-way type classification at all.
+The gate is a binary first pass: Jev, Codebook A, answers yes/no for every
+comment. Conceptually the gate answers "does reactance exist at all?". Once the
+gate has established that, the downstream type task answers the SEPARATE
+question "conditional on reactance, which TYPE is present?" -- and `keine_
+reaktanz` is NOT one of the six reactance types, so it must not be counted as a
+type.
 
-  Step 1 (gate)   : Jev, Codebook A, answers yes/no for every comment.
-  Step 2 (type)   : every model -- Jev included, all four -- classifies the
-                    TYPE (Codebook B) for every comment the gate marked 'ja'.
+This script therefore reports, per sample/condition:
 
-The gate is Jev's for all models, so all models annotate the SAME comment set:
-the matrix of 7x7 confusion matrices (model x model) is directly comparable
-with Figure 5, and the majority vote is a clean 4-vote plurality per comment.
+  1. Gate consistency / rejection (`gate_consistency`)
+     For each downstream model: of the comments Jev gated as 'ja', how many
+     does this model RETAIN as reactant (it assigns one of the six types) versus
+     REJECT (it re-labels them `keine_reaktanz`)? This is a gate-rejection
+     diagnostic, not a type disagreement.
+
+  2. Conditional six-class type analysis (`pairwise_type`, `type_distribution`)
+     On the subset where BOTH models of a pair retained the gate (both assigned
+     one of the six types), compute the six-class confusion matrix, raw
+     agreement and kappa, and report the (conditional) `n` for every pair.
+
+  3. Conditional type consensus (`type_consensus`)
+     For each gated comment, only the models that RETAINED the gate vote on the
+     type (plurality, tie-safe). A 2-2 split, or any 1-1 / 1-1-1 split within
+     the accepting models, is a TIE (label null), not a majority. We report
+     both how many models retained the gate (1/4..4/4) and, among the retainers,
+     how strongly their type labels agree. No comment is scored against an
+     arbitrarily tie-broken reference.
+
+The sensitivity block `own_gate` (each model gating on its OWN Codebook-A call)
+is left as a 7-class descriptive and is NOT the main gated analysis.
 
 Nothing here costs an API call: every prediction (Codebook A and B for all
 models, both samples) is already on disk; this script only re-combines them.
-
-Two views are computed per sample/condition:
-
-  * fixed Jev gate (the condition proper):
-      - per-model type distribution on the Jev-gated set
-      - 4x4 grid of 7x7 confusion matrices (model x model) on the gated set
-      - majority vote per gated comment: share of comments whose majority
-        reaches each k-of-4 threshold, per-model agreement with the majority,
-        and the majority type distribution
-  * per-model gate (sensitivity): what the pipeline would look like if each
-      model gated on its OWN Codebook-A judgement instead of Jev's.
 """
 from __future__ import annotations
 
 import json
 from collections import Counter
+from datetime import datetime, timezone
 from itertools import combinations
 from pathlib import Path
 
@@ -38,10 +48,16 @@ import numpy as np
 REPO = Path(__file__).resolve().parents[1]
 RES = REPO / "results"
 
+# The full Codebook B task is 7-class, but the GATED type task is 6-class:
+# once the gate has established reactance, `keine_reaktanz` is a gate rejection,
+# not a type.
 LAB_B = ["keine_reaktanz", "konfrontation_angriff", "ablenkung_whataboutism",
          "delegierung_hilflosigkeit", "vermeidung_rueckzug",
          "reflektierte_rechtfertigung", "konstruktive_kritik"]
+TYPE_LABELS = [l for l in LAB_B if l != "keine_reaktanz"]
+assert len(TYPE_LABELS) == 6, "the gated type task must be exactly six-class"
 NEG_A, NEG_B = "nein", "keine_reaktanz"
+GATE_MODEL = "jev-1.13"
 PREF = ["jev-1.13", "gpt-6-luna", "deepseek-v4.1-flash", "glm-5.3-flash"]
 CL = {l: s for l, s in zip(LAB_B, ["none", "attack", "deflect", "delegate",
                                     "avoid", "justify", "critique"])}
@@ -95,34 +111,143 @@ def pairwise_stats(rows_, cols_, labels):
     return base.tolist(), nrm.tolist(), agree, round(kappa, 4)
 
 
-def majority(labels):
+def plurality(labels, order):
+    """Tie-safe plurality. Returns (winner_or_None, max_count, is_tie).
+
+    `is_tie` is True ONLY for a genuine split at the top among at least two
+    competing labels (e.g. 2-2, or 1-1, or 1-1-1): that is a tie and must not be
+    silently resolved by label order. A single vote (one model, one label) and
+    no votes at all are NOT ties -- they return (label, 1, False) / (None, 0,
+    False) respectively, so the "k-of-n" partitions below stay disjoint.
+    """
     c = Counter(labels)
+    if not c:
+        return None, 0, False
     best = max(c.values())
-    return min((l for l, n in c.items() if n == best), key=LAB_B.index), best
+    if best == 1:
+        return next(iter(c)), 1, False
+    winners = [l for l in order if c.get(l) == best]
+    if len(winners) != 1:
+        return None, best, True
+    return winners[0], best, False
 
 
-def analyse_cond(cond, A, B, models):
-    """Condition C analysis for one sample/condition. Gate = Jev."""
-    out = {"cond": cond, "models": models, "jev_gated": [], "pairwise": [],
-           "majority": None, "own_gate": []}
-
-    # ---- the gate set -------------------------------------------------------
-    gate_A = A.get("jev-1.13", {})
-    gated = sorted(u for u, l in gate_A.items() if l == "ja")
-
-    # ---- per-model type distribution on the gated set ----------------------
+def _gate_consistency(gated, B, models):
+    """Q1: of Jev's gated positives, how often does each model reject the premise?"""
+    out = []
     for m in models:
         b = B.get(m, {})
-        dist = Counter(b[u] for u in gated if b.get(u) in LAB_B)
-        n_typed = sum(dist.values())
-        out["jev_gated"].append({
-            "model": m, "n_typed": n_typed,
-            "dist": {l: dist.get(l, 0) for l in LAB_B},
-            "reactant_share_pct": round(
-                100 * (n_typed - dist.get(NEG_B, 0)) / n_typed, 2) if n_typed else None,
-        })
+        n = 0
+        n_accept = 0
+        for u in gated:
+            lab = b.get(u)
+            if lab not in LAB_B:
+                continue
+            n += 1
+            if lab in TYPE_LABELS:
+                n_accept += 1
+        n_reject = n - n_accept
+        out.append({"model": m, "n": n, "n_gated": n,
+                    "n_accept": n_accept, "n_reject": n_reject,
+                    "accept_pct": round(100 * n_accept / n, 2) if n else None,
+                    "reject_pct": round(100 * n_reject / n, 2) if n else None})
+    return out
 
-    # ---- grid of 7x7 confusion matrices on the gated set --------------------
+
+def _type_distribution(gated, B, models):
+    """Q2 support: the six-class type distribution per model on the RETAINED set."""
+    out = []
+    for m in models:
+        b = B.get(m, {})
+        dist = Counter(b[u] for u in gated if b.get(u) in TYPE_LABELS)
+        out.append({"model": m, "n": sum(dist.values()),
+                    "dist": {l: dist.get(l, 0) for l in TYPE_LABELS}})
+    return out
+
+
+def _pairwise_type(gated, B, models):
+    """Q2: six-class type confusion between models, on the CONDITIONAL support
+    (both models retained the gate), with an explicit per-pair n."""
+    out = []
+    for m1, m2 in combinations(models, 2):
+        b1, b2 = B.get(m1, {}), B.get(m2, {})
+        uids = [u for u in gated
+                if b1.get(u) in TYPE_LABELS and b2.get(u) in TYPE_LABELS]
+        if not uids:
+            continue
+        raw, nrm, agree, kappa = pairwise_stats(
+            [b1[u] for u in uids], [b2[u] for u in uids], TYPE_LABELS)
+        out.append({"a": m1, "b": m2, "n": len(uids), "n_both_accept": len(uids),
+                    "raw": raw, "norm": nrm, "raw_pct": agree, "kappa": kappa})
+    return out
+
+
+def _type_consensus(gated, B, models):
+    """Q3: per gated comment, the models that RETAINED the gate vote on the type
+    (tie-safe plurality). Returns both the per-comment records and the summary."""
+    order = list(models)
+    per = []
+    for u in gated:
+        votes = [B[m][u] for m in models if B.get(m, {}).get(u) in TYPE_LABELS]
+        n_accept = len(votes)
+        winner, cnt, tie = plurality(votes, TYPE_LABELS)
+        per.append({"uid": u, "n_models_accepting_gate": n_accept,
+                    "majority_type": winner, "majority_n": cnt,
+                    "tie": tie, "n_models_voting": n_accept})
+
+    n_gated = len(per)
+    n_models = len(models)
+    # Two SEPARATE distributions, reported side by side:
+    #  (a) gate acceptance   : how many of the n_models retained the gate (1/4..4/4)
+    #  (b) type-consensus strength: among the models that RETAINED the gate, how
+    #      many agreed on one type (a 2-2 split is a tie, not a 2-of-4 majority)
+    accept_dist = Counter(r["n_models_accepting_gate"] for r in per)
+    gate_accept = {f"{k}-of-{n_models}": accept_dist.get(k, 0)
+                   for k in range(n_models, -1, -1)}
+    majority_n_dist = Counter(r["majority_n"] for r in per
+                               if r["majority_type"] is not None)
+    type_consensus = {
+        **{f"{k}-of-{n_models}": majority_n_dist.get(k, 0)
+           for k in range(n_models, -1, -1)},
+        "tie": sum(1 for r in per if r["tie"]),
+        "no_type_votes": sum(1 for r in per if r["n_models_accepting_gate"] == 0),
+    }
+    # per-model agreement with the (non-tie) consensus reference. Comments whose
+    # type call was a TIE are excluded from the denominator: a model must not be
+    # scored against an arbitrarily tie-broken reference.
+    per_model = []
+    for m in models:
+        b = B.get(m, {})
+        sel = [r for r in per
+               if r["majority_type"] is not None and b.get(r["uid"]) in TYPE_LABELS]
+        n_tie = sum(1 for r in per if r["tie"] and r["majority_n"] >= 2)
+        if not sel:
+            per_model.append({"model": m, "n": 0, "n_ties_excluded": n_tie,
+                              "pct": None})
+            continue
+        n_ok = sum(1 for r in sel if b[r["uid"]] == r["majority_type"])
+        per_model.append({"model": m, "n": len(sel), "n_ties_excluded": n_tie,
+                          "pct": round(100 * n_ok / len(sel), 2)})
+    majority_type_dist = Counter(r["majority_type"] for r in per
+                                  if r["majority_type"] in TYPE_LABELS)
+    return {
+        "n_gated": n_gated,
+        "n_voters": n_models,
+        "gate_accept": gate_accept,
+        "type_consensus": type_consensus,
+        "majority_type_dist": {l: majority_type_dist.get(l, 0) for l in TYPE_LABELS},
+        "vs_majority": per_model,
+        "per_comment": per,
+    }
+
+
+def _pairwise_baseline7(gated, B, models):
+    """Descriptive baseline: the OLD 7-class task (all of `LAB_B` incl.
+    `keine_reaktanz`) on the same gated set, without conditioning. Kept so the
+    report can contrast the conditional six-class analysis against the
+    unconditional seven-class one on identical inputs -- the numbers are
+    generated, not typed from an older analysis run."""
+    out = []
     for m1, m2 in combinations(models, 2):
         b1, b2 = B.get(m1, {}), B.get(m2, {})
         uids = [u for u in gated if b1.get(u) in LAB_B and b2.get(u) in LAB_B]
@@ -130,43 +255,28 @@ def analyse_cond(cond, A, B, models):
             continue
         raw, nrm, agree, kappa = pairwise_stats(
             [b1[u] for u in uids], [b2[u] for u in uids], LAB_B)
-        out["pairwise"].append({"a": m1, "b": m2, "n": len(uids),
-                                 "raw": raw, "norm": nrm,
-                                 "raw_pct": agree, "kappa": kappa})
+        out.append({"a": m1, "b": m2, "n": len(uids),
+                    "raw_pct": agree, "kappa": kappa})
+    return out
 
-    # ---- majority vote on the gated set ------------------------------------
-    maj_rows = []
-    for u in gated:
-        votes = [B[m][u] for m in models if B.get(m, {}).get(u) in LAB_B]
-        if not votes:
-            continue
-        lab, n = majority(votes)
-        maj_rows.append((u, lab, n, len(votes)))
-    if maj_rows:
-        n_tot = len(maj_rows)
-        dist = Counter(l for _, l, _, _ in maj_rows)
-        thr = []
-        for k in range(2, len(models) + 1):
-            ok = sum(1 for _, _, n, nv in maj_rows if n >= k)
-            thr.append({"k": k, "n": ok, "pct": round(100 * ok / n_tot, 2)})
-        per_model = []
-        for m in models:
-            b = B.get(m, {})
-            sel = [r for r in maj_rows if b.get(r[0]) in LAB_B]
-            if not sel:
-                continue
-            n_ok = sum(1 for u, lab, _, _ in sel if b[u] == lab)
-            per_model.append({"model": m, "n": len(sel),
-                               "pct": round(100 * n_ok / len(sel), 2)})
-        out["majority"] = {
-            "n_gated": n_tot,
-            "n_voters": len(models),
-            "type_dist": {l: dist.get(l, 0) for l in LAB_B},
-            "by_threshold": thr,
-            "vs_majority": per_model,
-        }
 
-    # ---- sensitivity: each model as its own gate ---------------------------
+def analyse_cond(cond, A, B, models):
+    """Gated-condition analysis for one sample/condition. Gate = Jev (Codebook A)."""
+    out = {"cond": cond, "models": models, "gate_consistency": [],
+           "type_distribution": [], "pairwise_type": [], "pairwise_baseline7": [],
+           "type_consensus": None, "own_gate": []}
+
+    # ---- the gate set -------------------------------------------------------
+    gate_A = A.get(GATE_MODEL, {})
+    gated = sorted(u for u, l in gate_A.items() if l == "ja")
+
+    out["gate_consistency"] = _gate_consistency(gated, B, models)
+    out["type_distribution"] = _type_distribution(gated, B, models)
+    out["pairwise_type"] = _pairwise_type(gated, B, models)
+    out["pairwise_baseline7"] = _pairwise_baseline7(gated, B, models)
+    out["type_consensus"] = _type_consensus(gated, B, models)
+
+    # ---- sensitivity: each model as its own gate (descriptive, 7-class) ----
     for m in models:
         a, b = A.get(m, {}), B.get(m, {})
         g = sorted(u for u, l in a.items() if l == "ja")
@@ -188,19 +298,36 @@ def analyse_cond(cond, A, B, models):
 
 
 def main():
-    out = {"note": ("Condition C: Jev's Codebook-A gate selects the comments; "
-                    "every model (incl. Jev) then classifies the reactance TYPE "
-                    "on exactly those comments. Pairwise 7x7 matrices and the "
-                    "majority vote are computed on that common gated set."),
+    generated_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    out = {"meta": {
+               "generated_at": generated_at,
+               "gate_model": GATE_MODEL, "gate_codebook": "A", "type_codebook": "B",
+               "type_labels": TYPE_LABELS,
+               "neg_type": NEG_B,
+               "note": ("Gated condition: Jev's Codebook-A gate (binary 'does "
+                        "reactance exist?') selects the comments; the type task "
+                        "(Codebook B) is then the CONDITIONAL six-class task "
+                        "'which type, given reactance?'. Downstream "
+                        "`keine_reaktanz` answers are reported as gate "
+                        "rejections, not as a seventh type. This is a "
+                        "RETROSPECTIVE conditional reanalysis of the stored "
+                        "seven-class predictions; the intended production "
+                        "pipeline would prompt the second stage with only the "
+                        "six types after the gate passes."),
+           },
            "runs": {}}
 
-    # ---- matrix sample: the 3-model matrix + glm (merged into predictions_full)
+    # ---- matrix sample: all 4 models ---------------------------------------
     matrix_models = order_models(
         {p["model"] for p in load(RES / "predictions_full.jsonl")})
     for cond in ("A", "B"):
         A, B = collect(["predictions_full.jsonl"], cond, set(matrix_models))
-        out["runs"].setdefault("matrix", {"n_comments": 1200, "conditions": {}})
+        out["runs"].setdefault("matrix", {"n_comments": 1200,
+                                           "sample": "matrix", "conditions": {}})
         out["runs"]["matrix"]["conditions"][cond] = analyse_cond(cond, A, B, matrix_models)
+    out["runs"]["matrix"]["models"] = matrix_models
+    out["runs"]["matrix"]["source_files"] = ["predictions_full.jsonl"]
+    out["runs"]["matrix"]["conditions_run"] = ["A", "B"]
 
     # ---- big sample: jev + glm, condition B only ----------------------------
     big_models = order_models(set()
@@ -208,7 +335,10 @@ def main():
                               | {p["model"] for p in load(RES / "predictions_glm_big.jsonl")})
     Ab, Bb = collect(["predictions_big.jsonl", "predictions_glm_big.jsonl"],
                      "B", set(big_models))
-    out["runs"]["big"] = {"n_comments": 2001,
+    out["runs"]["big"] = {"n_comments": 2001, "sample": "big", "models": big_models,
+                          "source_files": ["predictions_big.jsonl",
+                                            "predictions_glm_big.jsonl"],
+                          "conditions_run": ["B"],
                           "conditions": {"B": analyse_cond("B", Ab, Bb, big_models)}}
 
     (RES / "analysis_gate.json").write_text(
@@ -216,33 +346,29 @@ def main():
     print("wrote results/analysis_gate.json")
 
     for run, d in out["runs"].items():
-        print(f"\n== {run} sample ==")
+        print(f"\n== {run} sample ({d['n_comments']} comments) ==")
         for c, r in d["conditions"].items():
             print(f"  condition {c}: Jev gate -> {r['jev_gated_n']} "
                   f"({r['jev_gated_pct']}%) of {r['n_comments']}")
-            for pm in r["jev_gated"]:
-                top = sorted(pm["dist"].items(), key=lambda kv: -kv[1])[:2]
-                top = ", ".join(f"{CL.get(l, l)}={n}" for l, n in top if n)
-                print(f"    gate+type {pm['model']:22s} typed={pm['n_typed']:3d} "
-                      f"reactant|gated={pm['reactant_share_pct']}%  top[{top}]")
-            for pw in r["pairwise"]:
-                print(f"    pair {pw['a'][:14]:14s} x {pw['b'][:14]:14s}: "
+            print("   gate retention (Q1):")
+            for gc in r["gate_consistency"]:
+                print(f"     {gc['model']:22s} retain {gc['n_accept']:3d}/{gc['n']:3d} "
+                      f"({gc['accept_pct']}%)  reject {gc['n_reject']:3d} "
+                      f"({gc['reject_pct']}%)")
+            for pw in r["pairwise_type"]:
+                print(f"   type pair {pw['a'][:14]:14s} x {pw['b'][:14]:14s}: "
                       f"n={pw['n']:3d} agree={pw['raw_pct']}% kappa={pw['kappa']}")
-            maj = r["majority"]
-            if maj:
-                print(f"    majority ({maj['n_voters']} votes, "
-                      f"n={maj['n_gated']} gated):")
-                for t in maj["by_threshold"]:
-                    print(f"      >= {t['k']}/{maj['n_voters']} agree on one type: "
-                          f"{t['pct']}% (n={t['n']})")
-                for v in maj["vs_majority"]:
-                    print(f"      {v['model']:22s} = majority for {v['pct']}% "
-                          f"of its type calls")
-            print("    own gate (sensitivity):")
-            for og in r["own_gate"]:
-                print(f"      {og['model']:22s} gates {og['gated']:4d} "
-                      f"({og['gated_pct']:5.2f}%) -> reactant|gated="
-                      f"{og['reactant_share_pct']}%")
+            tc = r["type_consensus"]
+            if tc:
+                print(f"   type consensus (Q3, n={tc['n_gated']} gated):")
+                print(f"     gate acceptance  : {tc['gate_accept']}")
+                print(f"     type consensus   : {tc['type_consensus']}")
+                print(f"     type dist: "
+                      f"{ {CL.get(k, k): v for k, v in tc['majority_type_dist'].items() if v} }")
+                for v in tc["vs_majority"]:
+                    print(f"     {v['model']:22s} matches non-tie consensus "
+                          f"{v['pct']}% of its retained calls (n={v['n']}, "
+                          f"{v['n_ties_excluded']} ties excluded)")
 
 
 if __name__ == "__main__":
