@@ -189,45 +189,47 @@ def fig_prevalence():
 
 # ===================================================== 2 audit
 def fig_audit():
-    if not AUD:
+    """Manual-audit precision, version 1.
+
+    v1 scope (stated on the figure, not in the caption): the 36 audited cases
+    were drawn from the ORIGINAL THREE-MODEL positive pool; GLM-5.3-Flash was
+    added to the experiment after the audit was sampled, so the strata are
+    "k of the 3 original models". All precision values and Wilson 95%
+    intervals are read from results/audit_scoping.json -- a single generated
+    source, no hand-typed percentages (see report section on the 92/95 %
+    inconsistency)."""
+    AUD_SC = _load("audit_scoping.json", {}) or {}
+    strata = AUD_SC.get("strata") or {}
+    k_keys = [k for k in ("3", "2", "1") if strata.get(k)]
+    if not k_keys:
         return
-    pool = {}
-    for row in (X.get("_pool") or []):
-        pool[row["uid"]] = row
-    # The audit was drawn from the 3-model positive set (glm was not part of
-    # the 36-case sample), so the strata counts must use those 3 models only;
-    # otherwise the panel (b) total no longer matches the audited pool.
-    AUDIT_MODELS = {"jev-1.13", "gpt-6-luna", "deepseek-v4.1-flash"}
-    preds = [json.loads(l) for l in
-             (RES / "predictions_full.jsonl").open(encoding="utf-8")]
-    flags = {}
-    for p in preds:
-        if (p["codebook"] == "A" and p["condition"] == "A" and p["label"] == "ja"
-                and p["model"] in AUDIT_MODELS):
-            flags.setdefault(p["uid"], set()).add(p["model"])
-    sizes = [sum(1 for v in flags.values() if len(v) == k) for k in (3, 2, 1)]
-    precs, ns = [], []
-    for k in (3, 2, 1):
-        sub = [r for r in AUD if r["n_models"] == k]
-        precs.append(100 * sum(1 for r in sub if r["verdict"] == "ja") / max(1, len(sub)))
-        ns.append(len(sub))
+    precs, ns, wis = [], [], []
+    for k in k_keys:
+        s = strata[k]
+        lo, hi = s["wilson95_pct"]
+        precs.append(s["precision_pct"])
+        ns.append(s["n"])
+        # Wilson half-widths in the SAME (percentage-point) units as the bars
+        wis.append([s["precision_pct"] - lo, hi - s["precision_pct"]])
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(7.0, 2.7),
                                  gridspec_kw={"width_ratios": [1.15, 1]})
     cols = [BLUE, "#7ea7bd", "#bccfd9"]
-    bars = a1.bar(range(3), precs, 0.55, color=cols, edgecolor="#333", linewidth=0.5)
-    import math
-    err = [1.96 * math.sqrt(max(p, 0.01) * (100 - p) / 12) for p in precs]
-    a1.errorbar(range(3), precs, yerr=err, fmt="none", ecolor="#222",
-                elinewidth=0.9, capsize=3, zorder=4)
-    for i, (p, n) in enumerate(zip(precs, ns)):
-        a1.annotate(f"{p:.0f} %", (i, p + err[i]), textcoords="offset points",
+    a1.bar(range(3), precs, 0.55, color=cols, edgecolor="#333", linewidth=0.5)
+    for i, (p, n, (wlo, whi)) in enumerate(zip(precs, ns, wis)):
+        a1.errorbar([i], [p], yerr=[[wlo], [whi]], fmt="none", ecolor="#222",
+                     elinewidth=0.9, capsize=3, zorder=4)
+        a1.annotate(f"{p:.0f} %", (i, p + whi), textcoords="offset points",
                     xytext=(0, 5), ha="center", fontsize=7.4, fontweight="bold")
         a1.annotate(f"n={n}", (i, 4), ha="center", fontsize=6.4, color="white")
     a1.set_xticks(range(3))
-    a1.set_xticklabels(["3 of 3\nmodels", "2 von 3", "1 von 3"], fontsize=7.2)
-    a1.set_ylabel("Precision (%)")
+    a1.set_xticklabels(["3 of 3\nmodels", "2 of 3", "1 of 3"], fontsize=7.2)
+    a1.set_ylabel("Precision (%), Wilson 95% CI")
     a1.set_ylim(0, 116)
-    a1.set_title("(a)  Precision by consensus", loc="left")
+    a1.set_title("(a)  Precision by consensus (3-model audit)", loc="left")
+    sizes = [sum(1 for v in (strata.get(k) or {"cases": []}).get("cases", []) and [])
+             for k in k_keys] or [27, 26, 66]
+    sz3 = (AUD_SC.get("pool_sizes_3model") or {})
+    sizes = [sz3.get(k, 0) for k in k_keys]
     tot = sum(sizes)
     sh = [100 * s / tot for s in sizes]
     a2.bar(range(3), sh, 0.55, color=cols, edgecolor="#333", linewidth=0.5)
@@ -237,9 +239,9 @@ def fig_audit():
         a2.annotate(f"n={s}", (i, 3), ha="center", fontsize=6.4, color="white")
     a2.set_xticks(range(3))
     a2.set_xticklabels(["3/3", "2/3", "1/3"], fontsize=7.2)
-    a2.set_ylabel("Share of all 119 positives (%)")
+    a2.set_ylabel(f"Share of {tot} positives flagged by the 3 original models (%)")
     a2.set_ylim(0, 68)
-    a2.set_title("(b)  Distribution of positives", loc="left")
+    a2.set_title("(b)  Distribution of the 3-model positives", loc="left")
     fig.tight_layout()
     _save(fig, "fig02_audit")
 
@@ -469,30 +471,97 @@ def fig_confusion_models(cb: str):
 
 
 # ===================================================== 6 condition A vs B
-def fig_confusion_condition():
+def fig_confusion_condition(cb: str):
+    """Condition A (transcript) vs Condition B (comment-only), per model.
+
+    Generalised over the codebook (the old version hard-coded Codebook A):
+      * Codebook A: the binary 2x2 (nein/ja), absolute + row-normalised --
+        unchanged in substance.
+      * Codebook B: TWO stability questions, both reported:
+          row 0  type-level: the full 7-class A x B confusion (colour, log scale)
+                   -- does the transcript change the INFERRED KIND of reactance?
+          row 1  binary-level: reactant/none collapse with counts (the 4 cells
+                   A=no/B=no, A=no/B=yes, A=yes/B=no, A=yes/B=yes)
+                   -- are the SAME comments classified as reactant?
+    The aggregate prevalence difference is NOT sufficient for either question:
+    two conditions can have identical prevalence while labelling different
+    comments. This figure is the case-level answer and sits next to the
+    transcript claim in the report."""
     cp = [r for r in X.get("condition_pairwise", [])
-          if r["cb"] == "A" and r.get("raw")]
+          if r["cb"] == cb and r.get("raw")]
     if not cp:
         return
     models = _order({r["model"] for r in cp})
-    fig, axes = plt.subplots(2, len(models), figsize=(2.05 * len(models), 4.0))
+    if cb == "A":
+        fig, axes = plt.subplots(2, len(models), figsize=(2.05 * len(models), 4.0))
+        axes = np.atleast_2d(axes)
+        for j, m in enumerate(models):
+            r = next((x for x in cp if x["model"] == m), None)
+            if not r:
+                continue
+            for i, (mat, norm, tag) in enumerate(
+                    ((r["raw"], False, "absolute"), (r["norm"], True, "row-normalised"))):
+                ax = axes[i, j]
+                _cmap_grid(ax, mat, ["nein", "ja"], ["nein", "ja"], norm=norm,
+                           annot_size=7.0)
+                ax.set_xlabel("Condition B", fontsize=6.6)
+                if i == 0:
+                    ax.set_title(MSHORT.get(m, m), fontsize=7.4, pad=5)
+                if j == 0:
+                    ax.set_ylabel(f"Condition A\n({tag})", fontsize=6.8)
+        fig.tight_layout()
+        _save(fig, "fig06_confusion_condition_A")
+        return
+
+    # Codebook B: type-level 7x7 (row 0) + binary reactant/none 2x2 (row 1)
+    type_lbl = [CLS.get(l, l) for l in LAB_B]
+    bin_lbl = ["none", "reactant"]
+    fig, axes = plt.subplots(2, len(models), figsize=(2.2 * len(models), 4.7))
     axes = np.atleast_2d(axes)
     for j, m in enumerate(models):
         r = next((x for x in cp if x["model"] == m), None)
         if not r:
             continue
-        for i, (mat, norm, tag) in enumerate(
-                ((r["raw"], False, "absolute"), (r["norm"], True, "row-normalised"))):
-            ax = axes[i, j]
-            _cmap_grid(ax, mat, ["nein", "ja"], ["nein", "ja"], norm=norm,
-                       annot_size=7.0)
-            ax.set_xlabel("Condition B", fontsize=6.6)
-            if i == 0:
-                ax.set_title(MSHORT.get(m, m), fontsize=7.4, pad=5)
-            if j == 0:
-                ax.set_ylabel(f"Condition A\n({tag})", fontsize=6.8)
+        # row 0: 7x7 type confusion, colour only (log scale -- see fig05)
+        ax = axes[0, j]
+        mtr = np.asarray(r["raw"], dtype=float)
+        vmax = max(int(mtr.max()), 2)
+        ax.imshow(mtr, cmap=SEQ_CMAP, norm=LogNorm(vmin=0.7, vmax=vmax),
+                  interpolation="nearest", aspect="equal")
+        k = len(LAB_B)
+        ax.set_xticks(range(k))
+        ax.set_yticks(range(k))
+        ax.set_xticklabels(type_lbl if j == len(models) - 1 else [],
+                           fontsize=5.2, rotation=45, ha="right")
+        ax.set_yticklabels(type_lbl if j == 0 else [], fontsize=5.4)
+        ax.grid(False)
+        for s in ax.spines.values():
+            s.set_visible(True)
+            s.set_linewidth(0.5)
+            s.set_color("#666666")
+        if j == 0:
+            ax.set_ylabel("Condition A\n(type)", fontsize=6.8)
+        ax.set_xlabel("Condition B (type)" if j == len(models) - 1 else "",
+                      fontsize=6.6)
+        ax.set_title(f"{MSHORT.get(m, m)}\n{r['raw_pct']:.1f}% raw agree",
+                     fontsize=7.2, pad=4)
+        # row 1: binary reactant/none collapse, with counts
+        b = r.get("binary")
+        ax2 = axes[1, j]
+        if b:
+            mat = np.asarray([[b["A_no_B_no"], b["A_no_B_yes"]],
+                               [b["A_yes_B_no"], b["A_yes_B_yes"]]], dtype=float)
+            _cmap_grid(ax2, mat, bin_lbl, bin_lbl, norm=False, annot_size=6.6)
+            nflip = b["A_no_B_yes"] + b["A_yes_B_no"]
+            ax2.set_title(f"reactant: {b['case_agreement_pct']:.1f}% same\n"
+                           f"({nflip} flip)", fontsize=6.8, pad=4)
+        else:
+            ax2.axis("off")
+        ax2.set_xlabel("Condition B (binary)", fontsize=6.6)
+        if j == 0:
+            ax2.set_ylabel("Condition A\n(binary)", fontsize=6.8)
     fig.tight_layout()
-    _save(fig, "fig06_confusion_condition")
+    _save(fig, "fig06_confusion_condition_B")
 
 
 # ===================================================== 7 codebook A vs B
@@ -609,29 +678,45 @@ def fig_reliability():
 
 # ===================================================== 10 big scale
 def fig_bigscale():
+    """Large-scale sample (n=2,001, condition B, Jev + GLM).
+
+    (a) Prevalence per model and codebook (Jev + GLM) with Jev's 95% CI;
+    (b) Jev's confidence-band structure.
+    """
     if not BIG:
         return
-    a, b = BIG["codebook_A"], BIG["codebook_B"]
+    PA, PB = BIG["prevalence_A"], BIG["prevalence_B"]
+    models = [m for m in ("jev-1.13", "glm-5.3-flash") if m in PA]
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(7.0, 2.8))
-    vals = [a["prevalence_pct"], b["prevalence_pct"]]
-    a1.bar([0, 1], vals, 0.5, color=[BLUE, RUST], edgecolor="#333", linewidth=0.5)
-    a1.errorbar([0], [a["prevalence_pct"]],
-                yerr=[[a["prevalence_pct"] - a["ci95"][0]],
-                      [a["ci95"][1] - a["prevalence_pct"]]],
-                fmt="none", ecolor="#222", elinewidth=1.0, capsize=4, zorder=4)
-    for i, r in enumerate((a, b)):
-        a1.annotate(f"{vals[i]:.2f} %", (i, vals[i]), textcoords="offset points",
-                    xytext=(0, 8 if i == 0 else 10), ha="center", fontsize=7.4,
-                    fontweight="bold")
-        a1.annotate(f"n={r['n_positive']}", (i, 0.12), ha="center", fontsize=6.4,
-                    color="white")
-    a1.set_xticks([0, 1])
-    a1.set_xticklabels(["Codebook A\n(binary)", "Codebook B\n(7 Typen)"], fontsize=7.4)
+    for i, P in enumerate((PA, PB)):
+        for j, m in enumerate(models):
+            r = P[m]
+            a1.bar([i + j * 0.42 - 0.21], [r["prevalence_pct"]], 0.38,
+                   color=MODEL_COLOR[m], edgecolor="#333", linewidth=0.5,
+                   label=f"Codebook {['A','B'][i]}: {MSHORT[m]}")
+            if m == "jev-1.13" and r.get("ci95"):
+                a1.errorbar([i - 0.21], [r["prevalence_pct"]],
+                             yerr=[[r["prevalence_pct"] - r["ci95"][0]],
+                                   [r["ci95"][1] - r["prevalence_pct"]]],
+                             fmt="none", ecolor="#222", elinewidth=1.0,
+                             capsize=3, zorder=4)
+            a1.annotate(f"{r['prevalence_pct']:.1f}%", (i + j * 0.42 - 0.21,
+                        r["prevalence_pct"]), textcoords="offset points",
+                        xytext=(0, 7), ha="center", fontsize=6.6,
+                        fontweight="bold")
+            a1.annotate(f"n+={r['n_positive']}", (i + j * 0.42 - 0.21, 0.28),
+                        ha="center", fontsize=5.8, color="white")
+    a1.set_xticks([0.21, 1.21])
+    a1.set_xticklabels(["Codebook A (binary)", "Codebook B (type)"], fontsize=7.4)
     a1.set_ylabel("Prevalence (%)")
-    a1.set_ylim(0, 4.8)
-    a1.set_title("(a)  Prevalence", loc="left")
-    a1.annotate(f"95% CI, A: [{a['ci95'][0]}; {a['ci95'][1]}]", xy=(0.5, 4.3),
-                ha="center", fontsize=6.2, color="#444")
+    a1.set_ylim(0, 11.5)
+    a1.legend(fontsize=6.2, frameon=False, loc="upper left", ncols=2)
+    a1.set_title("(a)  Large-scale sample, n = 2,001 (Jev + GLM, cond. B)",
+                 loc="left", fontsize=8)
+    _ja = PA.get("jev-1.13", {})
+    if _ja.get("ci95"):
+        a1.annotate(f"95% CI (Jev, A): [{_ja['ci95'][0]}; {_ja['ci95'][1]}]",
+                    xy=(0, 10.8), ha="center", fontsize=6.2, color="#444")
     cb = BIG["confidence_bands"]
     order = ["<0.1", "0.1-0.3", "0.3-0.6", "0.6-0.9", ">=0.9"]
     rates = [cb.get(k, {}).get("rate_pct") or 0 for k in order]
@@ -656,21 +741,29 @@ def fig_bigscale():
 
 # ===================================================== 11 gate confusion grid
 def fig_gate_matrix():
-    """Matrix of confusion matrices for the Jev-gated condition:
-    rows = model A's type call, cols = model B's, each cell the 7x7 confusion
-    of the comments Jev's gate let through. All four models annotate the SAME
-    (gated) set, so every cell has the same support."""
+    """Gated condition, CONDITIONAL SIX-CLASS type confusion grid (main figure).
+
+    Each cell is the six-class (type) confusion matrix of ONE model pair, drawn
+    only over the comments on which BOTH models retained Jev's positive gate
+    (i.e. neither re-labelled it `keine_reaktanz`). The question the figure
+    answers: "given that two models both agree the gate is right, which reactance
+    types do they confuse?" The gate question (do they agree the gate is right
+    at all?) is a DIFFERENT question and lives in fig_gate_rejection, not here.
+    Class support per column (which types are effectively empty on this set) is
+    annotated, because a six-class kappa on near-empty classes is not a robust
+    global statistic (report section: sparse type classes)."""
     runs = GATE.get("runs", {})
     r = (runs.get("matrix", {}).get("conditions") or {}).get("B")
-    if not r or not r.get("pairwise"):
+    if not r or not r.get("pairwise_type"):
         return
     models = _order(r["models"])
     idx = {}
-    for pw in r["pairwise"]:
+    for pw in r["pairwise_type"]:
         idx[(pw["a"], pw["b"])] = pw
         idx[(pw["b"], pw["a"])] = pw
     n = len(models)
-    short_lbl = [CLS.get(l, l) for l in LAB_B]
+    TYPE_LBL = [l for l in LAB_B if l != "keine_reaktanz"]
+    short_lbl = [CLS.get(l, l) for l in TYPE_LBL]
     cell = 1.66
     fig, axes = plt.subplots(n, n, figsize=(cell * n + 0.85, cell * n + 0.75))
     axes = np.atleast_2d(axes)
@@ -737,47 +830,120 @@ def fig_gate_matrix():
                                markerfacecolor="none", markeredgecolor=RUST,
                                markeredgewidth=1.0, label="disagreement")],
                loc="lower left", bbox_to_anchor=(0.02, 0.028), fontsize=6.8)
+    # sparse-class support annotation: which of the six types have (almost) no
+    # support on the gated set. A global six-class kappa is only as meaningful as
+    # the emptiest class, so the report shows the per-type counts explicitly.
+    total_support = {tl: 0 for tl in TYPE_LBL}
+    for td in r.get("type_distribution", []):
+        for tl in TYPE_LBL:
+            total_support[tl] += td["dist"].get(tl, 0)
+    fig.text(0.98, 0.005,
+             "type support on the gated set: " +
+             ", ".join(f"{short_lbl[i]}={total_support[tl]}"
+                       for i, tl in enumerate(TYPE_LBL)),
+             ha="right", fontsize=6.2, color="#444")
     _save(fig, "fig11_gate_confusion")
+
+
+# ===================================================== 11b gate rejection (separate, simple)
+def fig_gate_rejection():
+    """Gate-consistency panel (the OTHER half of the gated question).
+
+    For every downstream model: of the comments Jev's gate let through, the share
+    RETAINING the gate (model assigns one of the six types) vs REJECTING it
+    (model re-labels `keine_reaktanz`). One horizontal stacked bar per model.
+    This is a gate-rejection diagnostic, NOT type disagreement -- which is why
+    it is its own figure next to, and not mixed into, fig11."""
+    r = ((GATE.get("runs", {}) or {}).get("matrix", {})
+         .get("conditions") or {}).get("B") or {}
+    gc = r.get("gate_consistency")
+    if not gc:
+        return
+    models = _order([g["model"] for g in gc])
+    fig, ax = plt.subplots(figsize=(6.4, 2.2))
+    y = np.arange(len(models))[::-1]
+    for i, m in enumerate(models):
+        g = next(x for x in gc if x["model"] == m)
+        tot = max(1, g["n"])
+        ret = 100 * g["n_accept"] / tot
+        rej = 100 * g["n_reject"] / tot
+        ax.barh(y[i], ret, left=0, color=BLUE, edgecolor="#333", linewidth=0.4,
+                label="retain gate (a type)" if i == len(models) - 1 else None)
+        ax.barh(y[i], rej, left=ret, color=RUST, edgecolor="#333", linewidth=0.4,
+                label="reject gate (`keine_reaktanz`)" if i == len(models) - 1 else None)
+        ax.text(ret / 2, y[i], f"retain {ret:.0f}%\n({g['n_accept']}/{g['n']})",
+                ha="center", va="center", fontsize=6.4, color="white", fontweight="bold")
+        ax.text(ret + rej / 2, y[i], f"reject {rej:.0f}%\n({g['n_reject']})",
+                ha="center", va="center", fontsize=6.4,
+                color="white" if rej > 25 else "#22404f", fontweight="bold")
+    ax.set_yticks(y)
+    ax.set_yticklabels([MSHORT.get(m, m) for m in models], fontsize=7.0)
+    ax.set_xlim(0, 100)
+    ax.set_xlabel("share of Jev-gated comments (%)", fontsize=7.2)
+    ax.set_title("(Jev gate, matrix sample, Condition B)", loc="left", fontsize=7.2)
+    ax.legend(loc="lower right", fontsize=6.4)
+    ax.spines[["top", "right"]].set_visible(False)
+    fig.tight_layout()
+    _save(fig, "fig13_gate_rejection")
 
 
 # ===================================================== 12 gate majority vote
 def fig_gate_majority():
-    """Share of Jev-gated comments whose type label reaches a k-of-n majority,
-    and per-model agreement with that majority (matrix sample, condition B)."""
+    """Conditional type consensus on the gated set, reported as TWO quantities
+    that the old single 'majority' figure conflated (matrix sample, condition B):
+
+      (a) gate acceptance  : 1/4 .. 4/4 -- how many models retained the gate
+      (b) type consensus    : among the models that retained it, how strongly do
+                              their type labels agree (k-of-n plurality, where a
+                              2-2 split is a TIE, not a 2-of-4 majority)
+    Ties are never resolved by label order, and no model is scored against an
+    arbitrarily tie-broken reference (the per-model agreement panel omits tied
+    comments)."""
     r = ((GATE.get("runs", {}) or {}).get("matrix", {})
          .get("conditions") or {}).get("B") or {}
-    maj = r.get("majority")
-    if not maj or not maj.get("by_threshold"):
+    tc = r.get("type_consensus")
+    if not tc or not tc.get("gate_accept"):
         return
+    n_v = tc["n_voters"]
+    n_gate = tc["n_gated"]
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(7.0, 2.7))
-    thr = maj["by_threshold"]
-    xs = np.arange(len(thr))
-    vals = [t["pct"] for t in thr]
-    a1.bar(xs, vals, 0.5, color=[BAND["neg"], BAND["mid"], BLUE][:len(xs)],
+
+    # (a) gate acceptance distribution (all n_gated comments)
+    ga = tc["gate_accept"]
+    ks = [n_v - i for i in range(n_v + 1)]          # 4,3,2,1,0
+    ga_vals = [ga.get(f"{k}-of-{n_v}", 0) for k in ks]
+    xs = np.arange(len(ks))
+    a1.bar(xs, ga_vals, 0.5, color=[BAND["neg"], "#9fb3bf", BAND["mid"], BLUE, BLUE][:len(xs)],
            edgecolor="#333", linewidth=0.5)
-    for i, (t, v) in enumerate(zip(thr, vals)):
-        a1.annotate(f"{v:.0f} %", (i, v), textcoords="offset points",
-                    xytext=(0, 3), ha="center", fontsize=7.2, fontweight="bold")
-        a1.annotate(f"n={t['n']}", (i, 3), ha="center", fontsize=6.2, color="white")
+    for i, (k, v) in enumerate(zip(ks, ga_vals)):
+        a1.annotate(f"{v}", (i, v), textcoords="offset points", xytext=(0, 2),
+                    ha="center", fontsize=6.8, fontweight="bold")
+        a1.annotate(f"{v / n_gate:.0%}", (i, v), textcoords="offset points",
+                    xytext=(0, 11), ha="center", fontsize=5.8, color="#444")
     a1.set_xticks(xs)
-    a1.set_xticklabels([f"{t['k']} of {maj['n_voters']}" for t in thr], fontsize=7.0)
-    a1.set_ylabel("share of gated comments (%)")
-    a1.set_ylim(0, 112)
-    a1.set_title("(a)  Majority reached", loc="left")
-    per = maj["vs_majority"]
-    xs2 = np.arange(len(per))
-    a2.bar(xs2, [v["pct"] for v in per], 0.55,
-           color=[MODEL_COLOR.get(v["model"], GREY) for v in per],
-           edgecolor="#333", linewidth=0.5)
-    for i, v in enumerate(per):
-        a2.annotate(f"{v['pct']:.0f} %", (i, v["pct"]), textcoords="offset points",
-                    xytext=(0, 3), ha="center", fontsize=6.6, fontweight="bold")
+    a1.set_xticklabels([f"{k}/{n_v}" for k in ks], fontsize=7.0)
+    a1.set_ylabel("gated comments (n=" + f"{n_gate})")
+    a1.set_title("(a)  Gate acceptance: models retaining reactance", loc="left")
+
+    # (b) type consensus among the RETAINERS (ties shown, not resolved)
+    tcs = tc["type_consensus"]
+    ks2 = [n_v - i for i in range(n_v + 1)]          # 4,3,2,1,0
+    tcs_vals = [tcs.get(f"{k}-of-{n_v}", 0) for k in ks2]
+    n_tie = tcs.get("tie", 0)
+    xs2 = np.arange(len(ks2) + 1)
+    b2_vals = tcs_vals + [n_tie]
+    cols2 = ([BAND["neg"], "#9fb3bf", BAND["mid"], BLUE, BLUE][:len(ks2)]
+              + [GREY])
+    a2.bar(xs2, b2_vals, 0.5, color=cols2, edgecolor="#333", linewidth=0.5)
+    for i, (k, v) in enumerate(zip(ks2, tcs_vals)):
+        a2.annotate(f"{v}", (i, v), textcoords="offset points", xytext=(0, 2),
+                    ha="center", fontsize=6.8, fontweight="bold")
+    a2.annotate(f"{n_tie}", (len(ks2), n_tie), textcoords="offset points",
+                xytext=(0, 2), ha="center", fontsize=6.8, fontweight="bold", color=GREY)
     a2.set_xticks(xs2)
-    a2.set_xticklabels([MSHORT.get(v["model"], v["model"]) for v in per],
-                       fontsize=6.4, rotation=12, ha="right")
-    a2.set_ylabel("agreement with majority (%)")
-    a2.set_ylim(0, 112)
-    a2.set_title("(b)  Per model", loc="left")
+    a2.set_xticklabels([f"{k}/{n_v}" for k in ks2] + ["2-2\ntie"], fontsize=7.0)
+    a2.set_ylabel("gated comments")
+    a2.set_title("(b)  Type consensus among the models that retained it", loc="left")
     fig.tight_layout()
     _save(fig, "fig12_gate_majority")
 
@@ -789,12 +955,14 @@ ALL = (
     ("cost", fig_cost),
     ("confusion-models-A", lambda: fig_confusion_models("A")),
     ("confusion-models-B", lambda: fig_confusion_models("B")),
-    ("confusion-condition", fig_confusion_condition),
+    ("confusion-condition-A", lambda: fig_confusion_condition("A")),
+    ("confusion-condition-B", lambda: fig_confusion_condition("B")),
     ("confusion-codebook", fig_confusion_codebook),
     ("calibration", fig_calibration),
     ("reliability", fig_reliability),
     ("bigscale", fig_bigscale),
     ("gate-confusion", fig_gate_matrix),
+    ("gate-rejection", fig_gate_rejection),
     ("gate-majority", fig_gate_majority),
 )
 

@@ -1,0 +1,270 @@
+{
+ "meta": {
+  "audit_version": 1,
+  "generated_at": "2026-09-29T20:54:43+00:00",
+  "condition": "A",
+  "codebook": "A",
+  "sample": "matrix",
+  "models": [
+   "jev-1.13",
+   "gpt-6-luna",
+   "deepseek-v4.1-flash"
+  ],
+  "glm_in_audit": false,
+  "n_candidates": 119,
+  "n_audited": 36,
+  "coded_by": "assistant reading, 2026-09-28; not a trained human coder -- treat as indicative",
+  "scope_note": "Audit v1 was drawn from the original three-model positive pool; GLM-5.3-Flash was added later and took part in neither the sampling nor the coding. The strata are therefore 'k of the 3 original models'.",
+  "source_files": [
+   "audit_sample.json",
+   "audit_verdicts.json",
+   "predictions_full.jsonl"
+  ]
+ },
+ "strata": {
+  "3": {
+   "n": 12,
+   "n_positive": 11,
+   "precision_pct": 91.7,
+   "wilson95_pct": [
+    64.6,
+    98.5
+   ],
+   "cases": [
+    {
+     "uid": "72fc8f292092",
+     "verdict": "ja",
+     "why": "Rahmen als Überwachungsstaat = wahrgenommene Kontrollbedrohung (A)"
+    },
+    {
+     "uid": "595e7ef3272e",
+     "verdict": "ja",
+     "why": "Maskenpflicht als Eingriff in den Körper benannt = Kontrollbedrohung (A)"
+    },
+    {
+     "uid": "35c8d2851eee",
+     "verdict": "ja",
+     "why": "Video beschämt die Zuschauer → Normdruck + Identitätsbedrohung (C/D). Gutes Beispiel."
+    },
+    {
+     "uid": "08221862dbd3",
+     "verdict": "ja",
+     "why": "Polizei vor der Tür gegen Impfpflicht = Bedrohungsrahmen, Verweigerung (A)"
+    },
+    {
+     "uid": "c98642d183ca",
+     "verdict": "ja",
+     "why": "Weist aufgezwungene Terminologie zurück → Identitätsbedrohung (D), schwach aber vertretbar"
+    },
+    {
+     "uid": "164fdbd05be0",
+     "verdict": "ja",
+     "why": "„Zwangsimpfen“ explizit benannt = Kontrollbedrohung (A) + Sarkasmus"
+    },
+    {
+     "uid": "9670b72be611",
+     "verdict": "ja",
+     "why": "Wirft der Impfpolitik Gewinnmotive vor = wahrgenommene Manipulation (B)"
+    },
+    {
+     "uid": "c4ab95489e86",
+     "verdict": "nein",
+     "why": "Nicht deutbares Fragment, keine rekonstruierbare Reaktanz"
+    },
+    {
+     "uid": "dd91791e7a6d",
+     "verdict": "ja",
+     "why": "Weist den Beschämungsrahmen zurück, nennt den Ausstieg = Normdruck (C)"
+    },
+    {
+     "uid": "154b7ea414d7",
+     "verdict": "ja",
+     "why": "„total verblödet“ = Identitäts-/Würdeangriff (D)"
+    },
+    {
+     "uid": "6f1413afa4a1",
+     "verdict": "ja",
+     "why": "Message Fatigue, „jede Minute auf den Keks“ = Auslöserdimension E"
+    },
+    {
+     "uid": "03fe0e9d33e5",
+     "verdict": "ja",
+     "why": "Gegenargument gegen bevormundende Screen-Time-Moralisierung (C)"
+    }
+   ]
+  },
+  "2": {
+   "n": 12,
+   "n_positive": 6,
+   "precision_pct": 50.0,
+   "wilson95_pct": [
+    25.4,
+    74.6
+   ],
+   "cases": [
+    {
+     "uid": "e64da5bb8587",
+     "verdict": "nein",
+     "why": "Zustimmung / Wahlempfehlung"
+    },
+    {
+     "uid": "2cf8201f3b22",
+     "verdict": "nein",
+     "why": "Angriff auf eine rivalisierende Partei, keine Autonomiebedrohung"
+    },
+    {
+     "uid": "1b1473453593",
+     "verdict": "nein",
+     "why": "Gewöhnliche Sachkritik (Rundfunkgebühren)"
+    },
+    {
+     "uid": "fb7051982c51",
+     "verdict": "nein",
+     "why": "Beleidigung von Parteien, kein Rahmen einer Freiheitsbedrohung"
+    },
+    {
+     "uid": "93120de7b522",
+     "verdict": "ja",
+     "why": "„plumpe Framing“ benennt Framing/Manipulation (B) — Grenzfall, aber der Auslöser wird benannt"
+    },
+    {
+     "uid": "2764d52df393",
+     "verdict": "ja",
+     "why": "Verweigert eine Impfpflicht = Lehrbuchfall des Boomerang-Effekts (A)"
+    },
+    {
+     "uid": "75a022890f54",
+     "verdict": "ja",
+     "why": "Weist die Norm der Wahlpflicht zurück = Normdruck (C)"
+    },
+    {
+     "uid": "2c59ca2f16c5",
+     "verdict": "nein",
+     "why": "Beiläufige Bemerkung, keine Bewertung einer Einschränkung"
+    },
+    {
+     "uid": "11bce973d570",
+     "verdict": "ja",
+     "why": "„totalitärer Staat“ + Weigerung, sich spalten zu lassen = Identität/Würde (D)"
+    },
+    {
+     "uid": "281054d3929b",
+     "verdict": "nein",
+     "why": "Spott, keine Wiederherstellung von Autonomie"
+    },
+    {
+     "uid": "97bc1bb18aac",
+     "verdict": "ja",
+     "why": "Nimmt aus Prinzip ein Bußgeld an = klassische Reaktanz-Bewältigung (A)"
+    },
+    {
+     "uid": "fa01d672cd71",
+     "verdict": "ja",
+     "why": "Benennt „kontrollieren und zu verbieten“ = Kontrollbedrohung (A)"
+    }
+   ]
+  },
+  "1": {
+   "n": 12,
+   "n_positive": 3,
+   "precision_pct": 25.0,
+   "wilson95_pct": [
+    8.9,
+    53.2
+   ],
+   "cases": [
+    {
+     "uid": "b4cb6160f2d2",
+     "verdict": "nein",
+     "why": "Selbstauskunft + Bitte um Rat; keine Reaktion auf eine Einschränkung im Video"
+    },
+    {
+     "uid": "0b00c9eb868e",
+     "verdict": "nein",
+     "why": "Kritik an der Wortwahl, keine Autonomiebedrohung"
+    },
+    {
+     "uid": "5ab8106ad24c",
+     "verdict": "ja",
+     "why": "Verdacht auf gekaufte Abgeordnete = wahrgenommene Manipulation (B). Grenzfall."
+    },
+    {
+     "uid": "91470539cea8",
+     "verdict": "nein",
+     "why": "Wahlempfehlung"
+    },
+    {
+     "uid": "7757d0d3554f",
+     "verdict": "nein",
+     "why": "Reine Aggression, kein Einschränkungsrahmen"
+    },
+    {
+     "uid": "74b76eda3305",
+     "verdict": "nein",
+     "why": "Stimmt zu und fordert Handeln; Gegenteil von Reaktanz"
+    },
+    {
+     "uid": "de7cc9ed2663",
+     "verdict": "nein",
+     "why": "Drohung gegen andere, keine Reaktanz der kommentierenden Person"
+    },
+    {
+     "uid": "7039632930e0",
+     "verdict": "ja",
+     "why": "„die wollen alles verbieten“ = Kontrollbedrohung (A). Grenzfall."
+    },
+    {
+     "uid": "7f4bbe6be93b",
+     "verdict": "ja",
+     "why": "SED/Maueropfer-Konfrontation = Identität/Status (D). Grenzfall."
+    },
+    {
+     "uid": "367c29515d9d",
+     "verdict": "nein",
+     "why": "Sinnloses Fragment"
+    },
+    {
+     "uid": "cd532c30f994",
+     "verdict": "nein",
+     "why": "Sachliche Kritik an den Aussagen eines Politikers"
+    },
+    {
+     "uid": "38aee3d11aac",
+     "verdict": "nein",
+     "why": "Gegenargument zur Gasfrage, keine Bewertung einer Einschränkung"
+    }
+   ]
+  }
+ },
+ "pool_sizes_3model": {
+  "3": 27,
+  "2": 26,
+  "1": 66
+ },
+ "pool_sizes_4model": {
+  "4": 24,
+  "3": 26,
+  "2": 25,
+  "1": 105
+ },
+ "glm_only_flags": 61,
+ "n_positive_distinct_4model": 180,
+ "pooled": {
+  "n": 36,
+  "n_positive": 20,
+  "precision_pct": 55.6,
+  "wilson95_pct": [
+   39.6,
+   70.5
+  ]
+ },
+ "weighted_3model_pool": {
+  "n": 119,
+  "pct": 45.6
+ },
+ "weighted_4model_pool_unaudited_tail": {
+  "n": 180,
+  "caveat": "the 4-of-4 and GLM-only strata carry no audited rate",
+  "pct": null
+ }
+}

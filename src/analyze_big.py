@@ -1,17 +1,28 @@
+#!/usr/bin/env python3
 """The large-scale run (2,001 comments, comment-only, sharpened codebook).
 
-Two jobs:
-  1. Proper F1 for the binary task. The consensus majority is treated as a
-     REFERENCE, not ground truth -- so F1 is reported as agreement-with-
-     consensus and labelled as such.
-  2. The big run (jev, condition B, codebook A + B, 2,001 comments) with
-     macro/micro F1 over the 7-way task, the A-vs-B crosstab, and F1 broken
-     down by the confidence band the decision API reports.
+Scope (important, and the point of this file): the big sample is coded, under
+Condition B only, by two models --
+  * jev-1.13  (run 'big')    -- both codebooks, 2,001 comments
+  * glm-5.3-flash (run 'glm_big') -- both codebooks, 2,001 comments
+The other two models are NOT on the big sample. Every aggregate below carries
+`sample: "big"`, the model, the n that went into it and the condition, so the
+report can never again print a 2,001 number next to a table whose rows are the
+1,200-comment matrix sample (or vice versa).
+
+Jobs:
+  1. binary F1 for the 1,200-comment MATRIX sample. The consensus majority is
+     a REFERENCE, not ground truth -- F1 against it is an agreement measure
+     ("distance from consensus"), labelled as such, never "correctness".
+  2. the big run: per-model prevalence + bootstrap CI for both codebooks, the
+     per-model A-vs-B crosstab (raw agreement, kappa, FP/FN, FP:TP, n=2,001),
+     and the Jev confidence-band breakdown.
 """
 from __future__ import annotations
 
 import json
 from collections import Counter, defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -21,6 +32,7 @@ RES = REPO / "results"
 LAB_B = ["keine_reaktanz", "konfrontation_angriff", "ablenkung_whataboutism",
          "delegierung_hilflosigkeit", "vermeidung_rueckzug",
          "reflektierte_rechtfertigung", "konstruktive_kritik"]
+NEG_B = "keine_reaktanz"
 
 
 def load(p):
@@ -43,28 +55,30 @@ def binary_f1(pred, ref):
     return prf(tp, fp, fn)
 
 
-def macro_f1(pred, ref, labels):
-    out = {}
-    for l in labels:
-        tp = sum(1 for a, b in zip(pred, ref) if a == l and b == l)
-        fp = sum(1 for a, b in zip(pred, ref) if a == l and b != l)
-        fn = sum(1 for a, b in zip(pred, ref) if a != l and b == l)
-        out[l] = prf(tp, fp, fn)
-    valid = [v for v in out.values() if v["f1"] is not None]
-    out["_macro"] = {
-        "f1": round(float(np.mean([v["f1"] for v in valid])), 4) if valid else None,
-        "n_labels_scored": len(valid),
-    }
-    # micro over all labels == accuracy
-    n = sum(1 for a, b in zip(pred, ref) if a == b)
-    out["_micro_accuracy"] = round(n / len(pred), 4) if pred else None
-    return out
+def bootstrap_ci95(vals, scale=100, n=2000, seed=3):
+    rng = np.random.default_rng(seed)
+    arr = np.asarray(vals, dtype=float)
+    idx = rng.integers(0, len(arr), size=(n, len(arr)))
+    draws = scale * arr[idx].mean(axis=1)
+    return [round(float(np.quantile(draws, 0.025)), 2),
+            round(float(np.quantile(draws, 0.975)), 2)]
 
 
 def main():
-    out = {"binary_f1_vs_consensus": [], "big_run": {}}
+    generated_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    out = {
+        "meta": {
+            "generated_at": generated_at,
+            "source_files": ["predictions_full.jsonl", "predictions_big.jsonl",
+                              "predictions_glm_big.jsonl"],
+            "matrix_sample": {"sample": "matrix", "n": 1200,
+                               "conditions": ["A", "B"]},
+            "big_sample": {"sample": "big", "n": 2001, "conditions": ["B"]},
+        },
+        "binary_f1_vs_consensus": [],
+    }
 
-    # ---------- 1. binary F1 for the 1,200-comment matrix -------------------
+    # ---------- 1. binary F1, matrix sample --------------------------------
     full = load(RES / "predictions_full.jsonl")
     models = sorted({p["model"] for p in full})
     lab = {(p["model"], p["codebook"], p["condition"], p["uid"]): p["label"]
@@ -74,6 +88,7 @@ def main():
                 if all((m, "A", cond, u) in lab for m in models)]
         if not uids:
             continue
+        # reference = 4-model majority = consensus PROXY, not ground truth
         ref = []
         for u in uids:
             v = [lab[(m, "A", cond, u)] for m in models]
@@ -81,86 +96,81 @@ def main():
         for m in models:
             pred = [lab[(m, "A", cond, u)] for u in uids]
             r = binary_f1(pred, ref)
-            r.update({"model": m, "cond": cond, "n": len(uids),
+            r.update({"model": m, "cond": cond, "sample": "matrix", "n": len(uids),
                       "ref_positives": ref.count("ja")})
             out["binary_f1_vs_consensus"].append(r)
 
     # ---------- 2. the big run ---------------------------------------------
-    big = load(RES / "predictions_big.jsonl")
-    if big:
-        B = {"big_run": {}}
-        n = len({p["uid"] for p in big})
-        B["big_run"]["n_comments"] = n
-        B["big_run"]["n_requests"] = len(big)
-        B["big_run"]["cost_usd"] = round(
-            sum(p.get("cost_usd") or 0 for p in big if not p.get("was_cached")), 4)
-        bycb = defaultdict(dict)
-        for p in big:
-            if p["label"]:
-                bycb[p["codebook"]][p["uid"]] = p["label"]
+    big_all = load(RES / "predictions_big.jsonl") + load(RES / "predictions_glm_big.jsonl")
+    if big_all:
+        n = len({p["uid"] for p in big_all})
+        big_models = sorted({p["model"] for p in big_all})
         meta = json.load((REPO / "data/sample_big_meta.json").open(encoding="utf-8"))
-        B["big_run"]["sample"] = {
-            "accounts": meta["accounts_used"], "parties": meta["parties_used"],
-            "videos": meta["videos_used"],
-            "party_counts": meta["party_counts"]}
+        out.update({
+            "sample": "big",
+            "n_comments": n,
+            "n_requests": len(big_all),
+            "models": big_models,
+            "cost_usd": round(
+                sum(p.get("cost_usd") or 0 for p in big_all if not p.get("was_cached")), 4),
+            "sample_meta": {
+                "accounts": meta["accounts_used"], "parties": meta["parties_used"],
+                "videos": meta["videos_used"], "party_counts": meta["party_counts"]},
+        })
 
-        # codebook A: prevalence + bootstrap
-        A_ = bycb.get("A", {})
-        vs = [1 if v == "ja" else 0 for v in A_.values()]
-        rng = np.random.default_rng(3)
-        arr = np.asarray(vs, dtype=float)
-        idx = rng.integers(0, len(arr), size=(2000, len(arr)))
-        draws = 100 * arr[idx].mean(axis=1)
-        B["big_run"]["codebook_A"] = {
-            "n": len(vs), "n_positive": int(sum(vs)),
-            "prevalence_pct": round(100 * float(arr.mean()), 2),
-            "ci95": [round(float(np.quantile(draws, 0.025)), 2),
-                     round(float(np.quantile(draws, 0.975)), 2)]}
+        by_model = defaultdict(lambda: defaultdict(dict))
+        for p in big_all:
+            if p["label"]:
+                by_model[p["model"]][p["codebook"]][p["uid"]] = p["label"]
 
-        # codebook B: prevalence, distribution, and macro-F1 of B against B
-        Bb = bycb.get("B", {})
-        dist = Counter(Bb.values())
-        pos = len(Bb) - dist.get("keine_reaktanz", 0)
-        B["big_run"]["codebook_B"] = {
-            "n": len(Bb), "n_positive": pos,
-            "prevalence_pct": round(100 * pos / max(1, len(Bb)), 2),
-            "distribution": {k: dist.get(k, 0) for k in LAB_B}}
+        # per-model prevalence, both codebooks (big sample, condition B)
+        prev_a, prev_b = {}, {}
+        for m in big_models:
+            A_ = by_model[m].get("A", {})
+            vs = [1 if v == "ja" else 0 for v in A_.values()]
+            prev_a[m] = {"model": m, "sample": "big", "n": len(vs),
+                          "n_positive": int(sum(vs)),
+                          "prevalence_pct": round(100 * float(np.mean(vs)), 2) if vs else None,
+                          "ci95": bootstrap_ci95(vs) if vs else None}
+            Bb = by_model[m].get("B", {})
+            dist = Counter(Bb.values())
+            pos = len(Bb) - dist.get(NEG_B, 0)
+            prev_b[m] = {"model": m, "sample": "big", "n": len(Bb), "n_positive": pos,
+                         "prevalence_pct": round(100 * pos / max(1, len(Bb)), 2) if Bb else None,
+                         "distribution": {k: dist.get(k, 0) for k in LAB_B}}
+        out["prevalence_A"] = prev_a
+        out["prevalence_B"] = prev_b
 
-        # A vs B agreement on the same comments
-        common = sorted(set(A_) & set(Bb))
-        both = sum(1 for u in common if A_[u] == "ja" and Bb[u] != "keine_reaktanz")
-        fp = sum(1 for u in common if A_[u] == "nein" and Bb[u] != "keine_reaktanz")
-        fn = sum(1 for u in common if A_[u] == "ja" and Bb[u] == "keine_reaktanz")
-        bn = sum(1 for u in common if A_[u] == "nein" and Bb[u] == "keine_reaktanz")
-        agree = round(100 * (both + bn) / len(common), 2) if common else None
-        k = None
-        if common:
+        # A x B per model on the big sample: the numbers the report must carry,
+        # each with its own n (2,001), model, condition and sample tag.
+        ab = []
+        for m in big_models:
+            A_ = by_model[m].get("A", {})
+            Bb = by_model[m].get("B", {})
+            common = sorted(set(A_) & set(Bb))
+            if not common:
+                continue
+            both = sum(1 for u in common if A_[u] == "ja" and Bb[u] != NEG_B)
+            fp = sum(1 for u in common if A_[u] == "nein" and Bb[u] != NEG_B)
+            fn = sum(1 for u in common if A_[u] == "ja" and Bb[u] == NEG_B)
+            bn = sum(1 for u in common if A_[u] == "nein" and Bb[u] == NEG_B)
+            agree = round(100 * (both + bn) / len(common), 2)
             n_ = len(common)
             po = (both + bn) / n_
-            ca, cb = Counter(A_[u] for u in common), Counter(Bb[u] for u in common)
+            ca = Counter(A_[u] for u in common)
+            cb = Counter(Bb[u] for u in common)
             pe = sum((ca[l] / n_) * (cb[l] / n_) for l in set(ca) | set(cb))
             k = 1.0 if abs(1 - pe) < 1e-12 else round((po - pe) / (1 - pe), 4)
-        B["big_run"]["A_vs_B"] = {
-            "n": len(common), "both": both, "fp": fp, "fn": fn, "both_none": bn,
-            "raw_agreement_pct": agree, "cohens_kappa": k,
-            "fp_tp": round(fp / both, 2) if both else None}
-
-        # F1 of B against A collapsed to reactance yes/no
-        pred_bin = ["ja" if Bb[u] != "keine_reaktanz" else "nein" for u in common]
-        ref_bin = [A_[u] for u in common]
-        B["big_run"]["B_as_binary_vs_A"] = binary_f1(pred_bin, ref_bin)
-
-        # macro-F1 across the 7 labels, model vs itself is degenerate, so use
-        # the A/B agreement structure instead: report per-label support + recall
-        # of the reactance-vs-none binary mapping
-        sup = {k: dist.get(k, 0) for k in LAB_B}
-        B["big_run"]["codebook_B_support"] = sup
-
-        # confidence-band breakdown for codebook A
-        reqs = load(RES / "requests_big.jsonl")
+            ab.append({"model": m, "sample": "big", "condition": "B", "n": n_,
+                       "both": both, "fp": fp, "fn": fn, "both_none": bn,
+                       "raw_agreement_pct": agree, "cohens_kappa": k,
+                       "fp_tp": round(fp / both, 2) if both else None})
+        out["A_vs_B"] = ab
+        # Jev confidence bands (the decision API is the only one reporting them)
+        reqs = [r for r in load(RES / "requests_big.jsonl") if r.get("model") == "jev-1.13"]
         bands = defaultdict(lambda: [0, 0])
         for r in reqs:
-            if r.get("model") != "jev-1.13" or r.get("codebook") != "A":
+            if r.get("codebook") != "A":
                 continue
             p = (r.get("probabilities") or {}).get("ja")
             if p is None or r.get("was_cached"):
@@ -170,37 +180,33 @@ def main():
             bands[b][1] += 1
             if r["label"] == "ja":
                 bands[b][0] += 1
-        B["big_run"]["confidence_bands"] = {
+        out["confidence_bands"] = {
             k: {"n": v[1], "n_positive": v[0],
                 "rate_pct": round(100 * v[0] / v[1], 2) if v[1] else None}
             for k, v in sorted(bands.items())}
-        out["big_run"] = B["big_run"]
 
     (RES / "analysis_big.json").write_text(
-        json.dumps(out.get("big_run") or {}, indent=1, ensure_ascii=False),
-        encoding="utf-8")
+        json.dumps(out, indent=1, ensure_ascii=False), encoding="utf-8")
+    print("wrote results/analysis_big.json")
 
-    print("== binary F1 vs consensus majority (Codebook A) ==")
+    print("== binary F1 vs consensus majority (matrix sample, Codebook A) ==")
     for r in out["binary_f1_vs_consensus"]:
-        print(f"  {r['model']:20s} cond{r['cond']} n={r['n']} ref+={r['ref_positives']:3d} "
+        print(f"  {r['model']:22s} cond{r['cond']} n={r['n']} ref+={r['ref_positives']:3d} "
               f"P={r['precision']} R={r['recall']} F1={r['f1']}")
-    B_ = out.get("big_run") or {}
-    if B_:
-        print(f"\n== big run: {B_['n_comments']} comments, condition B, "
-              f"${B_['cost_usd']} ==")
-        a = B_["codebook_A"]
-        print(f"  codebook A: {a['n_positive']}/{a['n']} = {a['prevalence_pct']} % "
-              f"[{a['ci95'][0]}, {a['ci95'][1]}]")
-        b = B_["codebook_B"]
-        print(f"  codebook B: {b['n_positive']}/{b['n']} = {b['prevalence_pct']} %")
-        print(f"    {b['distribution']}")
-        ab = B_["A_vs_B"]
-        print(f"  A x B: n={ab['n']} both={ab['both']} fp={ab['fp']} fn={ab['fn']} "
-              f"agree={ab['raw_agreement_pct']} % kappa={ab['cohens_kappa']} "
-              f"fp:tp={ab['fp_tp']}")
-        f1 = B_["B_as_binary_vs_A"]
-        print(f"  B(collapsed) vs A: P={f1['precision']} R={f1['recall']} F1={f1['f1']}")
-        print(f"  confidence bands: {B_['confidence_bands']}")
+    B_ = {k: v for k, v in out.items() if k.startswith(("prevalence", "A_vs_B", "n_"))}
+    if "n_comments" in out:
+        print(f"\n== big run: {out['n_comments']} comments, condition B, "
+              f"models={out['models']}, ${out['cost_usd']} ==")
+        for m in out["models"]:
+            a = out["prevalence_A"][m]
+            b = out["prevalence_B"][m]
+            print(f"  {m:22s} A: {a['n_positive']:3d}/{a['n']} = {a['prevalence_pct']}% "
+                  f"[{a['ci95'][0]}; {a['ci95'][1]}]   B: {b['n_positive']:3d}/{b['n']} = {b['prevalence_pct']}%")
+        for r in out["A_vs_B"]:
+            print(f"  A x B {r['model']:22s} n={r['n']} both={r['both']} fp={r['fp']} "
+                  f"fn={r['fn']} agree={r['raw_agreement_pct']}% "
+                  f"kappa={r['cohens_kappa']} fp:tp={r['fp_tp']}")
+        print(f"  confidence bands (Jev): {out['confidence_bands']}")
 
 
 if __name__ == "__main__":
