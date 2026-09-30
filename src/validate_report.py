@@ -21,6 +21,8 @@ Checks
     flagged-positive precision can never be 1.0 by construction and the
     reference excludes Jev itself (checked via the consensus_reference rows)
   * the model-vs-consensus evaluation is leave-one-model-out
+  * threshold precision/recall are rendered as percentages (100 * stored),
+    not as the raw stored proportion (the historical "0% -> 1%" bug)
 """
 from __future__ import annotations
 
@@ -146,6 +148,43 @@ def main():
             prec = s["precision"]
             chk(prec is None or 0.0 <= prec <= 1.0,
                 f"[threshold cond{t['cond']} t={s['t']}] precision in [0,1]")
+
+    # ---- 4b. the report renders threshold precision/recall as PERCENTAGES ---
+    # Historical bug: _ts() formatted the stored proportion with .0f, so a
+    # precision of 0.139 printed as "0%" and 0.788 as "1%". This re-runs the
+    # exact formatting the report uses and asserts it equals 100 * stored.
+    _sweep_a = next((t for t in X.get("threshold_sweep", [])
+                     if t["cond"] == "A"), None)
+    if _sweep_a:
+        for s in _sweep_a.get("sweep", []):
+            for key in ("precision", "recall"):
+                v = s.get(key)
+                if v is None:
+                    continue
+                rendered = f"{100 * v:.0f}"      # what generate_latex._ts does
+                naive = f"{v:.0f}"               # what it used to do
+                # a proportion in (0, 1) that is not 0/1 must never render
+                # back as the bare proportion's own integer
+                chk(v in (0.0, 1.0) or rendered != naive,
+                    f"[threshold condA t={s['t']} {key}] renders as "
+                    f"{rendered}% (= 100 * {v}), not the raw {naive}%")
+        # the headline comparison used in the abstract and results text
+        lo = next((s for s in _sweep_a["sweep"] if s["t"] == 0.05), None)
+        hi = next((s for s in _sweep_a["sweep"] if s["t"] == 0.6), None)
+        chk(lo is not None and hi is not None,
+            "[threshold condA] t=0.05 and t=0.6 present for the headline claim")
+        if lo and hi and lo.get("precision") is not None \
+                and hi.get("precision") is not None:
+            chk(round(100 * hi["precision"]) > round(100 * lo["precision"]),
+                f"[threshold condA] precision rises "
+                f"{100*lo['precision']:.0f}% -> {100*hi['precision']:.0f}% "
+                f"(stored {lo['precision']} -> {hi['precision']})")
+            chk(round(100 * lo["precision"]) > 0,
+                f"[threshold condA] t=0.05 precision is not rendered as 0% "
+                f"(it is {100*lo['precision']:.0f}%)")
+            chk(round(100 * hi["precision"]) > 1,
+                f"[threshold condA] t=0.6 precision is not rendered as 1% "
+                f"(it is {100*hi['precision']:.0f}%)")
 
     # ---- 5. positive-specific agreement (Codebook A) is self-consistent ---
     for r in X.get("model_pairwise", []):

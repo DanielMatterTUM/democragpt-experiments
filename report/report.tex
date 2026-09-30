@@ -68,7 +68,7 @@
 \maketitle
 
 \begin{abstract}
-Public concern about political TikTok comment sections suggests that psychological reactance is common. In the sampled comments, however, all four classifiers produce relatively low reactance rates. On 1200 party-stratified comments, four models coded between about 2.8 and 10.8\% as reactance under strict, theory-anchored coding; the newest backend, GLM-5.3-Flash, is the least conservative (9--11\%). A second, comment-only pass over 2001 comments yields 2.90\% (95\% CI [2.20; 3.60], Jev). These are rates on a non-representative sample from classifiers that are not fully validated, not population prevalence estimates. The video transcript changes aggregate prevalence only modestly and leaves most item-level classifications unchanged. Jev, a Decision-API backend, answers in 0.46\,s and costs \$0.061 per 1{,}000 comments and \emph{as the only backend} returns class probabilities, so a threshold lifts leave-one-out-consensus precision from 0\% to 1\% at $t=0.6$. The real bottleneck is validity: a manual re-coding of the 36 audited three-model positives found 46\% precision overall (92\% at three-model consensus, 25\% for single-model flags; exact Wilson intervals on n=12 per stratum). GLM-5.3-Flash flags 61 comments no other model calls reactant; the audit predates GLM, so their precision is an open question, not a finding. Two sharpenings of the type codebook derived from that audit --- the trigger must be the target of the reaction, and politeness markers neither create nor cancel reactance --- raise the A/B codebook agreement on the large-scale sample to raw 98.2\% ($\kappa=0.55$). A gating variant (Section~\ref{sec:gate}) runs a cheap Jev binary pass first and classifies the type, across all four models, only on the $\approx$ 3\% it lets through; separating the gate question (do all models agree reactance exists?) from the conditional six-class type question shows that a substantial share of the apparent disagreement concerns the gate premise, not the type.
+Public concern about political TikTok comment sections suggests that psychological reactance is common. In the sampled comments, however, all four classifiers produce relatively low reactance rates. On 1200 party-stratified comments, four models coded between about 2.8 and 10.8\% as reactance under strict, theory-anchored coding; the newest backend, GLM-5.3-Flash, is the least conservative (9--11\%). A second, comment-only pass over 2001 comments yields 2.90\% (95\% CI [2.20; 3.60], Jev). These are rates on a non-representative sample from classifiers that are not fully validated, not population prevalence estimates. The video transcript changes aggregate prevalence only modestly and leaves most item-level classifications unchanged. Jev, a Decision-API backend, answers in 0.46\,s and costs \$0.061 per 1{,}000 comments and \emph{as the only backend} returns class probabilities, so a threshold lifts leave-one-out-consensus precision from 14\% to 79\% at $t=0.6$. The real bottleneck is validity: a manual re-coding of the 36 audited three-model positives found 46\% precision overall (92\% at three-model consensus, 25\% for single-model flags; exact Wilson intervals on n=12 per stratum). GLM-5.3-Flash flags 61 comments no other model calls reactant; the audit predates GLM, so their precision is an open question, not a finding. Two sharpenings of the type codebook derived from that audit --- the trigger must be the target of the reaction, and politeness markers neither create nor cancel reactance --- raise the A/B codebook agreement on the large-scale sample to raw 98.2\% ($\kappa=0.55$). A gating variant (Section~\ref{sec:gate}) runs a cheap Jev binary pass first and classifies the type, across all four models, only on the $\approx$ 3\% it lets through; separating the gate question (do all models agree reactance exists?) from the conditional six-class type question shows that a substantial share of the apparent disagreement concerns the gate premise, not the type.
 \end{abstract}
 
 \noindent\small\textbf{Keywords:} psychological reactance; social media;
@@ -104,8 +104,11 @@ this (Sections~\ref{sec:agree}, \ref{sec:validity}).
 \noindent\textbf{Conditions and models.} Condition~A presents the comment
 \emph{with} the video transcript; Condition~B the comment only. Jev runs via
 the Decisions API, GPT-6-Luna, DeepSeek-V4.1-Flash and --- new in this
-version --- GLM-5.3-Flash via chat completion. All four receive identical
-instructions at temperature~0 with a fixed seed; GLM-5.3-Flash was the
+version --- GLM-5.3-Flash via chat completion. All four models receive
+semantically matched coding criteria, adapted to the respective API format.
+The chat models receive the criteria as prompt instructions, whereas Jev
+receives the corresponding criteria through the Decisions API. All runs use
+temperature~0 with a fixed seed; GLM-5.3-Flash was the
 addition of this iteration and is otherwise handled exactly like the other
 chat models.
 
@@ -122,9 +125,13 @@ costs no API calls. Total cost 3.17\,US\$.
 \section{Frequency and speed}
 \label{sec:freq}
 
-Reactance is rare. Table~\ref{tab:prev} reports prevalence with 95\%-bootstrap
-confidence intervals on the matrix sample. The rank order is stable across
-conditions; Jev marks least often.
+Classifier-positive rates are low. Across the matrix sample, Codebook~A yields
+reactance-positive rates between 3.8\% and 10.8\%, depending on
+the model. Table~\ref{tab:prev} reports those rates with
+95\%-bootstrap confidence intervals. The rank order is stable across
+conditions; Jev marks least often. These are rates produced by the
+classifiers on a non-representative sample, not estimates of true
+prevalence in the corpus.
 
 \begin{table}[ht]
 \centering
@@ -148,7 +155,7 @@ Jev remains the fastest and cheapest backend: 0.46\,s and \$0.061 per
 (\$0.119) but does not beat Jev. Jev is also the only backend that returns
 class probabilities --- an advantage with a practical payoff in
 Section~\ref{sub:calib} (a threshold on the probability lifts
-leave-one-out-consensus precision from 0\% to 1\%).
+leave-one-out-consensus precision from 14\% to 79\%).
 
 \begin{figure}[ht]
 \centering
@@ -216,7 +223,8 @@ where Jev finds 58. This is not better or worse recall in itself; it
 is the single largest source of the disagreement structure in
 Section~\ref{sec:agree}, and it is a statement about \emph{agreement with the
 consensus}, not about which model is correct: GLM deviates most strongly from
-the four-model consensus, which is exactly what its lower consensus-F1
+its leave-one-model-out consensus of the other three models, which is
+exactly what its lower consensus-F1
 measures (0.52--0.54, Table~\ref{tab:agree}).
 
 Of the comments only GLM flags, 61 were flagged by no other model in
@@ -252,7 +260,8 @@ quantity and makes the base-rate gap readable at a glance
 \centering
 \includegraphics[width=0.98\linewidth]{fig03_agreement.pdf}
 \caption{Pairwise agreement on the model pairs (a, b) and per-model F1
-against the four-model majority (c), all on a single 0--1 axis: raw
+against the leave-one-model-out consensus of the other three models (c), all
+on a single 0--1 axis: raw
 agreement, Cohen's $\kappa$, Gwet's AC1 and F1. The gap between raw
 agreement ($\approx$0.91--0.95) and $\kappa$ (0.29--0.59) is the base-rate
 artefact; AC1 and, for the binary task, F1 close it.}
@@ -432,7 +441,8 @@ backends do not. Two properties of that number are worth checking separately,
 and Figure~\ref{fig:cal} shows both. We are careful about what this
 establishes: there is \emph{no independent human-labelled calibration set} in
 this experiment, so neither panel is a calibration result in the statistical
-sense. The reference in both panels is the four-model consensus majority ---
+sense. The reference in both panels is the leave-one-model-out consensus of
+GPT-6-Luna, DeepSeek-V4.1-Flash and GLM-5.3-Flash ---
 a proxy, not ground truth --- and the correct reading is
 \textbf{probability alignment with the model consensus}, with
 probability \emph{discrimination} (do the probability bands separate consensus
@@ -443,8 +453,8 @@ and are deliberately not reported here.
 \smallskip
 \noindent\textbf{(a) Alignment against the consensus majority.} We split
 Jev's predictions into ten bins of $P(\mathrm{ja})$ and, in each bin, ask
-how often the comment's label agrees with the four-model majority vote of the
-other backends. If Jev's probability were well \emph{aligned} with the
+how often the comment's label agrees with the majority vote of the other
+three backends. If Jev's probability were well \emph{aligned} with the
 consensus, the observed rate would track the diagonal: predictions of
 $P=0.6$ would be majority-reactant about 60\% of the time. Jev is close
 across the range --- the observed rate tracks the diagonal from
@@ -458,8 +468,8 @@ region that matters at low prevalence.
 is meaningful, we can discard low-confidence flags. Raising the threshold
 $t$ --- flag only those comments with $P(\mathrm{ja})\geq t$ --- trades
 coverage for agreement with the leave-one-model-out consensus: at $t=0.05$
-41.2\% of comments are flagged and precision is only 0\%;
-at $t=0.6$ precision reaches 1\% but covers only 2.8\% of
+41.2\% of comments are flagged and precision is only 14\%;
+at $t=0.6$ precision reaches 79\% but covers only 2.8\% of
 the sample. The 70\% line marks the precision of Jev's raw
 threshold-free label. Precision, then, is not a property of the model but of
 the operating point chosen on this curve --- relative to the consensus of the
@@ -468,8 +478,9 @@ other three models, not to a ground truth.
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.94\linewidth]{fig08_calibration.pdf}
-\caption{(a) Jev's $P(\mathrm{ja})$ against the four-model majority vote:
-observed reactant rate per probability bin versus the predicted probability
+\caption{(a) Jev's $P(\mathrm{ja})$ against the leave-one-model-out consensus
+of the other three models: observed reactant rate per probability bin versus
+the predicted probability
 (grey = the diagonal). This is alignment with a consensus proxy, not
 calibration against human labels. (b) The precision -- coverage trade-off as
 the threshold $t$ on $P(\mathrm{ja})$ rises; the 46\% line is Jev's
@@ -628,8 +639,9 @@ Condition A.}
 \end{figure}
 
 \section{Discussion}
-\noindent\textbf{Prevalence, not effect.} Reactance is rare in the studied
-corpus. That is a finding, not a flaw --- and it shifts the work from measuring
+\noindent\textbf{Prevalence, not effect.} The classifiers flag reactance
+rarely in the studied corpus. That is a finding, not a flaw --- and it shifts
+the work from measuring
 frequency to validating it. At low prevalence the question is not which model
 more often says yes, but whether a label carries at all.
 
