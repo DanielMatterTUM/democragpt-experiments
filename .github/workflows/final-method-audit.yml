@@ -32,20 +32,6 @@ jobs:
 
           p = Path('src/generate_latex.py')
           s = p.read_text(encoding='utf-8')
-          old = '''    n_44 = _cnt(_tcs, 4)
-              n_34 = _cnt(_tcs, 3)
-              n_24 = _cnt(_tcs, 2)
-              n_14 = _cnt(_tcs, 1)
-              n_tie = _tcs.get("tie", 0)
-              n_reject_all = _cnt(_ga, 0)
-              n_k3 = n_44 + n_34 + n_24  # >= 3 of 4 models retain the gate
-              pct = lambda c: round(100 * c / _n_gated) if _n_gated else None
-          else:
-              n_44 = n_34 = n_24 = n_14 = n_tie = n_reject_all = n_k3 = None
-              pct = lambda c: None
-          '''
-          # dedent produced by YAML is exact Python source indentation; use a more
-          # robust sequence of small replacements instead of relying on one block.
           replacements = {
               '    n_44 = _cnt(_tcs, 4)\n    n_34 = _cnt(_tcs, 3)\n    n_24 = _cnt(_tcs, 2)\n    n_14 = _cnt(_tcs, 1)\n':
               '    n_gate_44 = _cnt(_ga, 4)\n    n_gate_34 = _cnt(_ga, 3)\n    n_type_44 = _cnt(_tcs, 4)\n    n_type_34 = _cnt(_tcs, 3)\n    n_type_24 = _cnt(_tcs, 2)\n    n_type_14 = _cnt(_tcs, 1)\n',
@@ -81,36 +67,33 @@ jobs:
           s = s.replace(old, new, 1)
           marker = '    # ---- 6. historical 3-model sampling is pinned explicitly ---------------\n'
           gate_checks = '''    # ---- 5b. gated consensus is genuinely tie-safe -------------------------
-              for sample_name, run in GATE.get("runs", {}).items():
-                  for cond, r in (run.get("conditions") or {}).items():
-                      tc = r.get("type_consensus") or {}
-                      if not tc:
-                          continue
-                      tag = f"[gate {sample_name} cond{cond}]"
-                      n_gated = tc.get("n_gated", 0)
-                      gate_accept = tc.get("gate_accept") or {}
-                      chk(sum(gate_accept.values()) == n_gated,
-                          f"{tag} gate-acceptance distribution sums to n_gated")
-                      tcs = tc.get("type_consensus") or {}
-                      consensus_counts = sum(v for k, v in tcs.items() if "-of-" in k)
-                      chk(consensus_counts + tcs.get("tie", 0) + tcs.get("no_type_votes", 0) == n_gated,
-                          f"{tag} type consensus + ties + no-vote cases sum to n_gated")
-                      for row in tc.get("per_comment", []):
-                          if row.get("n_models_accepting_gate", 0) > 1 and row.get("majority_n") == 1:
-                              chk(row.get("tie") is True and row.get("majority_type") is None,
-                                  f"{tag} singleton top-count split is an explicit tie ({row.get('uid')})")
+    for sample_name, run in GATE.get("runs", {}).items():
+        for cond, r in (run.get("conditions") or {}).items():
+            tc = r.get("type_consensus") or {}
+            if not tc:
+                continue
+            tag = f"[gate {sample_name} cond{cond}]"
+            n_gated = tc.get("n_gated", 0)
+            gate_accept = tc.get("gate_accept") or {}
+            chk(sum(gate_accept.values()) == n_gated,
+                f"{tag} gate-acceptance distribution sums to n_gated")
+            tcs = tc.get("type_consensus") or {}
+            consensus_counts = sum(v for k, v in tcs.items() if "-of-" in k)
+            chk(consensus_counts + tcs.get("tie", 0) + tcs.get("no_type_votes", 0) == n_gated,
+                f"{tag} type consensus + ties + no-vote cases sum to n_gated")
+            for row in tc.get("per_comment", []):
+                if row.get("n_models_accepting_gate", 0) > 1 and row.get("majority_n") == 1:
+                    chk(row.get("tie") is True and row.get("majority_type") is None,
+                        f"{tag} singleton top-count split is an explicit tie ({row.get('uid')})")
 
-              gen_src = (REPO / "src" / "generate_latex.py").read_text(encoding="utf-8")
-              chk("n_k3 = n_gate_44 + n_gate_34" in gen_src,
-                  "[gate report] >=3-retainer percentage comes from gate acceptance, not type consensus")
-              fig_src = (REPO / "src" / "figures.py").read_text(encoding="utf-8")
-              chk('["tie"]' in fig_src and '2-2\\\\ntie' not in fig_src,
-                  "[gate figure] tie bar is labelled generically, covering 1-1 and 2-2 splits")
+    gen_src = (REPO / "src" / "generate_latex.py").read_text(encoding="utf-8")
+    chk("n_k3 = n_gate_44 + n_gate_34" in gen_src,
+        "[gate report] >=3-retainer percentage comes from gate acceptance, not type consensus")
+    fig_src = (REPO / "src" / "figures.py").read_text(encoding="utf-8")
+    chk('["tie"]' in fig_src and '2-2\\\\ntie' not in fig_src,
+        "[gate figure] tie bar is labelled generically, covering 1-1 and 2-2 splits")
 
-          '''
-          # remove YAML indentation from the embedded block
-          gate_checks = '\n'.join(line[10:] if line.startswith('          ') else line
-                                  for line in gate_checks.splitlines()) + '\n'
+'''
           if marker not in s:
               raise SystemExit('validator insertion marker not found')
           s = s.replace(marker, gate_checks + marker, 1)
