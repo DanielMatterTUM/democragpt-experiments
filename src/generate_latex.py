@@ -206,16 +206,20 @@ if tc:
     def _cnt(d, k):
         return d.get(f"{k}-of-{_n_v}", 0)
 
-    n_44 = _cnt(_tcs, 4)
-    n_34 = _cnt(_tcs, 3)
-    n_24 = _cnt(_tcs, 2)
-    n_14 = _cnt(_tcs, 1)
+    n_gate_44 = _cnt(_ga, 4)
+    n_gate_34 = _cnt(_ga, 3)
+    n_type_44 = _cnt(_tcs, 4)
+    n_type_34 = _cnt(_tcs, 3)
+    n_type_24 = _cnt(_tcs, 2)
+    n_type_14 = _cnt(_tcs, 1)
     n_tie = _tcs.get("tie", 0)
     n_reject_all = _cnt(_ga, 0)
-    n_k3 = n_44 + n_34 + n_24  # >= 3 of 4 models retain the gate
+    n_k3 = n_gate_44 + n_gate_34  # >= 3 of 4 models retain the gate
     pct = lambda c: round(100 * c / _n_gated) if _n_gated else None
 else:
-    n_44 = n_34 = n_24 = n_14 = n_tie = n_reject_all = n_k3 = None
+    n_gate_44 = n_gate_34 = None
+    n_type_44 = n_type_34 = n_type_24 = n_type_14 = None
+    n_tie = n_reject_all = n_k3 = None
     pct = lambda c: None
 
 # Big-sample gate consensus headline (2 models)
@@ -821,10 +825,10 @@ annotated below.}
 \noindent\textbf{3. Consensus among the retaining models.} The plurality is
 recomputed on the six types among the models that \emph{retained} the gate.
 Gate acceptance and conditional type consensus are distinct quantities
-(Figure~\ref{fig:gatemaj}): @N44@ of @GATE_N@ comments have all four models
+(Figure~\ref{fig:gatemaj}): @NGATE44@ of @GATE_N@ comments have all four models
 retaining the gate and @NREJALL@ are rejected by all, while \emph{among the
-retainers} the type label is a plurality of four (@N44@), three (@N34@), two
-(@N24@) or one (@N14@), with @NTIE@ explicit ties. Requiring three-or-more
+retainers} the type label is a plurality of four (@NTYPE44@), three (@NTYPE34@), two
+(@NTYPE24@) or one (@NTYPE14@), with @NTIE@ explicit ties. Requiring three-or-more
 models to retain the gate keeps @NK3PCT@\% of the gated stream. On the
 large-scale sample the gate is more selective (@GATE_N_BIG@ of @N_BIG@
 comments), of which @N24_BIG@ reach a plurality of the retaining models on the
@@ -1238,10 +1242,11 @@ def build():
                            f"--{max(p['raw_pct'] for p in pw7):.0f}") if pw7 else "--",
         "@KAPPA_RANGE7@": (f"{min(p['kappa'] for p in pw7):.2f}"
                             f"--{max(p['kappa'] for p in pw7):.2f}") if pw7 else "--",
-        "@N44@": str(n_44 if n_44 is not None else 0),
-        "@N34@": str(n_34 if n_34 is not None else 0),
-        "@N24@": str(n_24 if n_24 is not None else 0),
-        "@N14@": str(n_14 if n_14 is not None else 0),
+        "@NGATE44@": str(n_gate_44 if n_gate_44 is not None else 0),
+        "@NTYPE44@": str(n_type_44 if n_type_44 is not None else 0),
+        "@NTYPE34@": str(n_type_34 if n_type_34 is not None else 0),
+        "@NTYPE24@": str(n_type_24 if n_type_24 is not None else 0),
+        "@NTYPE14@": str(n_type_14 if n_type_14 is not None else 0),
         "@NTIE@": str(n_tie if n_tie is not None else 0),
         "@NK3@": str(n_k3 if n_k3 is not None else 0),
         "@NK3PCT@": f"{pct(n_k3):.0f}" if n_k3 is not None else "--",

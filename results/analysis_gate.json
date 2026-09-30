@@ -1,6 +1,6 @@
 {
  "meta": {
-  "generated_at": "2026-09-30T05:56:09+00:00",
+  "generated_at": "2026-09-30T09:13:34+00:00",
   "gate_model": "jev-1.13",
   "gate_codebook": "A",
   "type_codebook": "B",
@@ -824,13 +824,13 @@
        "4-of-4": 7,
        "3-of-4": 3,
        "2-of-4": 7,
-       "1-of-4": 11,
+       "1-of-4": 10,
        "0-of-4": 0,
-       "tie": 0,
+       "tie": 1,
        "no_type_votes": 18
       },
       "majority_type_dist": {
-       "konfrontation_angriff": 26,
+       "konfrontation_angriff": 25,
        "ablenkung_whataboutism": 0,
        "delegierung_hilflosigkeit": 0,
        "vermeidung_rueckzug": 1,
@@ -841,26 +841,26 @@
        {
         "model": "jev-1.13",
         "n": 21,
-        "n_ties_excluded": 0,
+        "n_ties_excluded": 1,
         "pct": 95.24
        },
        {
         "model": "gpt-6-luna",
         "n": 9,
-        "n_ties_excluded": 0,
+        "n_ties_excluded": 1,
         "pct": 100.0
        },
        {
         "model": "deepseek-v4.1-flash",
-        "n": 15,
-        "n_ties_excluded": 0,
+        "n": 14,
+        "n_ties_excluded": 1,
         "pct": 100.0
        },
        {
         "model": "glm-5.3-flash",
-        "n": 20,
-        "n_ties_excluded": 0,
-        "pct": 90.0
+        "n": 19,
+        "n_ties_excluded": 1,
+        "pct": 94.74
        }
       ],
       "per_comment": [
@@ -899,9 +899,9 @@
        {
         "uid": "154b7ea414d7",
         "n_models_accepting_gate": 2,
-        "majority_type": "konfrontation_angriff",
+        "majority_type": null,
         "majority_n": 1,
-        "tie": false,
+        "tie": true,
         "n_models_voting": 2
        },
        {
@@ -2108,13 +2108,13 @@
        "4-of-4": 5,
        "3-of-4": 6,
        "2-of-4": 6,
-       "1-of-4": 9,
+       "1-of-4": 8,
        "0-of-4": 0,
-       "tie": 0,
+       "tie": 1,
        "no_type_votes": 7
       },
       "majority_type_dist": {
-       "konfrontation_angriff": 23,
+       "konfrontation_angriff": 22,
        "ablenkung_whataboutism": 0,
        "delegierung_hilflosigkeit": 1,
        "vermeidung_rueckzug": 0,
@@ -2125,26 +2125,26 @@
        {
         "model": "jev-1.13",
         "n": 17,
-        "n_ties_excluded": 0,
+        "n_ties_excluded": 1,
         "pct": 100.0
        },
        {
         "model": "gpt-6-luna",
         "n": 7,
-        "n_ties_excluded": 0,
+        "n_ties_excluded": 1,
         "pct": 100.0
        },
        {
         "model": "deepseek-v4.1-flash",
-        "n": 17,
-        "n_ties_excluded": 0,
+        "n": 16,
+        "n_ties_excluded": 1,
         "pct": 100.0
        },
        {
         "model": "glm-5.3-flash",
-        "n": 20,
-        "n_ties_excluded": 0,
-        "pct": 90.0
+        "n": 19,
+        "n_ties_excluded": 1,
+        "pct": 94.74
        }
       ],
       "per_comment": [
@@ -2167,9 +2167,9 @@
        {
         "uid": "154b7ea414d7",
         "n_models_accepting_gate": 2,
-        "majority_type": "konfrontation_angriff",
+        "majority_type": null,
         "majority_n": 1,
-        "tie": false,
+        "tie": true,
         "n_models_voting": 2
        },
        {
@@ -2695,31 +2695,31 @@
       },
       "type_consensus": {
        "2-of-2": 18,
-       "1-of-2": 21,
+       "1-of-2": 19,
        "0-of-2": 0,
-       "tie": 0,
+       "tie": 2,
        "no_type_votes": 19
       },
       "majority_type_dist": {
-       "konfrontation_angriff": 28,
+       "konfrontation_angriff": 27,
        "ablenkung_whataboutism": 2,
        "delegierung_hilflosigkeit": 0,
        "vermeidung_rueckzug": 7,
-       "reflektierte_rechtfertigung": 2,
+       "reflektierte_rechtfertigung": 1,
        "konstruktive_kritik": 0
       },
       "vs_majority": [
        {
         "model": "jev-1.13",
-        "n": 23,
-        "n_ties_excluded": 0,
+        "n": 21,
+        "n_ties_excluded": 2,
         "pct": 100.0
        },
        {
         "model": "glm-5.3-flash",
-        "n": 36,
-        "n_ties_excluded": 0,
-        "pct": 94.44
+        "n": 34,
+        "n_ties_excluded": 2,
+        "pct": 100.0
        }
       ],
       "per_comment": [
@@ -3134,17 +3134,17 @@
        {
         "uid": "d8b89b0a1e9b",
         "n_models_accepting_gate": 2,
-        "majority_type": "konfrontation_angriff",
+        "majority_type": null,
         "majority_n": 1,
-        "tie": false,
+        "tie": true,
         "n_models_voting": 2
        },
        {
         "uid": "d9bb0b1fda8a",
         "n_models_accepting_gate": 2,
-        "majority_type": "reflektierte_rechtfertigung",
+        "majority_type": null,
         "majority_n": 1,
-        "tie": false,
+        "tie": true,
         "n_models_voting": 2
        },
        {
