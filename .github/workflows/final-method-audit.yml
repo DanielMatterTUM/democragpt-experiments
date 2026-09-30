@@ -1,0 +1,165 @@
+name: final-method-audit
+
+on:
+  push:
+    branches:
+      - fix/final-method-audit
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-analysis.txt
+
+      - name: Apply final gate-report fixes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('src/generate_latex.py')
+          s = p.read_text(encoding='utf-8')
+          old = '''    n_44 = _cnt(_tcs, 4)
+              n_34 = _cnt(_tcs, 3)
+              n_24 = _cnt(_tcs, 2)
+              n_14 = _cnt(_tcs, 1)
+              n_tie = _tcs.get("tie", 0)
+              n_reject_all = _cnt(_ga, 0)
+              n_k3 = n_44 + n_34 + n_24  # >= 3 of 4 models retain the gate
+              pct = lambda c: round(100 * c / _n_gated) if _n_gated else None
+          else:
+              n_44 = n_34 = n_24 = n_14 = n_tie = n_reject_all = n_k3 = None
+              pct = lambda c: None
+          '''
+          # dedent produced by YAML is exact Python source indentation; use a more
+          # robust sequence of small replacements instead of relying on one block.
+          replacements = {
+              '    n_44 = _cnt(_tcs, 4)\n    n_34 = _cnt(_tcs, 3)\n    n_24 = _cnt(_tcs, 2)\n    n_14 = _cnt(_tcs, 1)\n':
+              '    n_gate_44 = _cnt(_ga, 4)\n    n_gate_34 = _cnt(_ga, 3)\n    n_type_44 = _cnt(_tcs, 4)\n    n_type_34 = _cnt(_tcs, 3)\n    n_type_24 = _cnt(_tcs, 2)\n    n_type_14 = _cnt(_tcs, 1)\n',
+              '    n_k3 = n_44 + n_34 + n_24  # >= 3 of 4 models retain the gate\n':
+              '    n_k3 = n_gate_44 + n_gate_34  # >= 3 of 4 models retain the gate\n',
+              '    n_44 = n_34 = n_24 = n_14 = n_tie = n_reject_all = n_k3 = None\n':
+              '    n_gate_44 = n_gate_34 = None\n    n_type_44 = n_type_34 = n_type_24 = n_type_14 = None\n    n_tie = n_reject_all = n_k3 = None\n',
+              '(Figure~\\ref{fig:gatemaj}): @N44@ of @GATE_N@ comments have all four models\nretaining the gate and @NREJALL@ are rejected by all, while \\emph{among the\nretainers} the type label is a plurality of four (@N44@), three (@N34@), two\n(@N24@) or one (@N14@), with @NTIE@ explicit ties.':
+              '(Figure~\\ref{fig:gatemaj}): @NGATE44@ of @GATE_N@ comments have all four models\nretaining the gate and @NREJALL@ are rejected by all, while \\emph{among the\nretainers} the type label is a plurality of four (@NTYPE44@), three (@NTYPE34@), two\n(@NTYPE24@) or one (@NTYPE14@), with @NTIE@ explicit ties.',
+              '        "@N44@": str(n_44 if n_44 is not None else 0),\n        "@N34@": str(n_34 if n_34 is not None else 0),\n        "@N24@": str(n_24 if n_24 is not None else 0),\n        "@N14@": str(n_14 if n_14 is not None else 0),\n':
+              '        "@NGATE44@": str(n_gate_44 if n_gate_44 is not None else 0),\n        "@NTYPE44@": str(n_type_44 if n_type_44 is not None else 0),\n        "@NTYPE34@": str(n_type_34 if n_type_34 is not None else 0),\n        "@NTYPE24@": str(n_type_24 if n_type_24 is not None else 0),\n        "@NTYPE14@": str(n_type_14 if n_type_14 is not None else 0),\n'
+          }
+          for a, b in replacements.items():
+              if a not in s:
+                  raise SystemExit(f'generate_latex replacement target not found: {a[:80]!r}')
+              s = s.replace(a, b, 1)
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('src/figures.py')
+          s = p.read_text(encoding='utf-8')
+          old = '[f"{k}/{n_v}" for k in ks2] + ["2-2\\ntie"]'
+          if old not in s:
+              raise SystemExit('figures tie label target not found')
+          s = s.replace(old, '[f"{k}/{n_v}" for k in ks2] + ["tie"]', 1)
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('src/validate_report.py')
+          s = p.read_text(encoding='utf-8')
+          old = '    X = load("analysis_ext.json")\n    BIG = load("analysis_big.json")\n    if X is None or BIG is None:\n'
+          new = '    X = load("analysis_ext.json")\n    BIG = load("analysis_big.json")\n    GATE = load("analysis_gate.json")\n    if X is None or BIG is None or GATE is None:\n'
+          if old not in s:
+              raise SystemExit('validator load target not found')
+          s = s.replace(old, new, 1)
+          marker = '    # ---- 6. historical 3-model sampling is pinned explicitly ---------------\n'
+          gate_checks = '''    # ---- 5b. gated consensus is genuinely tie-safe -------------------------
+              for sample_name, run in GATE.get("runs", {}).items():
+                  for cond, r in (run.get("conditions") or {}).items():
+                      tc = r.get("type_consensus") or {}
+                      if not tc:
+                          continue
+                      tag = f"[gate {sample_name} cond{cond}]"
+                      n_gated = tc.get("n_gated", 0)
+                      gate_accept = tc.get("gate_accept") or {}
+                      chk(sum(gate_accept.values()) == n_gated,
+                          f"{tag} gate-acceptance distribution sums to n_gated")
+                      tcs = tc.get("type_consensus") or {}
+                      consensus_counts = sum(v for k, v in tcs.items() if "-of-" in k)
+                      chk(consensus_counts + tcs.get("tie", 0) + tcs.get("no_type_votes", 0) == n_gated,
+                          f"{tag} type consensus + ties + no-vote cases sum to n_gated")
+                      for row in tc.get("per_comment", []):
+                          if row.get("n_models_accepting_gate", 0) > 1 and row.get("majority_n") == 1:
+                              chk(row.get("tie") is True and row.get("majority_type") is None,
+                                  f"{tag} singleton top-count split is an explicit tie ({row.get('uid')})")
+
+              gen_src = (REPO / "src" / "generate_latex.py").read_text(encoding="utf-8")
+              chk("n_k3 = n_gate_44 + n_gate_34" in gen_src,
+                  "[gate report] >=3-retainer percentage comes from gate acceptance, not type consensus")
+              fig_src = (REPO / "src" / "figures.py").read_text(encoding="utf-8")
+              chk('["tie"]' in fig_src and '2-2\\\\ntie' not in fig_src,
+                  "[gate figure] tie bar is labelled generically, covering 1-1 and 2-2 splits")
+
+          '''
+          # remove YAML indentation from the embedded block
+          gate_checks = '\n'.join(line[10:] if line.startswith('          ') else line
+                                  for line in gate_checks.splitlines()) + '\n'
+          if marker not in s:
+              raise SystemExit('validator insertion marker not found')
+          s = s.replace(marker, gate_checks + marker, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Compile Python sources
+        run: python -m py_compile src/analyze_extended.py src/analyze_gate.py src/exp_paraphrase.py src/make_audit_sample.py src/score_audit.py src/validate_report.py src/generate_latex.py src/figures.py
+
+      - name: Recompute deterministic analyses and figures
+        run: |
+          python src/analyze_extended.py
+          python src/analyze_big.py
+          python src/analyze_gate.py
+          python src/score_audit.py
+          python src/make_report.py
+          python src/figures.py
+          python src/validate_report.py
+          python src/generate_latex.py
+
+      - name: Install PDF build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y texlive-xetex texlive-latex-extra texlive-fonts-extra biber poppler-utils fontconfig
+          mkdir -p "$HOME/.config/fontconfig"
+          cat > "$HOME/.config/fontconfig/fonts.conf" <<'EOF'
+          <?xml version="1.0"?>
+          <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+          <fontconfig>
+            <dir>/usr/share/texlive/texmf-dist/fonts/opentype</dir>
+            <dir>/usr/share/texlive/texmf-dist/fonts/truetype</dir>
+          </fontconfig>
+          EOF
+          fc-cache -f
+
+      - name: Build and verify PDF
+        run: |
+          cd report
+          ./make.sh
+          test -s report.pdf
+          pages=$(pdfinfo report.pdf | awk '/^Pages:/ {print $2}')
+          test "$pages" -gt 10
+
+      - name: Commit regenerated artifacts and remove temporary workflow
+        run: |
+          git config user.name "DanielMatter"
+          git config user.email "matter96@gmail.com"
+          git rm .github/workflows/final-method-audit.yml
+          git add -A
+          git status --short
+          git commit -m "chore: regenerate report after final method fixes"
+          git push origin HEAD:fix/final-method-audit
