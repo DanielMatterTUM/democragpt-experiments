@@ -54,16 +54,26 @@ def cohen_kappa(a, b, labels):
 
 
 def gwets_ac1(a, b, labels):
-    """Gwet's AC1: prevalence-robust agreement, better than kappa when classes
-    are heavily skewed (which is exactly our 3-7% case)."""
+    """Gwet's AC1 for two nominal raters.
+
+    For q categories, expected agreement is
+        Pe = sum_k pi_k * (1 - pi_k) / (q - 1)
+    where pi_k is the mean marginal proportion of category k across the two
+    raters. The /(q-1) factor is essential for multiclass tasks; it is 1 for
+    the binary case, which is why the previous implementation happened to be
+    correct for Codebook A but not for seven-class Codebook B.
+    """
     n = len(a)
     if not n:
         return None
     po = sum(1 for x, y in zip(a, b) if x == y) / n
     ca, cb = Counter(a), Counter(b)
-    # Pe for AC1 uses the average of observed proportions across both raters
-    props = [(ca[l] / n + cb[l] / n) / 2 for l in set(labels) | set(a) | set(b)]
-    pe = sum(p * (1 - p) for p in props)
+    categories = set(labels) | set(a) | set(b)
+    q = len(categories)
+    if q < 2:
+        return 1.0 if po == 1 else 0.0
+    props = [(ca[l] / n + cb[l] / n) / 2 for l in categories]
+    pe = sum(p * (1 - p) for p in props) / (q - 1)
     if abs(1 - pe) < 1e-12:
         return 1.0 if po == 1 else 0.0
     return (po - pe) / (1 - pe)

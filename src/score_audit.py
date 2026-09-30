@@ -62,7 +62,7 @@ for k, entries in verd["strata"].items():
 
 
 def wilson(count, total):
-    """Exact-Wilson 95% interval for a binomial proportion (small n)."""
+    """Wilson score 95% interval for a binomial proportion (small n)."""
     if total == 0:
         return None
     lo, hi = proportion_confint(count=count, nobs=total, alpha=0.05, method="wilson")

@@ -206,16 +206,20 @@ if tc:
     def _cnt(d, k):
         return d.get(f"{k}-of-{_n_v}", 0)
 
-    n_44 = _cnt(_tcs, 4)
-    n_34 = _cnt(_tcs, 3)
-    n_24 = _cnt(_tcs, 2)
-    n_14 = _cnt(_tcs, 1)
+    n_gate_44 = _cnt(_ga, 4)
+    n_gate_34 = _cnt(_ga, 3)
+    n_type_44 = _cnt(_tcs, 4)
+    n_type_34 = _cnt(_tcs, 3)
+    n_type_24 = _cnt(_tcs, 2)
+    n_type_14 = _cnt(_tcs, 1)
     n_tie = _tcs.get("tie", 0)
     n_reject_all = _cnt(_ga, 0)
-    n_k3 = n_44 + n_34 + n_24  # >= 3 of 4 models retain the gate
+    n_k3 = n_gate_44 + n_gate_34  # >= 3 of 4 models retain the gate
     pct = lambda c: round(100 * c / _n_gated) if _n_gated else None
 else:
-    n_44 = n_34 = n_24 = n_14 = n_tie = n_reject_all = n_k3 = None
+    n_gate_44 = n_gate_34 = None
+    n_type_44 = n_type_34 = n_type_24 = n_type_14 = None
+    n_tie = n_reject_all = n_k3 = None
     pct = lambda c: None
 
 # Big-sample gate consensus headline (2 models)
@@ -574,7 +578,7 @@ nothing about GLM-only flags. The estimated precision is \textbf{@PREC_W@\%}
 (@N3@/{@NN3@} of the cases) at three-model consensus, @PREC2@\%
 (@N2@/{@NN2@}) at a two-model majority and @PREC1@\% (@N1@/{@NN1@}) for
 single-model flags; every value is a point estimate on $n=12$ and the
-intervals are exact Wilson intervals (Figure~\ref{fig:audit}). The error is
+intervals are Wilson score 95\% intervals (Figure~\ref{fig:audit}). The error is
 structured: outrage without a freedom reference; reaction to a claim rather
 than to a constraint; named triggers without reactive behaviour.
 
@@ -583,7 +587,7 @@ than to a constraint; named triggers without reactive behaviour.
 \includegraphics[width=0.9\linewidth]{fig02_audit.pdf}
 \caption{Precision by consensus degree (a) and the distribution of the
 3-model positives (b); the audit is explicitly the three original models
-(GLM was added later and is not covered). Error bars: exact Wilson 95\%
+(GLM was added later and is not covered). Error bars: Wilson score 95\%
 intervals on $n=12$ per stratum.}
 \label{fig:audit}
 \end{figure}
@@ -618,7 +622,7 @@ on F1.
 
 \subsection{Codebook A and Codebook B agree --- on both samples}
 The error patterns above were translated into a new codebook, together with the
-surface-robustness finding (Section~\ref{sec:exp}). Gate~2 requires the trigger
+surface-sensitivity finding (Section~\ref{sec:exp}). Gate~2 requires the trigger
 to be the \emph{target} of the reaction, not its topic: responding to a claim
 is not reacting to a constraint. Gate~3 fixes that politeness markers are
 neither trigger nor shield. Both gates sit in the chat instructions \emph{and}
@@ -736,20 +740,22 @@ Jev's threshold-free consensus precision.}
 \label{fig:cal}
 \end{figure}
 
-\section{The gated condition: classify the type only when Jev says yes}
+\section{Retrospective gated reanalysis: classify type after a Jev-positive gate}
 \label{sec:gate}
 
-Codebook~B's seven-way type classification is the expensive part of the
-pipeline. A gating variant answers the binary question first (Codebook~A, Jev
-only) and runs the type classification only on the comments the gate lets
-through. Every model --- Jev included, all four --- then classifies the type of
-reactance on exactly those comments, so the four annotate the same set and the
-matrix of confusion matrices is directly comparable. It costs no additional
-API calls in this benchmark, because the Codebook~B predictions were already
-collected: the gate is a recombination of existing labels. The gated pipeline
-raises two distinct questions: whether downstream classifiers retain Jev's
-binary reactance decision, and, conditional on retaining it, which reactance
-type they assign.
+A production cascade would first run the binary Codebook~A gate and then prompt
+only the retained comments with the six reactance types. That second-stage
+six-class prompt was \emph{not} run here. Instead, this section is a
+\textbf{retrospective gated reanalysis} of predictions that had already been
+collected with the original seven-class Codebook~B task on all comments. We
+select the comments Jev marked positive under Codebook~A; a stored downstream
+\texttt{keine\_reaktanz} answer is treated as rejection of the gate premise,
+and the conditional type analysis then considers only the six reactance labels
+among retainers. This recombination costs no additional API calls, but it should
+not be read as an experimental test of a freshly prompted six-class second
+stage. The reanalysis raises two distinct questions: whether downstream
+classifiers retain Jev's binary reactance decision, and, conditional on
+retaining it, which reactance type they assign.
 
 \medskip
 \noindent\textbf{1. Gate retention and rejection.} Jev performs binary reactance
@@ -763,9 +769,10 @@ Figure~\ref{fig:gaterej}): @GATE_REJECT_SENTENCE@
 
 \begin{table}[htp]
 \centering
-\caption{Gate retention vs.\ rejection: of the @GATE_N@ comments Jev's gate let
-through (matrix sample, Condition~B), how many does each downstream model retain
-as reactant (assign one of the six types) and how many does it re-label as
+\caption{Gate retention vs.\ rejection in the retrospective reanalysis: of the
+@GATE_N@ comments Jev's gate selected (matrix sample, Condition~B), how many
+does each model's already-collected Codebook~B prediction retain as reactant
+(assign one of the six types) and how many does it label
 \texttt{keine\_reaktanz}?}
 \label{tab:gatereject}
 \small
@@ -781,65 +788,66 @@ Model & $n$ gated & retain & reject & reject\%\\
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.9\linewidth]{fig13_gate_rejection.pdf}
-\caption{Gate retention vs.\ rejection per model (matrix sample, Condition~B).
-GPT-6-Luna rejects Jev's gate most often; GLM-5.3-Flash retains it most often.}
+\caption{Retrospective gate retention vs.\ rejection per model (matrix sample,
+Condition~B).}
 \label{fig:gaterej}
 \end{figure}
 
 \medskip
-\noindent\textbf{2. Conditional six-class type agreement.} The type task,
-conditioned on the gate, is a \textbf{six-class} task: the six reactance types,
-without \texttt{keine\_reaktanz}, which at this stage means ``you rejected the
-gate'', not ``a kind of reactance''. Given that two models both retain the
-gate, which types do they confuse? Figure~\ref{fig:gatecm} is that six-class
-grid; each cell carries its conditional $n$, because support differs from pair
-to pair once rejections are removed. The retained type calls are dominated by
+\noindent\textbf{2. Conditional six-class type agreement.} For the analysis
+conditional on retaining the gate, \texttt{keine\_reaktanz} is excluded and
+the remaining label space contains the six reactance types. Given that two
+models both retain the gate, which types do they confuse?
+Figure~\ref{fig:gatecm} is that six-class grid; each cell carries its
+conditional $n$, because support differs from pair to pair once rejections are
+removed. The retained type calls are dominated by
 \texttt{konfrontation\_angriff} (attack), with the other five types at single
-digits in total (support annotated in Figure~\ref{fig:gatecm}), and the
-pairwise conditional support is tiny ($n$ between @PAIR_N_MIN@ and
-@PAIR_N_MAX@). Type-level agreement therefore is \emph{descriptive only}: raw
-pairwise agreement ranges from @PAIR_LO@ to @PAIR_HI@\% ($\kappa$
-@KAPPA_RANGE6@; on the same gated set the unconditional seven-class task the
-models were prompted with agrees @BASE7_RANGE@\%, $\kappa$ @KAPPA_RANGE7@).
-A global six-class $\kappa$ on near-empty classes is not a robust summary.
+digits in total (support annotated in Figure~\ref{fig:gatecm}), and the pairwise
+conditional support is tiny ($n$ between @PAIR_N_MIN@ and @PAIR_N_MAX@).
+Type-level agreement therefore is \emph{descriptive only}: raw pairwise
+agreement ranges from @PAIR_LO@ to @PAIR_HI@\% ($\kappa$ @KAPPA_RANGE6@; on the
+same gated set the unconditional seven-class predictions agree @BASE7_RANGE@\%,
+$\kappa$ @KAPPA_RANGE7@). A global six-class $\kappa$ on near-empty classes is
+not a robust summary.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\linewidth]{fig11_gate_confusion.pdf}
-\caption{Conditional six-class type confusion for the gated condition (matrix
-sample, Condition~B): rows and columns are the four models' type labels,
-restricted to the comments on which both models retained Jev's positive gate.
-Each cell carries its conditional $n$; per-type support is annotated below.}
+\caption{Conditional six-class type confusion in the retrospective gated
+reanalysis (matrix sample, Condition~B): rows and columns are the four models'
+stored type labels, restricted to comments on which both models retained Jev's
+positive gate. Each cell carries its conditional $n$; per-type support is
+annotated below.}
 \label{fig:gatecm}
 \end{figure}
 
 \medskip
-\noindent\textbf{3. Consensus among the retaining models.} The majority vote is
+\noindent\textbf{3. Consensus among the retaining models.} The plurality is
 recomputed on the six types among the models that \emph{retained} the gate.
 Gate acceptance and conditional type consensus are distinct quantities
-(Figure~\ref{fig:gatemaj}): @N44@ of @GATE_N@ comments have all four models
+(Figure~\ref{fig:gatemaj}): @NGATE44@ of @GATE_N@ comments have all four models
 retaining the gate and @NREJALL@ are rejected by all, while \emph{among the
-retainers} the type label is a plurality of four (@N44@), three (@N34@), two
-(@N24@) or one (@N14@), with @NTIE@ explicit ties. Requiring three-or-more
-models to retain the gate keeps @NK3PCT@\% of the gated stream and keeps the
-type label stable. On the large-scale sample the gate is more selective
-(@GATE_N_BIG@ of @N_BIG@ comments), of which only @N24_BIG@ reach a plurality
-of the retaining models on the type.
+retainers} the type label is a plurality of four (@NTYPE44@), three (@NTYPE34@), two
+(@NTYPE24@) or one (@NTYPE14@), with @NTIE@ explicit ties. Requiring three-or-more
+models to retain the gate keeps @NK3PCT@\% of the gated stream. On the
+large-scale sample the gate is more selective (@GATE_N_BIG@ of @N_BIG@
+comments), of which @N24_BIG@ reach a plurality of the retaining models on the
+type.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.9\linewidth]{fig12_gate_majority.pdf}
-\caption{Gated condition, matrix sample, Condition~B. (a)~Gate acceptance: how
-many of the four models retain each gated comment's reactance.
-(b)~Conditional type consensus among the models that retained it, with 2--2
-ties shown as their own bar.}
+\caption{Retrospective gated reanalysis, matrix sample, Condition~B.
+(a)~Gate acceptance: how many of the four stored Codebook~B predictions retain
+each Jev-gated comment as reactant. (b)~Conditional type consensus among the
+models that retained it, with ties shown separately.}
 \label{fig:gatemaj}
 \end{figure}
 
-The substantive result: \emph{the hard problem is not only deciding which
-reactance type applies. A substantial fraction of the apparent
-``disagreement'' concerns whether Jev's gated positives satisfy the reactance
-definition at all.}
+The substantive descriptive result is that disagreement on Jev-gated cases is
+not only type disagreement: a substantial share concerns whether the stored
+Codebook~B prediction accepts the reactance premise at all. A production
+six-class second-stage prompt remains to be tested directly.
 
 \section{Two validation experiments}
 \label{sec:exp}
@@ -847,25 +855,33 @@ definition at all.}
 \subsection{Repeat stability and position robustness}
 @RELIABILITY_TEXT@
 
-\subsection{Surface robustness}
+\subsection{Surface/framing sensitivity}
 \label{sub:surf}
-Three deterministic, meaning-preserving rewrites of the comment: emphasis
-removed, a neutral politeness frame added, filler particles removed. Emphasis
-and filler barely move the label; the politeness frame flips 22--38\% of
-positive codes (Table~\ref{tab:surf}). This is not a bug but a hint that the
-codebook was theoretically not sharp at this boundary --- Gate~3 is the
-consequence.
+The experiment applies three deterministic perturbations to the comment text.
+T1 removes emphasis. T2 first applies T1 and then adds a fixed opener/closer;
+T3 first applies T1 and then removes selected filler particles. These
+transformations preserve the lexical core but are not guaranteed to be
+semantically or pragmatically neutral, especially T2, whose framing changes
+tone and can contain an imperative. Table~\ref{tab:surf} should therefore be
+read as a \emph{sensitivity diagnostic}, not as a pure meaning-preserving
+invariance test. De-emphasis is highly stable; filler removal is somewhat less
+stable; the T2 framing intervention is most disruptive, leaving only 62--78\%
+of labels unchanged in the three original-model positive-pool strata. This
+finding motivated Gate~3, but does not by itself establish that politeness
+alone caused the flips.
 
 \begin{table}[htp]
 \centering
-\caption{Surface robustness (Jev, Codebook A, Condition A): share of codes
-unchanged under each rewrite.}
+\caption{Surface/framing sensitivity (Jev, Codebook A, Condition A): share of
+labels unchanged relative to the original. Historical strata are defined by
+the original three-model pool. T2 and T3 are compositional interventions that
+include T1 de-emphasis.}
 \label{tab:surf}
 \setlength{\tabcolsep}{5pt}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{lccccc}
 \toprule
-Stratum & $n$ & emphasis & politeness & filler & all three\\
+Stratum & $n$ & emphasis & T1+framing & T1+filler removal & all three\\
 \midrule
 @SURF_ROWS@
 \bottomrule
@@ -875,8 +891,8 @@ Stratum & $n$ & emphasis & politeness & filler & all three\\
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.94\linewidth]{fig09_reliability.pdf}
-\caption{Surface robustness (a) and repeat stability (b), Jev, Codebook A,
-Condition A.}
+\caption{Surface/framing sensitivity (a) and repeat stability (b), Jev,
+Codebook A, Condition A.}
 \label{fig:rel}
 \end{figure}
 
@@ -907,10 +923,13 @@ annotation scheme and no inter-coder protocol. The re-coding in
 Section~\ref{sub:precision} and the F1 figures in Section~\ref{sub:f1} are a
 first step, but were produced by the assistant and replace no supervised double
 coding with a training phase. The $\kappa$- and AC1-values measure consistency
-among models, not correctness against human coding; ``precision'' throughout
-this report is precision against a three-model audit that predates the fourth
-model, and ``F1 against the majority'' is an agreement measure. Until a
-labelled validation set exists, all such estimates are orders of magnitude.
+among models, not correctness against human coding. In
+Section~\ref{sub:precision}, ``precision'' is the stratum-weighted estimate
+from the three-model audit; in Figure~\ref{fig:cal} and the threshold analysis,
+``precision'' is agreement with the leave-one-model-out model consensus. F1
+against the majority is likewise an agreement measure. Until a labelled
+validation set exists, none of these quantities is a substitute for human-ground-truth
+accuracy.
 
 \section{Limitations}
 The sample was built for the method question, not as a representative sample:
@@ -920,12 +939,15 @@ automatic speech recognition with substantial errors; Condition~A suffers more
 than Condition~B. The precision estimate rests on 36 cases and one coder (the
 assistant), on the original three-model pool only; the 4-model audit (including
 the GLM-only flags) is sampled and pending. The majority vote is not a ground
-truth. The gated six-class analysis runs on 33 conditional observations in the
-matrix sample, most of them one type: the type-level results there are
-descriptive, and so is the sparsity. Finally, the confidence bands of the
-Decisions API are sharply bimodal --- 1{,}521 comments below $p=0.1$ are never
-positive, 43 above $p=0.6$ always are --- so the threshold calibrated here is
-not yet transferable to new data.
+truth. The gated six-class results are a retrospective conditional reanalysis
+of already-collected seven-class predictions, not a fresh six-class second
+stage; they run on 33 conditional observations in the matrix sample, most of
+them one type, so the type-level results are descriptive. The surface/framing
+perturbations are deterministic but not guaranteed pragmatically neutral, so
+their results identify sensitivity rather than a causal effect of politeness.
+Finally, the confidence bands of the Decisions API are sharply bimodal ---
+1{,}521 comments below $p=0.1$ are never positive, 43 above $p=0.6$ always are
+--- so the threshold aligned here is not yet transferable to new data.
 
 \appendix
 \section{Detailed tables}
@@ -1015,23 +1037,23 @@ ABSTRACT = (
     f"\\$0.061 per 1{{,}}000 comments and \\emph{{as the only backend}} returns "
     f"class probabilities, so a threshold lifts leave-one-out-consensus "
     f"precision from {THR_LO_P}\\% to {THR_HI_P}\\% at $t=0.6$. The real "
-    f"bottleneck is validity: "
-    f"a manual re-coding of the 36 audited three-model positives found "
-    f"{nz(w3 * 100, 0)}\\% precision overall ({nz(prec3 * 100, 0)}\\% at "
+    f"bottleneck is validity: a stratified manual re-coding of 36 cases from "
+    f"the original three-model positive pool implies an estimated "
+    f"{nz(w3 * 100, 0)}\\% precision after weighting the audited strata back "
+    f"to that {n_pos_3pool}-case pool ({nz(prec3 * 100, 0)}\\% at "
     f"three-model consensus, {nz(prec1 * 100, 0)}\\% for single-model flags; "
-    f"exact Wilson intervals on n=12 per stratum). GLM-5.3-Flash flags "
+    f"Wilson score 95\\% intervals on n=12 per stratum). GLM-5.3-Flash flags "
     f"{glm_only_flags} comments no other model calls reactant; the audit "
     f"predates GLM, so their precision is an open question, not a finding. "
-    f"Two sharpenings of the type codebook derived from that audit --- the "
-    f"trigger must be the target of the reaction, and politeness markers "
-    f"neither create nor cancel reactance --- raise the A/B codebook agreement "
-    f"on the large-scale sample to raw {AB_BIG_JEV_RAW}\% ($\kappa={AB_BIG_JEV_K}$). A gating "
-    f"variant (Section~\\ref{{sec:gate}}) runs a cheap Jev binary pass first "
-    f"and classifies the type, across all four models, only on the "
-    f"$\\approx$ 3\\% it lets through; separating the gate question (do all "
-    f"models agree reactance exists?) from the conditional six-class type "
-    f"question shows that a substantial share of the apparent disagreement "
-    f"concerns the gate premise, not the type."
+    f"Two sharpenings of the type codebook derived from that audit and the "
+    f"surface-sensitivity experiment --- the trigger must be the target of "
+    f"the reaction, and politeness markers neither create nor cancel "
+    f"reactance --- raise the A/B codebook agreement on the large-scale sample "
+    f"to raw {AB_BIG_JEV_RAW}\\% ($\\kappa={AB_BIG_JEV_K}$). A retrospective "
+    f"gated reanalysis (Section~\\ref{{sec:gate}}) selects the roughly 3\\% "
+    f"Jev-positive cases and examines the already-collected Codebook-B calls; "
+    f"it separates rejection of the gate premise from conditional type "
+    f"disagreement, but it is not a freshly prompted six-class second stage."
 )
 
 RELIABILITY_TEXT = (
@@ -1140,12 +1162,11 @@ if gc:
         return f"{g['reject_pct']:.0f}\\% ({g['n_reject']}/{g['n']})" if g else "--"
     GATE_REJECT_SENTENCE = (
         f"Jev itself re-labels {_g('jev-1.13')} of its own gated comments as "
-        f"\\texttt{{keine\\_reaktanz}} in the type stage; GPT-6-Luna the most "
-        f"({_g('gpt-6-luna')}), DeepSeek-V4.1-Flash {_g('deepseek-v4.1-flash')}, "
-        f"GLM-5.3-Flash {_g('glm-5.3-flash')}. Between a fifth and four-fifths "
-        f"of Jev's gated positives are thus not accepted as reactant by a given "
-        f"second model --- a gate-rejection diagnostic that says nothing about "
-        f"which \\emph{{type}} the retainers then choose."
+        f"\\texttt{{keine\\_reaktanz}} in the stored type call; GPT-6-Luna "
+        f"{_g('gpt-6-luna')}, DeepSeek-V4.1-Flash {_g('deepseek-v4.1-flash')}, "
+        f"and GLM-5.3-Flash {_g('glm-5.3-flash')}. This is a retrospective "
+        f"gate-rejection diagnostic from the existing seven-class predictions; "
+        f"it says nothing about which \\emph{{type}} the retainers then choose."
     )
 else:
     GATE_REJECT_SENTENCE = "no gate-consistency data were available."
@@ -1221,10 +1242,11 @@ def build():
                            f"--{max(p['raw_pct'] for p in pw7):.0f}") if pw7 else "--",
         "@KAPPA_RANGE7@": (f"{min(p['kappa'] for p in pw7):.2f}"
                             f"--{max(p['kappa'] for p in pw7):.2f}") if pw7 else "--",
-        "@N44@": str(n_44 if n_44 is not None else 0),
-        "@N34@": str(n_34 if n_34 is not None else 0),
-        "@N24@": str(n_24 if n_24 is not None else 0),
-        "@N14@": str(n_14 if n_14 is not None else 0),
+        "@NGATE44@": str(n_gate_44 if n_gate_44 is not None else 0),
+        "@NTYPE44@": str(n_type_44 if n_type_44 is not None else 0),
+        "@NTYPE34@": str(n_type_34 if n_type_34 is not None else 0),
+        "@NTYPE24@": str(n_type_24 if n_type_24 is not None else 0),
+        "@NTYPE14@": str(n_type_14 if n_type_14 is not None else 0),
         "@NTIE@": str(n_tie if n_tie is not None else 0),
         "@NK3@": str(n_k3 if n_k3 is not None else 0),
         "@NK3PCT@": f"{pct(n_k3):.0f}" if n_k3 is not None else "--",

@@ -1,19 +1,22 @@
-"""Experiment E1: paraphrase / surface-form robustness (Jev only, cheap).
+"""Experiment E1: surface/framing sensitivity (Jev only, cheap).
 
-A coding instrument that only fires on the exact surface form it was shown is
-not measuring the construct. This re-runs the borderline and positive cases with
-a mechanical, meaning-preserving surface perturbation of the COMMENT ONLY (the
-transcript stays untouched):
+This experiment re-runs borderline and positive cases after deterministic
+perturbations of the COMMENT ONLY (the transcript stays untouched):
 
   T1  emphasis removed   : ALL-CAPS runs and repeated punctuation collapsed
-  T2  politeness added   : a short opener/closer typical of German comment culture
-  T3  filler removed     : "also", "eigentlich", "halt", "eben", "ja" stripped
+  T2  politeness/framing : T1 first, then an opener/closer is added
+  T3  filler removed     : T1 first, then selected German filler particles removed
 
-No LLM is used for the rewrite, so no paraphrase model can smuggle in its own
-judgement -- the perturbation is deterministic and auditable.
+The transformations are auditable and use no paraphrase model. They preserve
+the lexical core of the comment, but they are NOT guaranteed to be perfectly
+meaning- or pragmatics-preserving. In particular, T2 changes framing/tone and
+one closer contains an imperative. Results should therefore be interpreted as
+surface/framing sensitivity, not as a pure semantic-invariance test.
 
-If the label survives all three, the instrument measures reactance rather than
-phrasing. If it collapses, we are measuring style.
+The sampling strata intentionally use the ORIGINAL THREE-MODEL pool (Jev,
+GPT-6-Luna, DeepSeek). GLM was added later; including it when re-running this
+script would silently change the historical 3/3, 2/3 and 1/3 strata reported
+in Table 6.
 """
 from __future__ import annotations
 
@@ -30,6 +33,7 @@ import codebook as CB                              # noqa: E402
 from run_benchmark import JEV_MODELS, REPO, RESULTS, load_key  # noqa: E402
 
 JEV = JEV_MODELS["jev-1.13"]
+STRAT_MODELS_3 = {"jev-1.13", "gpt-6-luna", "deepseek-v4.1-flash"}
 PER_STRATUM = int(sys.argv[1]) if len(sys.argv) > 1 else 35
 OUT = RESULTS / "exp_paraphrase.jsonl"
 SUM = RESULTS / "exp_paraphrase.json"
@@ -55,7 +59,12 @@ def t1_deemphasise(t: str) -> str:
 
 
 def t2_politeness(t: str, k: int) -> str:
-    """Wrap in politeness framing, deterministically by comment index."""
+    """Wrap the de-emphasised comment in a deterministic framing wrapper.
+
+    Kept byte-for-byte compatible with the original experiment so the existing
+    result file remains reproducible. The wrapper is a sensitivity intervention,
+    not guaranteed pragmatically neutral.
+    """
     i = k % len(POLITE_OPEN)
     j = (k // len(POLITE_OPEN)) % len(POLITE_CLOSE)
     return f"{POLITE_OPEN[i]}{t}{POLITE_CLOSE[j]}"
@@ -77,8 +86,15 @@ def main() -> None:
              (REPO / "results/predictions_full.jsonl").open(encoding="utf-8")]
     flagged = defaultdict(set)
     for p in preds:
-        if p["codebook"] == "A" and p["condition"] == "A" and p["label"] == "ja":
+        if (p["model"] in STRAT_MODELS_3 and p["codebook"] == "A"
+                and p["condition"] == "A" and p["label"] == "ja"):
             flagged[p["uid"]].add(p["model"])
+
+    # Historical Table 6 strata are defined on exactly three models. This guard
+    # prevents a future backend added to predictions_full.jsonl from changing
+    # the sample silently.
+    assert all(v <= STRAT_MODELS_3 for v in flagged.values())
+    assert all(1 <= len(v) <= 3 for v in flagged.values())
 
     by_stratum = defaultdict(list)
     for u, v in flagged.items():
@@ -102,15 +118,17 @@ def main() -> None:
         sample.append(r)
 
     print(f"sample {len(sample)} comments (strata {dict(sorted(Counter(s['_stratum'] for s in sample).items()))})")
-    print("variants: original, T1 de-emphasis, T2 politeness, T3 defiller")
+    print("strata: original three models only (Jev, GPT-6-Luna, DeepSeek)")
+    print("variants: original, T1 de-emphasis, T2 T1+framing, T3 T1+defiller")
     print(f"budget: {len(sample)*4} Jev calls")
 
     def variants_for(row, i):
         c = row["comment_text"]
+        t1 = t1_deemphasise(c)
         return [("orig", c),
-                ("T1_deemphasis", t1_deemphasise(c)),
-                ("T2_politeness", t2_politeness(t1_deemphasise(c), i)),
-                ("T3_defiller", t3_defiller(t1_deemphasise(c)))]
+                ("T1_deemphasis", t1),
+                ("T2_politeness", t2_politeness(t1, i)),
+                ("T3_defiller", t3_defiller(t1))]
 
     tasks = []
     for i, row in enumerate(sample):
@@ -182,19 +200,26 @@ def main() -> None:
         per[k] = row
 
     res = {
-        "design": "deterministic surface perturbations of the comment only; "
-                  "Jev codebook A, condition A",
-        "model": JEV, "n_comments": len(by_uid), "calls": len(recs),
+        "design": ("deterministic surface/framing perturbations of the comment only; "
+                   "Jev codebook A, condition A; historical strata use the original "
+                   "three-model pool"),
+        "model": JEV,
+        "stratification_models": sorted(STRAT_MODELS_3),
+        "n_comments": len(by_uid), "calls": len(recs),
         "variants": {
             "T1_deemphasis": "ALL-CAPS runs and repeated punctuation collapsed",
-            "T2_politeness": "neutral politeness opener + hedging closer added",
-            "T3_defiller": "German filler particles removed",
+            "T2_politeness": "T1 de-emphasis, then a deterministic opener/closer added",
+            "T3_defiller": "T1 de-emphasis, then selected German filler particles removed",
         },
+        "interpretation_note": (
+            "T2/T3 are compositional perturbations and T2 is not guaranteed "
+            "pragmatically neutral; treat results as framing sensitivity rather than "
+            "a pure meaning-preserving invariance test."),
         "per_stratum": per,
-        "stratum_meaning": {"0": "negative control (no model flagged)",
-                            "1": "flagged by 1 of 3 models",
-                            "2": "flagged by 2 of 3",
-                            "3": "flagged by all 3"},
+        "stratum_meaning": {"0": "negative control (none of the 3 original models flagged)",
+                            "1": "flagged by 1 of 3 original models",
+                            "2": "flagged by 2 of 3 original models",
+                            "3": "flagged by all 3 original models"},
         "cost_usd": round(sum(r.get("cost_usd") or 0 for r in recs), 4),
         "examples": [{"uid": u,
                       "orig": by_uid[u].get("orig", {}).get("text"),

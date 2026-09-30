@@ -951,7 +951,7 @@ def fig_gate_majority():
     a2.annotate(f"{n_tie}", (len(ks2), n_tie), textcoords="offset points",
                 xytext=(0, 2), ha="center", fontsize=6.8, fontweight="bold", color=GREY)
     a2.set_xticks(xs2)
-    a2.set_xticklabels([f"{k}/{n_v}" for k in ks2] + ["2-2\ntie"], fontsize=7.0)
+    a2.set_xticklabels([f"{k}/{n_v}" for k in ks2] + ["tie"], fontsize=7.0)
     a2.set_ylabel("gated comments")
     a2.set_title("(b)  Type consensus among the models that retained it", loc="left")
     fig.tight_layout()
