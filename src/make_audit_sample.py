@@ -1,10 +1,18 @@
-"""Stratified dump for manual precision coding of the positive cases."""
+"""Stratified dump for manual precision coding of the original three-model pool.
+
+Audit v1 predates GLM-5.3-Flash. Re-running this script against the current
+``predictions_full.jsonl`` must therefore reproduce the historical 3/3, 2/3
+and 1/3 strata from Jev, GPT-6-Luna and DeepSeek only. GLM is deliberately
+excluded here; ``make_audit_sample_v2.py`` is the four-model audit sampler.
+"""
 import json
 import random
 from collections import defaultdict
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+AUDIT_MODELS_3 = {"jev-1.13", "gpt-6-luna", "deepseek-v4.1-flash"}
+
 rows = {json.loads(l)["uid"]: json.loads(l)
         for l in (REPO / "data/sample_comments.jsonl").open(encoding="utf-8")}
 preds = [json.loads(l) for l in (REPO / "results/predictions_full.jsonl").open(encoding="utf-8")]
@@ -15,7 +23,7 @@ for p in preds:
     tab[(p["model"], p["codebook"], p["condition"], p["uid"])] = p["label"]
 pool = defaultdict(set)
 for (m, cb, cond, uid), lab in tab.items():
-    if cb == "A" and cond == "A" and lab == "ja":
+    if (m in AUDIT_MODELS_3 and cb == "A" and cond == "A" and lab == "ja"):
         pool[uid].add(m)
 
 rng = random.Random(2026)
