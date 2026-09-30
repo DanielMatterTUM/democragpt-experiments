@@ -73,6 +73,16 @@ jobs:
           python src/validate_report.py
           python src/generate_latex.py
 
+      - name: Persist validated code and generated non-PDF artifacts
+        run: |
+          git config user.name "DanielMatter"
+          git config user.email "matter96@gmail.com"
+          git rm .github/workflows/final-method-audit.yml
+          git add -A
+          git status --short
+          git commit -m "chore: regenerate validated report artifacts"
+          git push origin HEAD:fix/final-method-audit
+
       - name: Install PDF build dependencies
         run: |
           sudo apt-get update
@@ -91,17 +101,17 @@ jobs:
       - name: Build and verify PDF
         run: |
           cd report
-          ./make.sh
+          ./make.sh || { echo '--- report.log tail ---'; tail -n 140 report.log || true; exit 1; }
           test -s report.pdf
           pages=$(pdfinfo report.pdf | awk '/^Pages:/ {print $2}')
           test "$pages" -gt 10
 
-      - name: Commit regenerated artifacts and remove temporary workflow
+      - name: Commit regenerated PDF
         run: |
-          git config user.name "DanielMatter"
-          git config user.email "matter96@gmail.com"
-          git rm .github/workflows/final-method-audit.yml
-          git add -A
-          git status --short
-          git commit -m "chore: regenerate report after final method fixes"
-          git push origin HEAD:fix/final-method-audit
+          git add report/report.pdf
+          if git diff --cached --quiet; then
+            echo "report.pdf unchanged"
+          else
+            git commit -m "chore: regenerate report PDF"
+            git push origin HEAD:fix/final-method-audit
+          fi
