@@ -158,6 +158,13 @@ for m in ("jev-1.13", "gpt-6-luna", "deepseek-v4.1-flash", "glm-5.3-flash"):
            nz(b.get("pct"), 2), nz(b.get("ci_lo"), 2), nz(b.get("ci_hi"), 2)))
 prev_rows = "\n".join(prev_rows_lines)
 
+# Codebook A Condition A positive-rate range across models (for the prose
+# claim in Section "Frequency and speed"). Generated, not typed.
+_prevA = [b["pct"] for b in X.get("bootstrap_prev", [])
+          if b["cb"] == "A" and b["cond"] == "A" and b.get("pct") is not None]
+PREV_A_MIN = f"{min(_prevA):.1f}" if _prevA else "--"
+PREV_A_MAX = f"{max(_prevA):.1f}" if _prevA else "--"
+
 # --- surface robustness rows -------------------------------------------------
 def _surf_table():
     per = PARA.get("per_stratum", {})
@@ -229,7 +236,11 @@ def _ts(t, key):
     s = _sweep.get(t)
     if not s or s.get(key) is None:
         return "--"
-    return f"{s[key]:.0f}" if key in ("precision", "recall") else f"{s[key]:.1f}"
+    # precision/recall are stored as proportions in [0,1]; coverage_pct is
+    # already a percentage. Without the *100 the report printed "0%" and "1%".
+    if key in ("precision", "recall"):
+        return f"{100 * s[key]:.0f}"
+    return f"{s[key]:.1f}"
 THR_LO_P = _ts(0.05, "precision")    # precision at t=0.05
 THR_HI_P = _ts(0.6, "precision")     # precision at t=0.6
 THR_HI_C = _ts(0.6, "coverage_pct")  # coverage at t=0.6
@@ -347,8 +358,11 @@ this (Sections~\ref{sec:agree}, \ref{sec:validity}).
 \noindent\textbf{Conditions and models.} Condition~A presents the comment
 \emph{with} the video transcript; Condition~B the comment only. Jev runs via
 the Decisions API, GPT-6-Luna, DeepSeek-V4.1-Flash and --- new in this
-version --- GLM-5.3-Flash via chat completion. All four receive identical
-instructions at temperature~0 with a fixed seed; GLM-5.3-Flash was the
+version --- GLM-5.3-Flash via chat completion. All four models receive
+semantically matched coding criteria, adapted to the respective API format.
+The chat models receive the criteria as prompt instructions, whereas Jev
+receives the corresponding criteria through the Decisions API. All runs use
+temperature~0 with a fixed seed; GLM-5.3-Flash was the
 addition of this iteration and is otherwise handled exactly like the other
 chat models.
 
@@ -365,9 +379,13 @@ costs no API calls. Total cost 3.17\,US\$.
 \section{Frequency and speed}
 \label{sec:freq}
 
-Reactance is rare. Table~\ref{tab:prev} reports prevalence with 95\%-bootstrap
-confidence intervals on the matrix sample. The rank order is stable across
-conditions; Jev marks least often.
+Classifier-positive rates are low. Across the matrix sample, Codebook~A yields
+reactance-positive rates between @PREV_A_MIN@\% and @PREV_A_MAX@\%, depending on
+the model. Table~\ref{tab:prev} reports those rates with
+95\%-bootstrap confidence intervals. The rank order is stable across
+conditions; Jev marks least often. These are rates produced by the
+classifiers on a non-representative sample, not estimates of true
+prevalence in the corpus.
 
 \begin{table}[ht]
 \centering
@@ -456,7 +474,8 @@ where Jev finds @N_JEV_BIG@. This is not better or worse recall in itself; it
 is the single largest source of the disagreement structure in
 Section~\ref{sec:agree}, and it is a statement about \emph{agreement with the
 consensus}, not about which model is correct: GLM deviates most strongly from
-the four-model consensus, which is exactly what its lower consensus-F1
+its leave-one-model-out consensus of the other three models, which is
+exactly what its lower consensus-F1
 measures (0.52--0.54, Table~\ref{tab:agree}).
 
 Of the comments only GLM flags, @GLM_ONLY@ were flagged by no other model in
@@ -492,7 +511,8 @@ quantity and makes the base-rate gap readable at a glance
 \centering
 \includegraphics[width=0.98\linewidth]{fig03_agreement.pdf}
 \caption{Pairwise agreement on the model pairs (a, b) and per-model F1
-against the four-model majority (c), all on a single 0--1 axis: raw
+against the leave-one-model-out consensus of the other three models (c), all
+on a single 0--1 axis: raw
 agreement, Cohen's $\kappa$, Gwet's AC1 and F1. The gap between raw
 agreement ($\approx$0.91--0.95) and $\kappa$ (0.29--0.59) is the base-rate
 artefact; AC1 and, for the binary task, F1 close it.}
@@ -665,7 +685,8 @@ backends do not. Two properties of that number are worth checking separately,
 and Figure~\ref{fig:cal} shows both. We are careful about what this
 establishes: there is \emph{no independent human-labelled calibration set} in
 this experiment, so neither panel is a calibration result in the statistical
-sense. The reference in both panels is the four-model consensus majority ---
+sense. The reference in both panels is the leave-one-model-out consensus of
+GPT-6-Luna, DeepSeek-V4.1-Flash and GLM-5.3-Flash ---
 a proxy, not ground truth --- and the correct reading is
 \textbf{probability alignment with the model consensus}, with
 probability \emph{discrimination} (do the probability bands separate consensus
@@ -676,8 +697,8 @@ and are deliberately not reported here.
 \smallskip
 \noindent\textbf{(a) Alignment against the consensus majority.} We split
 Jev's predictions into ten bins of $P(\mathrm{ja})$ and, in each bin, ask
-how often the comment's label agrees with the four-model majority vote of the
-other backends. If Jev's probability were well \emph{aligned} with the
+how often the comment's label agrees with the majority vote of the other
+three backends. If Jev's probability were well \emph{aligned} with the
 consensus, the observed rate would track the diagonal: predictions of
 $P=0.6$ would be majority-reactant about 60\% of the time. Jev is close
 across the range --- the observed rate tracks the diagonal from
@@ -701,8 +722,9 @@ other three models, not to a ground truth.
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.94\linewidth]{fig08_calibration.pdf}
-\caption{(a) Jev's $P(\mathrm{ja})$ against the four-model majority vote:
-observed reactant rate per probability bin versus the predicted probability
+\caption{(a) Jev's $P(\mathrm{ja})$ against the leave-one-model-out consensus
+of the other three models: observed reactant rate per probability bin versus
+the predicted probability
 (grey = the diagonal). This is alignment with a consensus proxy, not
 calibration against human labels. (b) The precision -- coverage trade-off as
 the threshold $t$ on $P(\mathrm{ja})$ rises; the 46\% line is Jev's
@@ -855,8 +877,9 @@ Condition A.}
 \end{figure}
 
 \section{Discussion}
-\noindent\textbf{Prevalence, not effect.} Reactance is rare in the studied
-corpus. That is a finding, not a flaw --- and it shifts the work from measuring
+\noindent\textbf{Prevalence, not effect.} The classifiers flag reactance
+rarely in the studied corpus. That is a finding, not a flaw --- and it shifts
+the work from measuring
 frequency to validating it. At low prevalence the question is not which model
 more often says yes, but whether a label carries at all.
 
@@ -1141,6 +1164,8 @@ def build():
         "@JEV_RAW_P@": JEV_RAW_P,
         "@RELIABILITY_TEXT@": RELIABILITY_TEXT,
         "@PREV_ROWS@": prev_rows,
+        "@PREV_A_MIN@": PREV_A_MIN,
+        "@PREV_A_MAX@": PREV_A_MAX,
         "@AGREE_ROWS@": agree_rows,
         "@AB_ROWS_BIG@": ab_rows_big,
         "@AB_ROWS_MATRIX@": ab_rows_matrix,
