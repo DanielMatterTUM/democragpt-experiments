@@ -14,6 +14,8 @@ Checks
     incompatible label spaces and came out far too high).
   * raw agreement = (tp + tn) / n
   * kappa = (po - pe) / (1 - pe) from the four binary cells
+  * Gwet's AC1 is independently recomputed from pairwise confusion matrices,
+    including the required /(q-1) normalization for multiclass tasks
   * prevalence = positives / n
   * fp + fn + tp + tn = n for every four-cell table
   * reported A-vs-B flip counts equal the off-diagonal cells
@@ -23,6 +25,8 @@ Checks
   * the model-vs-consensus evaluation is leave-one-model-out
   * threshold precision/recall are rendered as percentages (100 * stored),
     not as the raw stored proportion (the historical "0% -> 1%" bug)
+  * historical three-model audit/surface strata are explicitly pinned to the
+    original Jev/GPT-6-Luna/DeepSeek model set
 """
 from __future__ import annotations
 
@@ -55,6 +59,31 @@ def cohen_kappa_from_cells(tp, fp, fn, tn):
     pa1 = (tp + fp) / n
     pb1 = (tp + fn) / n
     pe = pa1 * pb1 + (1 - pa1) * (1 - pb1)
+    if abs(1 - pe) < 1e-12:
+        return 1.0 if po == 1 else 0.0
+    return (po - pe) / (1 - pe)
+
+
+def gwets_ac1_from_matrix(raw):
+    """Independently recompute two-rater nominal AC1 from a q x q table.
+
+    pi_k is the average marginal share of category k across the two raters and
+    Pe = sum_k pi_k(1-pi_k)/(q-1). This catches the historical bug where the
+    /(q-1) factor was omitted, which only changes multiclass results.
+    """
+    q = len(raw)
+    if q == 0 or any(len(row) != q for row in raw):
+        return None
+    n = sum(sum(row) for row in raw)
+    if not n:
+        return None
+    po = sum(raw[i][i] for i in range(q)) / n
+    if q < 2:
+        return 1.0 if po == 1 else 0.0
+    row_m = [sum(raw[i]) / n for i in range(q)]
+    col_m = [sum(raw[i][j] for i in range(q)) / n for j in range(q)]
+    props = [(row_m[k] + col_m[k]) / 2 for k in range(q)]
+    pe = sum(p * (1 - p) for p in props) / (q - 1)
     if abs(1 - pe) < 1e-12:
         return 1.0 if po == 1 else 0.0
     return (po - pe) / (1 - pe)
@@ -115,6 +144,20 @@ def main():
         chk(abs(prevA - b["prev_A_pct"]) < 0.01
             and abs(prevB - b["prev_B_pct"]) < 0.01,
             f"{tag} prevalences from cells match stored")
+
+    # ---- 2b. AC1: recompute from every stored square confusion matrix ------
+    for r in X.get("model_pairwise", []):
+        calc = gwets_ac1_from_matrix(r.get("raw") or [])
+        tag = f"[AC1 model pair cb{r.get('cb')} {r.get('cond')} {r.get('a')}/{r.get('b')}]"
+        chk(calc is not None and r.get("ac1") is not None
+            and abs(calc - r["ac1"]) < 1e-4,
+            f"{tag} recomputed {calc if calc is not None else 'NA'} matches stored {r.get('ac1')}")
+    for r in X.get("condition_pairwise", []):
+        calc = gwets_ac1_from_matrix(r.get("raw") or [])
+        tag = f"[AC1 condition cb{r.get('cb')} {r.get('model')}]"
+        chk(calc is not None and r.get("ac1") is not None
+            and abs(calc - r["ac1"]) < 1e-4,
+            f"{tag} recomputed {calc if calc is not None else 'NA'} matches stored {r.get('ac1')}")
 
     # ---- 3. leave-one-model-out consensus evaluation ---------------------
     cr = X.get("consensus_reference", [])
@@ -246,6 +289,14 @@ def main():
         jac = round(tp / dj, 4) if dj else None
         chk(jac is None or abs(jac - r.get("jaccard", jac)) < 1e-4,
             f"[jaccard {r['a']}/{r['b']}] matches cells")
+
+    # ---- 6. historical 3-model sampling is pinned explicitly ---------------
+    audit_src = (REPO / "src" / "make_audit_sample.py").read_text(encoding="utf-8")
+    para_src = (REPO / "src" / "exp_paraphrase.py").read_text(encoding="utf-8")
+    chk("AUDIT_MODELS_3" in audit_src and "m in AUDIT_MODELS_3" in audit_src,
+        "[audit sampler] v1 strata explicitly restricted to original three models")
+    chk("STRAT_MODELS_3" in para_src and 'p["model"] in STRAT_MODELS_3' in para_src,
+        "[surface sampler] Table 6 strata explicitly restricted to original three models")
 
     # ---- report ----------------------------------------------------------
     for m in OK:
