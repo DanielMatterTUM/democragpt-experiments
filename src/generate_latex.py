@@ -700,12 +700,15 @@ Jev's predictions into ten bins of $P(\mathrm{ja})$ and, in each bin, ask
 how often the comment's label agrees with the majority vote of the other
 three backends. If Jev's probability were well \emph{aligned} with the
 consensus, the observed rate would track the diagonal: predictions of
-$P=0.6$ would be majority-reactant about 60\% of the time. Jev is close
-across the range --- the observed rate tracks the diagonal from
-$P<0.1$ (observed 1\%) up to $P>0.9$ (observed 100\%) --- with a slight dip
-in the 0.3--0.6 bins, where a fifth to a third of its positives are either
-missed or refuted by the others. Alignment, then, is imperfect in exactly the
-region that matters at low prevalence.
+$P=0.6$ would be majority-reactant about 60\% of the time. The two ends of
+the range do track it --- below $P=0.1$ the observed rate is 1\%, above
+$P=0.9$ it is 100\% --- but the middle bins sit consistently below the
+diagonal, and by a lot in two places: the 0.1--0.2 bin is observed at 4\%
+against a mean predicted 14\%, and the 0.3--0.4 bin at 17\% against 35\%.
+Roughly a fifth to a third of Jev's mid-range positives are there missed or
+refuted by the other three models. Alignment, then, is imperfect in exactly
+the region that matters at low prevalence, and the bin sizes printed in
+Figure~\ref{fig:cal}(a) show how few comments the upper bins rest on.
 
 \smallskip
 \noindent\textbf{(b) The threshold trade-off.} Because $P(\mathrm{ja})$
@@ -722,13 +725,14 @@ other three models, not to a ground truth.
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.94\linewidth]{fig08_calibration.pdf}
-\caption{(a) Jev's $P(\mathrm{ja})$ against the leave-one-model-out consensus
-of the other three models: observed reactant rate per probability bin versus
-the predicted probability
-(grey = the diagonal). This is alignment with a consensus proxy, not
-calibration against human labels. (b) The precision -- coverage trade-off as
-the threshold $t$ on $P(\mathrm{ja})$ rises; the 46\% line is Jev's
-threshold-free precision.}
+\caption{(a) Jev's mean predicted $P(\mathrm{ja})$ within each probability bin
+against the observed positive rate of the leave-one-model-out consensus of
+GPT-6-Luna, DeepSeek-V4.1-Flash and GLM-5.3-Flash. The grey diagonal indicates
+perfect alignment with this consensus proxy; this is not calibration against
+human labels. Numbers denote bin sizes. (b) The precision -- coverage trade-off
+as the threshold $t$ on $P(\mathrm{ja})$ rises. Precision is measured against
+the same leave-one-model-out consensus reference; the horizontal line shows
+Jev's threshold-free consensus precision.}
 \label{fig:cal}
 \end{figure}
 

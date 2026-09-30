@@ -600,32 +600,42 @@ def fig_calibration():
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(7.0, 2.8))
     c = next((x for x in cal if x["cond"] == "A"), cal[0])
     if c["bins"]:
-        xs = [0.5 * (b["lo"] + b["hi"]) for b in c["bins"]]
-        ys = [b["mean_p"] for b in c["bins"]]
+        # x = mean predicted P(ja) in the bin, y = OBSERVED LOO-consensus
+        # positive rate. The historical version plotted mean_p against the bin
+        # midpoint, which is near-tautological and forced the curve onto the
+        # diagonal (see issue #8).
+        xs = [b["mean_p"] for b in c["bins"]]
+        ys = [b["obs"] for b in c["bins"]]
         ns = [b["n"] for b in c["bins"]]
         a1.plot([0, 1], [0, 1], color=GREY, lw=0.7, ls=(0, (4, 3)),
-                label="perfectly calibrated", zorder=1)
+                label="perfect alignment", zorder=1)
         a1.plot(xs, ys, "o-", color=BLUE, ms=4.4, lw=1.1, zorder=3, label="Jev")
         for x, y, n in zip(xs, ys, ns):
-            a1.annotate(f"{n}", (x, y), textcoords="offset points", xytext=(3, -9),
+            a1.annotate(f"n={n}", (x, y), textcoords="offset points", xytext=(3, -9),
                         fontsize=5.4, color=GREY)
-        a1.set_xlabel("predicted $P(\\mathrm{ja})$")
-        a1.set_ylabel("observed rate")
+        a1.set_xlabel("mean predicted $P(\\mathrm{ja})$")
+        a1.set_ylabel("observed LOO-consensus positive rate")
         a1.set_xlim(-0.03, 1.03)
         a1.set_ylim(-0.03, 1.03)
-        a1.set_title("(a)  Calibration", loc="left")
+        a1.set_title("(a)  Probability alignment with LOO consensus", loc="left")
         a1.legend(loc="upper left")
     s = ts["sweep"]
-    a2.plot([r["coverage_pct"] for r in s], [r["precision"] for r in s],
-            "o-", color=RUST, ms=4.2, lw=1.1, zorder=3)
-    for r in s:
-        a2.annotate(f"{r['t']:.1f}", (r["coverage_pct"], r["precision"]),
+    # stored precision is a proportion in [0, 1]; the axis is 0-100 %, so
+    # scale it (issue #8) instead of plotting 0-1 against a 46 % reference line.
+    coverage = [r["coverage_pct"] for r in s]
+    precision_pct = [100 * r["precision"] if r["precision"] is not None else np.nan
+                     for r in s]
+    a2.plot(coverage, precision_pct, "o-", color=RUST, ms=4.2, lw=1.1, zorder=3)
+    for r, pp in zip(s, precision_pct):
+        if r["precision"] is None:
+            continue
+        a2.annotate(f"t={r['t']:.1f}", (r["coverage_pct"], pp),
                     textcoords="offset points", xytext=(4, -3), fontsize=5.4,
                     color=GREY)
     a2.axhline(46, color=GREY, lw=0.7, ls=(0, (4, 3)))
-    a2.annotate("46 % without threshold", (20, 50), fontsize=5.8, color=GREY)
+    a2.annotate("46% without threshold", (20, 50), fontsize=5.8, color=GREY)
     a2.set_xlabel("flagged share of comments (%)")
-    a2.set_ylabel("precision vs majority vote")
+    a2.set_ylabel("precision vs LOO consensus (%)")
     a2.set_ylim(0, 100)
     a2.set_title("(b)  Threshold trade-off", loc="left")
     fig.tight_layout()

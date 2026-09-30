@@ -186,6 +186,50 @@ def main():
                 f"[threshold condA] t=0.6 precision is not rendered as 1% "
                 f"(it is {100*hi['precision']:.0f}%)")
 
+    # ---- 4c. the FIGURE plots the right quantities (issue #8) --------------
+    # Panel (a) must plot the OBSERVED consensus rate (obs) against the mean
+    # predicted probability (mean_p) -- not mean_p against the bin midpoint.
+    # Panel (b) must scale the stored [0,1] precision to percent, because its
+    # y-axis is 0-100 %. This re-reads the plotting source and the numbers it
+    # would draw, so the bug cannot silently come back.
+    _figs = (REPO / "src" / "figures.py")
+    if _figs.exists():
+        _src = _figs.read_text(encoding="utf-8")
+        _f = _src.split("def fig_calibration", 1)[-1].split("\ndef ", 1)[0]
+        chk('ys = [b["obs"] for b in c["bins"]]' in _f,
+            "[fig_calibration] panel (a) y-data sourced from obs, not mean_p")
+        chk('xs = [b["mean_p"] for b in c["bins"]]' in _f,
+            "[fig_calibration] panel (a) x-data sourced from mean_p")
+        chk('0.5 * (b["lo"] + b["hi"])' not in _f,
+            "[fig_calibration] panel (a) no longer plots mean_p vs bin midpoint")
+        chk('100 * r["precision"]' in _f,
+            "[fig_calibration] panel (b) precision converted to percent")
+        chk("perfect alignment" in _f and "perfectly calibrated" not in _f,
+            "[fig_calibration] diagonal described as alignment, not calibration")
+    # and the numbers such a figure would draw must equal the stored values
+    _cal_a = next((c for c in X.get("calibration", []) if c["cond"] == "A"), None)
+    if _cal_a and _cal_a.get("bins"):
+        for b in _cal_a["bins"]:
+            chk(0.0 <= b["obs"] <= 1.0 and 0.0 <= b["mean_p"] <= 1.0
+                and b["lo"] <= b["mean_p"] <= b["hi"],
+                f"[calibration condA bin {b['lo']}-{b['hi']}] mean_p inside its "
+                f"bin and obs a rate ({b['mean_p']}, {b['obs']}, n={b['n']})")
+        top = max(_cal_a["bins"], key=lambda b: b["lo"])
+        chk(top["obs"] > top["mean_p"] or top["n"] < 30,
+            f"[calibration condA] top bin (n={top['n']}) is a coarse "
+            f"consensus rate (obs={top['obs']}), not a predicted probability")
+        # a curve that plotted mean_p on both axes would be perfectly diagonal
+        spread = [abs(b["obs"] - b["mean_p"]) for b in _cal_a["bins"]]
+        chk(max(spread) > 0.05,
+            f"[calibration condA] obs differs from mean_p (max gap "
+            f"{max(spread):.3f}) -- figure is not tautological")
+    if _sweep_a:
+        for s_ in _sweep_a.get("sweep", []):
+            p_ = s_.get("precision")
+            chk(p_ is None or 0 <= p_ <= 1,
+                f"[threshold condA t={s_['t']}] stored precision is a "
+                f"proportion, so the figure must scale it by 100 ({p_})")
+
     # ---- 5. positive-specific agreement (Codebook A) is self-consistent ---
     for r in X.get("model_pairwise", []):
         if r.get("cb") != "A":
