@@ -97,6 +97,38 @@ def mcnemar_exact(a, b):
     return {"b01": b01, "b10": b10, "p": round(float(p), 6), "n": n}
 
 
+def binary_f1_vs_ref(pred, ref):
+    tp = sum(1 for a, b in zip(pred, ref) if a == "ja" and b == "ja")
+    fp = sum(1 for a, b in zip(pred, ref) if a == "ja" and b == "nein")
+    fn = sum(1 for a, b in zip(pred, ref) if a == "nein" and b == "ja")
+    p = tp / (tp + fp) if tp + fp else None
+    r = tp / (tp + fn) if tp + fn else None
+    f1 = 2 * p * r / (p + r) if p and r and (p + r) else None
+    return {"tp": tp, "fp": fp, "fn": fn,
+            "precision": round(p, 4) if p is not None else None,
+            "recall": round(r, 4) if r is not None else None,
+            "f1": round(f1, 4) if f1 is not None else None}
+
+
+def leave_one_out_consensus(target_model, models, labels_by_model, uid):
+    """Majority binary (ja/nein) reference built from every model EXCEPT the
+    target. A model must never vote in the consensus used to evaluate itself;
+    otherwise the reference is partially circular (this matters most for Jev's
+    probability/threshold analysis, where the target's own label anchors the
+    very probability being calibrated).
+
+    labels_by_model: {model: {uid: "ja"/"nein"}}.
+    Returns ("ja"/"nein", [votes_used]) or (None, votes) if too few usable votes.
+    """
+    others = [m for m in models if m != target_model]
+    votes = [labels_by_model[m][uid] for m in others
+             if uid in labels_by_model[m]
+             and labels_by_model[m][uid] in LAB_A]
+    if len(votes) < 2:
+        return None, votes
+    return ("ja" if votes.count("ja") * 2 > len(votes) else "nein"), votes
+
+
 def bootstrap_ci(vals, scale=100, n=2000, seed=11, alpha=0.05):
     """Percentile bootstrap CI of a proportion, returned in PERCENT.
 
@@ -162,32 +194,39 @@ def main():
                 a = [x for x, _ in pairs]
                 b = [y for _, y in pairs]
                 m, nrm = confusion(a, b, labels)
-                # F1 of model A's labels with model B's as (reference-free)
-                # ground truth: exact label agreement is the only "true
-                # positive", every mismatch is one false positive AND one false
-                # negative (symmetric by construction), so precision = recall
-                # = raw agreement and F1 = raw agreement. Kept as its own
-                # number because it is what a pipeline would actually compute.
-                m_np = np.asarray(m)
-                n_ = len(pairs)
-                if n_ and m_np.sum():
-                    off = m_np.sum() - sum(m_np[i, i] for i in range(len(labels)))
-                    tp = float(sum(m_np[i, i] for i in range(len(labels))))
-                    prec = tp / (tp + off) if (tp + off) else None
-                    rec = prec
-                    f1v = (2 * prec * rec / (prec + rec) if prec and prec + rec
-                            else None)
-                else:
-                    f1v = None
-                out["model_pairwise"].append({
+                # NOTE: no multiclass "F1" here. A pairwise multiclass score
+                # with no reference treats every exact label match as TP and
+                # every mismatch as both FP and FN, which forces
+                # precision = recall = F1 = raw agreement -- a number that
+                # carries no information beyond raw agreement and is not a
+                # standard multiclass F1. We therefore report raw / kappa /
+                # AC1 only for model-vs-model. A proper F1 is reported for
+                # binary model-vs-leave-one-out-consensus (consensus_reference).
+                rec = {
                     "cb": cb, "cond": cond, "a": m1, "b": m2,
                     "labels": labels, "n": len(pairs),
                     "raw": m.tolist(), "norm": nrm.tolist(),
                     "raw_pct": round(100 * sum(1 for x, y in pairs if x == y) / len(pairs), 2),
                     "kappa": round(cohen_kappa(a, b, labels), 4),
                     "ac1": round(gwets_ac1(a, b, labels), 4),
-                    "f1": round(f1v, 4) if f1v is not None else None,
-                })
+                }
+                # Positive-class specific agreement (Codebook A binary).
+                # Raw agreement, kappa and AC1 are all dominated by the large
+                # negative class; these two make the rare-positive overlap
+                # interpretable. AC1 is a prevalence-robust alternative, not a
+                # fix for low prevalence, so we report it alongside.
+                if cb == "A":
+                    tp_ = sum(1 for x, y in pairs if x == "ja" and y == "ja")
+                    fp_ = sum(1 for x, y in pairs if x == "ja" and y == "nein")
+                    fn_ = sum(1 for x, y in pairs if x == "nein" and y == "ja")
+                    denom_j = tp_ + fp_ + fn_
+                    rec["positive_agreement"] = (
+                        round(2 * tp_ / (2 * tp_ + fp_ + fn_), 4)
+                        if (2 * tp_ + fp_ + fn_) else None)
+                    rec["jaccard"] = (
+                        round(tp_ / denom_j, 4) if denom_j else None)
+                    rec["positive_cells"] = {"tp": tp_, "fp": fp_, "fn": fn_}
+                out["model_pairwise"].append(rec)
 
     # ---------- 2. condition A x B, per model & codebook --------------------
     # Two questions are answered here, kept separate:
@@ -354,38 +393,45 @@ def main():
                     "cb": cb, "cond": cond, "model": m, "n": len(vs),
                     "pct": round(obs, 2), "ci_lo": ci[0], "ci_hi": ci[1]})
 
-    # ---------- 5. consensus as reference (codebook A) ---------------------
+    # ---------- 5. consensus as reference (codebook A), LEAVE-ONE-OUT ------
+    # Each model is evaluated against a reference built ONLY from the OTHER
+    # models, so a model never votes in its own consensus. This makes the
+    # agreement measures non-circular, which matters especially for the Jev
+    # probability/threshold analysis (see section 6).
     for cond in ("A", "B"):
         uids = [u for u in rows
                 if all((m, "A", cond, u) in lab for m in models)]
         if not uids:
             continue
-        # reference = majority vote of the three models
-        ref = {}
-        for u in uids:
-            votes = [lab[(m, "A", cond, u)] for m in models]
-            ref[u] = "ja" if votes.count("ja") > len(votes) / 2 else "nein"
-        npos = sum(1 for u in uids if ref[u] == "ja")
+        # per-model binary label maps for this condition
+        lab_by_model = {m: {u: lab[(m, "A", cond, u)] for u in uids}
+                        for m in models}
         for m in models:
-            pred = [lab[(m, "A", cond, u)] for u in uids]
-            refs = [ref[u] for u in uids]
-            tp = sum(1 for a, b in zip(pred, refs) if a == "ja" and b == "ja")
-            fp = sum(1 for a, b in zip(pred, refs) if a == "ja" and b == "nein")
-            fn = sum(1 for a, b in zip(pred, refs) if a == "nein" and b == "ja")
-            prec = tp / (tp + fp) if tp + fp else None
-            rec = tp / (tp + fn) if tp + fn else None
-            f1 = (2 * prec * rec / (prec + rec)) if prec and rec else None
-            # reference-free agreement measures of this model vs the majority
-            # (same definitions as the pairwise section), so a single table can
-            # carry raw / F1 / kappa / AC1 side by side
+            pred = [lab_by_model[m][u] for u in uids]
+            refs, ref_pos = [], 0
+            for u in uids:
+                r, _votes = leave_one_out_consensus(m, models, lab_by_model, u)
+                refs.append(r)
+                if r == "ja":
+                    ref_pos += 1
+            r = binary_f1_vs_ref(pred, refs)
+            # Positive-class specific agreement against the LOO consensus.
+            # raw/kappa/AC1 are dominated by the negative class; this makes the
+            # rare-positive overlap interpretable (AC1 is a prevalence-robust
+            # alternative, not a cure for low prevalence).
+            pa = (round(2 * r["tp"] / (2 * r["tp"] + r["fp"] + r["fn"]), 4)
+                  if (2 * r["tp"] + r["fp"] + r["fn"]) else None)
+            # reference-free agreement measures of this model vs its
+            # leave-one-out majority (same definitions as the pairwise
+            # section), so a single table can carry raw / F1 / kappa / AC1
             kk = cohen_kappa(pred, refs, LAB_A)
             aa = gwets_ac1(pred, refs, LAB_A)
             out["consensus_reference"].append({
-                "model": m, "cond": cond, "n": len(uids), "n_ref_pos": npos,
-                "tp": tp, "fp": fp, "fn": fn,
-                "precision": round(prec, 4) if prec is not None else None,
-                "recall": round(rec, 4) if rec is not None else None,
-                "f1": round(f1, 4) if f1 is not None else None,
+                "model": m, "cond": cond, "n": len(uids), "n_ref_pos": ref_pos,
+                "leave_one_out": True,
+                "tp": r["tp"], "fp": r["fp"], "fn": r["fn"],
+                "precision": r["precision"], "recall": r["recall"],
+                "f1": r["f1"], "positive_agreement": pa,
                 "raw": round(float(np.mean([a == b for a, b in zip(pred, refs)])), 4),
                 "kappa": round(kk, 4) if kk is not None else None,
                 "ac1": round(aa, 4) if aa is not None else None})
@@ -406,15 +452,18 @@ def main():
                 recs[r["uid"]] = r
             if not recs:
                 continue
-            # consensus reference from the other two chat models
-            chat = [m for m in models if m != "jev-1.13"]
+            # leave-one-model-out consensus: Jev's reference is the majority
+            # of the OTHER models only (GPT-6-Luna, DeepSeek, GLM). Using a
+            # 4-model majority that includes Jev would make the calibration /
+            # threshold target partially circular.
+            lab_by_model = {m: {u: lab.get((m, "A", cond, u)) for u in recs}
+                            for m in models}
             rowsx = []
             for u, r in recs.items():
-                votes = [lab.get((m, "A", cond, u)) for m in chat]
-                votes = [v for v in votes if v in LAB_A]
-                if len(votes) < 2:
+                ref, votes = leave_one_out_consensus(
+                    "jev-1.13", models, lab_by_model, u)
+                if ref is None:
                     continue
-                ref = "ja" if votes.count("ja") > len(votes) / 2 else "nein"
                 p = r["probabilities"]
                 pos = "ja" if p.get("ja", 0) >= p.get("nein", 0) else "nein"
                 rowsx.append({

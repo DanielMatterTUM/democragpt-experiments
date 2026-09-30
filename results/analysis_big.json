@@ -1,6 +1,6 @@
 {
  "meta": {
-  "generated_at": "2026-09-29T22:01:09+00:00",
+  "generated_at": "2026-09-30T05:56:10+00:00",
   "source_files": [
    "predictions_full.jsonl",
    "predictions_big.jsonl",
@@ -228,7 +228,8 @@
    "fn": 116,
    "both_none": 1775,
    "raw_agreement_pct": 92.35,
-   "cohens_kappa": 0.9235,
+   "cohens_kappa": 0.4501,
+   "kappa_label_space": "binary (A: ja/nein vs B: reactant/none)",
    "fp_tp": 0.51
   },
   {
@@ -241,7 +242,8 @@
    "fn": 35,
    "both_none": 1941,
    "raw_agreement_pct": 98.15,
-   "cohens_kappa": 0.9815,
+   "cohens_kappa": 0.5463,
+   "kappa_label_space": "binary (A: ja/nein vs B: reactant/none)",
    "fp_tp": 0.09
   }
  ],

@@ -139,10 +139,10 @@ for c in X.get("consensus_reference", []):
           + (1 - maj_pos / n) * (1 - (n11 + n01) / n)) if n else 0.0
     k = (1.0 if abs(1 - pe) < 1e-12 else (po - pe) / (1 - pe)) if n else 0.0
     agree_rows_lines.append(
-        "  %s & %d & %s & %s & %s & %s \\\\"
-        % (short_model(c["model"]), n,
-           nz(po, 3), nz(c.get("f1"), 3), nz(k, 3),
-           nz(c.get("ac1"), 3)))
+        "  %s & %d & %s & %s & %s & %s & %s " % (short_model(c["model"]), n,
+                   nz(po, 3), nz(c.get("f1"), 3), nz(k, 3),
+                   nz(c.get("ac1"), 3),
+                   nz(c.get("positive_agreement"), 3)) + r"\\")
 agree_rows = "\n".join(agree_rows_lines)
 
 # --- prevalence rows ---------------------------------------------------------
@@ -221,6 +221,24 @@ _abj = next((r for r in (BIG.get("A_vs_B") or []) if r["model"] == "jev-1.13"), 
 AB_BIG_JEV_RAW = f"{_abj['raw_agreement_pct']:.1f}" if _abj else "--"
 AB_BIG_JEV_K = f"{_abj['cohens_kappa']:.2f}" if _abj else "--"
 AB_BIG_JEV_FPTP = f"{_abj['fp_tp']:.2f}" if _abj else "--"
+
+# Jev threshold sweep (leave-one-model-out consensus), generated
+_ts_a = next((t for t in X.get("threshold_sweep", []) if t["cond"] == "A"), None)
+_sweep = {s["t"]: s for s in (_ts_a.get("sweep") or [])} if _ts_a else {}
+def _ts(t, key):
+    s = _sweep.get(t)
+    if not s or s.get(key) is None:
+        return "--"
+    return f"{s[key]:.0f}" if key in ("precision", "recall") else f"{s[key]:.1f}"
+THR_LO_P = _ts(0.05, "precision")    # precision at t=0.05
+THR_HI_P = _ts(0.6, "precision")     # precision at t=0.6
+THR_HI_C = _ts(0.6, "coverage_pct")  # coverage at t=0.6
+THR_LO_C = _ts(0.05, "coverage_pct")  # coverage at t=0.05
+# Jev raw-label precision vs LOO consensus (threshold-free operating point)
+_jev_cr = next((c for c in X.get("consensus_reference", [])
+                if c["model"] == "jev-1.13" and c["cond"] == "A"), None)
+JEV_RAW_P = (f"{_jev_cr['precision'] * 100:.0f}" if _jev_cr
+             and _jev_cr.get("precision") is not None else "--")
 
 # ---------------------------------------------------------------- document
 DOC_TEMPLATE = r"""% !TeX program = xelatex
@@ -369,8 +387,8 @@ Jev remains the fastest and cheapest backend: 0.46\,s and \$0.061 per
 (Figure~\ref{fig:cost}); GLM-5.3-Flash is the cheapest chat model
 (\$0.119) but does not beat Jev. Jev is also the only backend that returns
 class probabilities --- an advantage with a practical payoff in
-Section~\ref{sub:calib} (a threshold on the probability lifts consensus-agreement
-precision from 14\% to nearly 80\%).
+Section~\ref{sub:calib} (a threshold on the probability lifts
+leave-one-out-consensus precision from @THR_LO_P@\% to @THR_HI_P@\%).
 
 \begin{figure}[ht]
 \centering
@@ -405,9 +423,9 @@ only Jev's shift reaches the conventional significance level of an exact
 McNemar test). The aggregate figure alone does not answer the interesting
 question, however, which is whether the \emph{same comments} are classified as
 reactant with and without the transcript (Figures~\ref{fig:cmCondA} and
-\ref{fig:cmCondB} sit here on purpose). @CASELEVEL_SENTENCE@ The transcript
-is therefore not a detection tool, but the comment text is sufficient for
-detection.
+\ref{fig:cmCondB} sit here on purpose). @CASELEVEL_SENTENCE@ For a
+cost-sensitive screening pipeline, the limited change in model outputs
+provides little evidence that transcript inclusion is necessary.
 
 \begin{figure}[ht]
 \centering
@@ -483,18 +501,19 @@ artefact; AC1 and, for the binary task, F1 close it.}
 
 \begin{table}[htp]
 \centering
-\caption{Each model against the four-model majority vote (Codebook~A,
-Condition~A). All four columns sit on the 0--1 scale --- raw agreement and
-F1 next to the two chance-corrected coefficients, so F1 is a first-class
-measure here rather than a chapter of its own. The reference is the
+\caption{Each model against the \emph{leave-one-model-out} consensus of the
+other three (Codebook~A, Condition~A). All columns sit on the 0--1 scale ---
+raw agreement and F1 next to the two chance-corrected coefficients, plus a
+positive-class-specific agreement so the rare-positive overlap is visible
+rather than hidden behind the dominant negative class. The reference is a
 consensus, not a gold standard: these are agreement numbers, not
 correctness numbers.}
 \label{tab:agree}
 \footnotesize
 \setlength{\tabcolsep}{5pt}
-\begin{tabular}{lccccc}
+\begin{tabular}{lcccccc}
 \toprule
-Model & $n$ & Raw & F1 & $\kappa$ & AC1\\
+Model & $n$ & Raw & F1 & $\kappa$ & AC1 & Pos.\,agree.\\
 \midrule
 @AGREE_ROWS@
 \bottomrule
@@ -549,23 +568,32 @@ intervals on $n=12$ per stratum.}
 \label{fig:audit}
 \end{figure}
 
-Because most of the 3-model positives are single-model flags, a pipeline that
-runs a single model inherits roughly two thirds false alarms. The prevalence
-figures in Section~\ref{sec:freq} are therefore upper bounds; the order of
-magnitude survives, the exact percentages do not. A v2 audit sample covering
-the four-model pool (including the @GLM_ONLY@ GLM-only flags) is drawn and
-awaiting annotation; precision for the 4-model strata is a follow-up, not a
-number in this report.
+Precision falls sharply with the number of models that agree. Among the cases
+flagged by only one of the three original models, 3 of 12 were judged true
+positives; among those flagged by all three, 11 of 12 were. Within the audited
+cases flagged by a single model, this suggests low precision for isolated
+flags, although the estimate rests on a small stratified sample and the
+intervals are wide. The positive audit therefore indicates substantial
+false-positive contamination, especially in the isolated-flag strata. Raw
+model-positive rates should not be read directly as estimates of true
+prevalence. Because the audit samples predicted positives rather than the full
+comment population, it does not estimate false negatives and cannot establish
+whether prevalence is biased upward or downward overall. A v2 audit sample
+covering the four-model pool (including the @GLM_ONLY@ GLM-only flags) is
+drawn and awaiting annotation; precision for the four-model strata is a
+follow-up, not a number in this report.
 
-\subsection{F1 against the consensus majority}
+\subsection{F1 against the leave-one-model-out consensus}
 \label{sub:f1}
 F1 is treated as a first-class agreement measure in
 Section~\ref{sec:agree}, where it sits next to raw agreement, $\kappa$ and
 AC1 (Table~\ref{tab:agree}) rather than in a chapter of its own. The reference
-there is the four-model majority vote --- not a gold standard --- so F1 reads
-as how far a model sits from the consensual position, not how correct it is.
-At low prevalence precision and recall pull against each other: Jev has the
-best precision but gives up the most recall, and so loses to the chat models
+there is a \emph{leave-one-model-out consensus}: each model is compared with
+the majority of the other three only, so the evaluated model never votes in
+its own reference. It is a consensus, not a gold standard, so F1 reads as how
+far a model sits from the consensual position, not how correct it is. At low
+prevalence precision and recall pull against each other: Jev has the best
+precision but gives up the most recall, and so loses to the chat models
 on F1.
 
 \subsection{Codebook A and Codebook B agree --- on both samples}
@@ -576,11 +604,16 @@ is not reacting to a constraint. Gate~3 fixes that politeness markers are
 neither trigger nor shield. Both gates sit in the chat instructions \emph{and}
 in the Jev criteria, because the Decisions API only returns the criteria.
 
-Two samples, two tables --- deliberately kept apart, because mixing them is
-what the earlier draft did. On the \emph{large-scale} sample
-(@N_BIG@ comments, Condition~B, Jev and GLM) the two instruments now agree to
-@AB_BIG_JEV_RAW@\% raw with $\kappa=$@AB_BIG_JEV_K@ and an FP/TP ratio of
-@AB_BIG_JEV_FPTP@ (Jev; Table~\ref{tab:ab}).
+Two samples, two tables --- deliberately kept apart. On the
+\emph{large-scale} sample (@N_BIG@ comments, Condition~B, Jev and GLM) the two
+instruments agree to @AB_BIG_JEV_RAW@\% raw, but the chance-corrected
+agreement is only $\kappa=$@AB_BIG_JEV_K@, with an FP/TP ratio of
+@AB_BIG_JEV_FPTP@ (Jev; Table~\ref{tab:ab}). The very high raw agreement is
+driven by both instruments labelling most comments as non-reactant; on the
+rare positive class the agreement is moderate once chance is accounted for.
+$\kappa$ is computed after collapsing both codebooks to the same binary label
+space (A: ja/nein vs.\ B: reactant/none), because comparing the two label
+spaces directly would make the expected-agreement term invalid.
 The \emph{matrix sample} (@N_MATRIX@ comments, all four models) shows the same
 pattern per model and condition at n=@N_MATRIX@
 (Table~\ref{tab:abm}); its aggregate raw agreement is lower simply because the
@@ -657,12 +690,13 @@ region that matters at low prevalence.
 \noindent\textbf{(b) The threshold trade-off.} Because $P(\mathrm{ja})$
 is meaningful, we can discard low-confidence flags. Raising the threshold
 $t$ --- flag only those comments with $P(\mathrm{ja})\geq t$ --- trades
-coverage for consensus-agreement precision: at $t=0.05$ nearly half the
-comments are flagged and precision is only 14\%; at $t=0.6$ precision reaches
-79\% but covers only 2.8\% of the sample. The 46\% line marks the precision
-of Jev's raw threshold-free label. Precision, then, is not a property of the
-model but of the operating point chosen on this curve --- relative to the
-consensus, not to a ground truth.
+coverage for agreement with the leave-one-model-out consensus: at $t=0.05$
+@THR_LO_C@\% of comments are flagged and precision is only @THR_LO_P@\%;
+at $t=0.6$ precision reaches @THR_HI_P@\% but covers only @THR_HI_C@\% of
+the sample. The @JEV_RAW_P@\% line marks the precision of Jev's raw
+threshold-free label. Precision, then, is not a property of the model but of
+the operating point chosen on this curve --- relative to the consensus of the
+other three models, not to a ground truth.
 
 \begin{figure}[ht]
 \centering
@@ -686,36 +720,32 @@ through. Every model --- Jev included, all four --- then classifies the type of
 reactance on exactly those comments, so the four annotate the same set and the
 matrix of confusion matrices is directly comparable. It costs no additional
 API calls in this benchmark, because the Codebook~B predictions were already
-collected: the gate is a recombination of existing labels.
-
-This section separates two questions that the previous draft answered with one
-figure, and the separation is the substantive point.
-
-\medskip
-\noindent\textbf{Step 1 -- detection.} Jev performs binary reactance detection
-over all comments. On the matrix sample, condition~B, the gate lets through
-@GATE_N@ of @N_MATRIX@ comments (@GATE_PCT@\%); on the large-scale sample
-@GATE_N_BIG@ of @N_BIG@ (@GATE_PCT_BIG@\%).
+collected: the gate is a recombination of existing labels. The gated pipeline
+raises two distinct questions: whether downstream classifiers retain Jev's
+binary reactance decision, and, conditional on retaining it, which reactance
+type they assign.
 
 \medskip
-\noindent\textbf{Step 2 -- gate consistency (a separate diagnostic).} Once Jev
-says ``reactance present'', a downstream model can still answer with
-\texttt{keine\_reaktanz}: it \emph{rejects the gate's premise}. That is not
-type disagreement, and it must not be mixed into the type analysis. How often
-each model does this is its own number (Table~\ref{tab:gatereject},
+\noindent\textbf{1. Gate retention and rejection.} Jev performs binary reactance
+detection over all comments. On the matrix sample, condition~B, the gate lets
+through @GATE_N@ of @N_MATRIX@ comments (@GATE_PCT@\%); on the large-scale
+sample @GATE_N_BIG@ of @N_BIG@ (@GATE_PCT_BIG@\%). Once Jev says ``reactance
+present'', a downstream model can still answer
+\texttt{keine\_reaktanz}: it \emph{rejects the gate's premise}. How often each
+model does this is its own diagnostic (Table~\ref{tab:gatereject},
 Figure~\ref{fig:gaterej}): @GATE_REJECT_SENTENCE@
 
 \begin{table}[htp]
 \centering
-\caption{Gate consistency: of the @GATE_N@ comments Jev's gate let through
-(matrix sample, Condition~B), how many does each downstream model retain as
-reactant (assign one of the six types) and how many does it re-label as
+\caption{Gate retention vs.\ rejection: of the @GATE_N@ comments Jev's gate let
+through (matrix sample, Condition~B), how many does each downstream model retain
+as reactant (assign one of the six types) and how many does it re-label as
 \texttt{keine\_reaktanz}?}
 \label{tab:gatereject}
 \small
 \begin{tabular}{lcccc}
 \toprule
-Model & $n$ gated & retain & reject & reject\\
+Model & $n$ gated & retain & reject & reject\%\\
 \midrule
 @GATE_ROWS@
 \bottomrule
@@ -731,29 +761,21 @@ GPT-6-Luna rejects Jev's gate most often; GLM-5.3-Flash retains it most often.}
 \end{figure}
 
 \medskip
-\noindent\textbf{Step 3 -- conditional type classification.} The type task,
+\noindent\textbf{2. Conditional six-class type agreement.} The type task,
 conditioned on the gate, is a \textbf{six-class} task: the six reactance types,
 without \texttt{keine\_reaktanz}, which at this stage means ``you rejected the
-gate'', not ``a kind of reactance''. Figure~\ref{fig:gatecm} is the six-class
-type-confusion grid: only comments on which \emph{both} models of a pair
-retained the gate enter a cell, and each cell carries its (conditional) $n$,
-because the support differs from pair to pair once rejections are removed.
-The type calls on this set are spread out more than one would expect for a
-task where the answer is almost always the same type: pairwise agreement
-ranges from @PAIR_LO@ to @PAIR_HI@\% raw with per-pair $n$ between
-@PAIR_N_MIN@ and @PAIR_N_MAX@ --- most pairs still agree on the dominant type
-(attack), while a few differ on whether the (rare) other types apply at all
-($\kappa$ @KAPPA_RANGE6@; on the same gated set, the unconditional
-7-class task the models were actually prompted with, the same pairs agreed to
-@BASE7_RANGE@\%, $\kappa$ @KAPPA_RANGE7@). Two further
-caveats attach to these numbers: the
-conditional support is tiny (33 comments), and the six types are \emph{sparse}
---- on the gated set almost every retained type call is
+gate'', not ``a kind of reactance''. Given that two models both retain the
+gate, which types do they confuse? Figure~\ref{fig:gatecm} is that six-class
+grid; each cell carries its conditional $n$, because support differs from pair
+to pair once rejections are removed. The retained type calls are dominated by
 \texttt{konfrontation\_angriff} (attack), with the other five types at single
-digits in total (support annotated in Figure~\ref{fig:gatecm}). A global
-six-class $\kappa$ on near-empty classes is therefore not a robust summary;
-what the data support is a \emph{binary} finding --- attack versus the
-(very rare) other types --- plus a statement of the sparsity.
+digits in total (support annotated in Figure~\ref{fig:gatecm}), and the
+pairwise conditional support is tiny ($n$ between @PAIR_N_MIN@ and
+@PAIR_N_MAX@). Type-level agreement therefore is \emph{descriptive only}: raw
+pairwise agreement ranges from @PAIR_LO@ to @PAIR_HI@\% ($\kappa$
+@KAPPA_RANGE6@; on the same gated set the unconditional seven-class task the
+models were prompted with agrees @BASE7_RANGE@\%, $\kappa$ @KAPPA_RANGE7@).
+A global six-class $\kappa$ on near-empty classes is not a robust summary.
 
 \begin{figure}[ht]
 \centering
@@ -761,25 +783,22 @@ what the data support is a \emph{binary} finding --- attack versus the
 \caption{Conditional six-class type confusion for the gated condition (matrix
 sample, Condition~B): rows and columns are the four models' type labels,
 restricted to the comments on which both models retained Jev's positive gate.
-``Given that two models both retain the gate, which types do they confuse?''
 Each cell carries its conditional $n$; per-type support is annotated below.}
 \label{fig:gatecm}
 \end{figure}
 
 \medskip
-\noindent\textbf{Step 4 -- consensus, tie-safe.} The majority vote is recomputed
-on the six types among the models that \emph{retained} the gate, with explicit
-ties: a 2--2 split is stored as a tie (label null), not resolved by label
-order, and no model is scored against an arbitrarily tie-broken reference.
-The two quantities the old single statistic conflated are now reported
-separately (Figure~\ref{fig:gatemaj}): \emph{gate acceptance}
-(@N44@ of @GATE_N@ comments have all four models retaining the gate,
-@N34@+@N44@ = @NK3@ have at least three, and @NREJALL@ are rejected by all)
-and \emph{conditional type consensus} (among the retainers: @N44@ four-of-four,
-@N34@ three-of-four, @N24@ two-of-four --- where ``2 of 4'' is a plurality,
-not a majority --- @N14@ one-of-four, @NTIE@ ties). The practical reading does
-not change, but is now honest: requiring three-or-more models to retain the
-gate keeps @NK3PCT@\% of the gated stream and keeps the type label stable.
+\noindent\textbf{3. Consensus among the retaining models.} The majority vote is
+recomputed on the six types among the models that \emph{retained} the gate.
+Gate acceptance and conditional type consensus are distinct quantities
+(Figure~\ref{fig:gatemaj}): @N44@ of @GATE_N@ comments have all four models
+retaining the gate and @NREJALL@ are rejected by all, while \emph{among the
+retainers} the type label is a plurality of four (@N44@), three (@N34@), two
+(@N24@) or one (@N14@), with @NTIE@ explicit ties. Requiring three-or-more
+models to retain the gate keeps @NK3PCT@\% of the gated stream and keeps the
+type label stable. On the large-scale sample the gate is more selective
+(@GATE_N_BIG@ of @N_BIG@ comments), of which only @N24_BIG@ reach a plurality
+of the retaining models on the type.
 
 \begin{figure}[ht]
 \centering
@@ -791,17 +810,10 @@ ties shown as their own bar.}
 \label{fig:gatemaj}
 \end{figure}
 
-On the large-scale sample the gate is even more selective: @GATE_N_BIG@ of
-@N_BIG@ comments (@GATE_PCT_BIG@\%), of which only @N24_BIG@ reach a
-plurality of the retaining models on the type. The gate thus concentrates the
-analysis where it is needed, at roughly 3\% of the comments, without losing the
-ability to compare the models on a common set.
-
-The substantive result of the separation: \emph{the hard problem is not only
-deciding which reactance type applies. A substantial fraction of the apparent
-``disagreement'' already concerns whether Jev's gated positives satisfy the
-reactance definition at all.} Combining both sources in one 7-class matrix
-overstated the type problem and understated the gate problem.
+The substantive result: \emph{the hard problem is not only deciding which
+reactance type applies. A substantial fraction of the apparent
+``disagreement'' concerns whether Jev's gated positives satisfy the reactance
+definition at all.}
 
 \section{Two validation experiments}
 \label{sec:exp}
@@ -849,12 +861,12 @@ frequency to validating it. At low prevalence the question is not which model
 more often says yes, but whether a label carries at all.
 
 \medskip
-\noindent\textbf{The context work is avoidable.} Neither transcript nor video
-measurably affect aggregate detection, and the case-level evidence
-(Section~\ref{sub:transcript}) shows the transcript does not carry additional
-item-level signal either: @CASELEVEL_DISCUSSION@ The most practical message for
-a pipeline over 6.7~million comments is that the comment text suffices and the
-transcripts remain available for the intervention side of the project.
+\noindent\textbf{The context work is low-priority.} Adding the transcript
+changes aggregate prevalence only modestly and leaves most item-level
+classifications unchanged (Section~\ref{sub:transcript}): @CASELEVEL_DISCUSSION@
+The most practical message for a pipeline over 6.7~million comments is that
+the comment text appears sufficient for screening, while the transcripts
+remain available for the intervention side of the project.
 
 \medskip
 \noindent\textbf{Cascades instead of monoliths.} A cheap Jev pass with a
@@ -961,19 +973,22 @@ cd report && ./make.sh
 # ---------------------------------------------------------------- abstract
 ABSTRACT = (
     f"Public concern about political TikTok comment sections suggests that "
-    f"psychological reactance is common. Two benchmarks show the opposite. On "
+    f"psychological reactance is common. In the sampled comments, however, "
+    f"all four classifiers produce relatively low reactance rates. On "
     f"{n_matrix} party-stratified comments, four models coded between "
     f"about 2.8 and 10.8\\% as reactance under strict, theory-anchored coding; "
     f"the newest backend, GLM-5.3-Flash, is the least conservative "
     f"(9--11\\%). A second, comment-only pass over {n_big} comments yields "
     f"{nz(a_prev, 2)}\\% (95\\% CI [{nz(a_ci[0], 2)}; {nz(a_ci[1], 2)}], "
-    f"Jev). The video transcript does not measurably improve aggregate "
-    f"detection --- and the case-level confusion analysis shows it does not "
-    f"change which individual comments are called reactant either. Jev, a "
+    f"Jev). These are rates on a non-representative sample from classifiers "
+    f"that are not fully validated, not population prevalence estimates. "
+    f"The video transcript changes aggregate prevalence only modestly and "
+    f"leaves most item-level classifications unchanged. Jev, a "
     f"Decision-API backend, answers in 0.46\\,s and costs "
     f"\\$0.061 per 1{{,}}000 comments and \\emph{{as the only backend}} returns "
-    f"class probabilities, so a threshold lifts consensus-agreement precision "
-    f"from 14\\% to nearly 80\\% at t=0.6. The real bottleneck is validity: "
+    f"class probabilities, so a threshold lifts leave-one-out-consensus "
+    f"precision from {THR_LO_P}\\% to {THR_HI_P}\\% at $t=0.6$. The real "
+    f"bottleneck is validity: "
     f"a manual re-coding of the 36 audited three-model positives found "
     f"{nz(w3 * 100, 0)}\\% precision overall ({nz(prec3 * 100, 0)}\\% at "
     f"three-model consensus, {nz(prec1 * 100, 0)}\\% for single-model flags; "
@@ -1064,16 +1079,19 @@ if _recj and _recj.get("binary") and _flips_A and _flips_B:
         f"models: flips range from {fB_lo} to {fB_hi} on Codebook B and from "
         f"{fA_lo} to {fA_hi} on Codebook A (Figures~\\ref{{fig:cmCondA}}--\\ref{{fig:cmCondB}}) "
         f"--- double-digit flip counts in every case, but in absolute terms a small "
-        f"share of the sample. Small prevalence shift and small case-level flip "
-        f"shares are both observed; the transcript "
-        f"contributes neither aggregate nor item-level detection value."
+        f"share of the sample. Adding the transcript changes aggregate "
+        f"prevalence only modestly and leaves most item-level classifications "
+        f"unchanged. Without human-labelled ground truth for the "
+        f"transcript-bearing condition, however, we cannot determine whether "
+        f"the remaining label changes improve or reduce validity."
     )
     CASELEVEL_DISCUSSION = (
-        f"the flip counts are small in both directions "
-        f"($\\sim${fB_lo}--{fB_hi} per model on Codebook B, "
-        f"${fA_lo}--{fA_hi}$ on Codebook A), and the transcript changes neither "
-        f"the aggregate hit rate nor, case by case, which comments are called "
-        f"reactant."
+        f"most classifications remain unchanged, but item-level flips range "
+        f"from {fB_lo} to {fB_hi} per model on Codebook B and from {fA_lo} to "
+        f"{fA_hi} on Codebook A. For a cost-sensitive screening pipeline the "
+        f"limited change in model outputs provides little evidence that "
+        f"transcript inclusion is necessary; the experiment measures output "
+        f"stability, not demonstrated accuracy."
     )
 else:
     CASELEVEL_SENTENCE = ("The case-level confusion analysis could not be "
@@ -1116,6 +1134,11 @@ def build():
     doc = DOC_TEMPLATE
     r = {
         "@ABSTRACT@": ABSTRACT,
+        "@THR_LO_P@": THR_LO_P,
+        "@THR_HI_P@": THR_HI_P,
+        "@THR_HI_C@": THR_HI_C,
+        "@THR_LO_C@": THR_LO_C,
+        "@JEV_RAW_P@": JEV_RAW_P,
         "@RELIABILITY_TEXT@": RELIABILITY_TEXT,
         "@PREV_ROWS@": prev_rows,
         "@AGREE_ROWS@": agree_rows,

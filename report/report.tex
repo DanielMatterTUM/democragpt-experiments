@@ -68,7 +68,7 @@
 \maketitle
 
 \begin{abstract}
-Public concern about political TikTok comment sections suggests that psychological reactance is common. Two benchmarks show the opposite. On 1200 party-stratified comments, four models coded between about 2.8 and 10.8\% as reactance under strict, theory-anchored coding; the newest backend, GLM-5.3-Flash, is the least conservative (9--11\%). A second, comment-only pass over 2001 comments yields 2.90\% (95\% CI [2.20; 3.60], Jev). The video transcript does not measurably improve aggregate detection --- and the case-level confusion analysis shows it does not change which individual comments are called reactant either. Jev, a Decision-API backend, answers in 0.46\,s and costs \$0.061 per 1{,}000 comments and \emph{as the only backend} returns class probabilities, so a threshold lifts consensus-agreement precision from 14\% to nearly 80\% at t=0.6. The real bottleneck is validity: a manual re-coding of the 36 audited three-model positives found 46\% precision overall (92\% at three-model consensus, 25\% for single-model flags; exact Wilson intervals on n=12 per stratum). GLM-5.3-Flash flags 61 comments no other model calls reactant; the audit predates GLM, so their precision is an open question, not a finding. Two sharpenings of the type codebook derived from that audit --- the trigger must be the target of the reaction, and politeness markers neither create nor cancel reactance --- raise the A/B codebook agreement on the large-scale sample to raw 98.2\% ($\kappa=0.98$). A gating variant (Section~\ref{sec:gate}) runs a cheap Jev binary pass first and classifies the type, across all four models, only on the $\approx$ 3\% it lets through; separating the gate question (do all models agree reactance exists?) from the conditional six-class type question shows that a substantial share of the apparent disagreement concerns the gate premise, not the type.
+Public concern about political TikTok comment sections suggests that psychological reactance is common. In the sampled comments, however, all four classifiers produce relatively low reactance rates. On 1200 party-stratified comments, four models coded between about 2.8 and 10.8\% as reactance under strict, theory-anchored coding; the newest backend, GLM-5.3-Flash, is the least conservative (9--11\%). A second, comment-only pass over 2001 comments yields 2.90\% (95\% CI [2.20; 3.60], Jev). These are rates on a non-representative sample from classifiers that are not fully validated, not population prevalence estimates. The video transcript changes aggregate prevalence only modestly and leaves most item-level classifications unchanged. Jev, a Decision-API backend, answers in 0.46\,s and costs \$0.061 per 1{,}000 comments and \emph{as the only backend} returns class probabilities, so a threshold lifts leave-one-out-consensus precision from 0\% to 1\% at $t=0.6$. The real bottleneck is validity: a manual re-coding of the 36 audited three-model positives found 46\% precision overall (92\% at three-model consensus, 25\% for single-model flags; exact Wilson intervals on n=12 per stratum). GLM-5.3-Flash flags 61 comments no other model calls reactant; the audit predates GLM, so their precision is an open question, not a finding. Two sharpenings of the type codebook derived from that audit --- the trigger must be the target of the reaction, and politeness markers neither create nor cancel reactance --- raise the A/B codebook agreement on the large-scale sample to raw 98.2\% ($\kappa=0.55$). A gating variant (Section~\ref{sec:gate}) runs a cheap Jev binary pass first and classifies the type, across all four models, only on the $\approx$ 3\% it lets through; separating the gate question (do all models agree reactance exists?) from the conditional six-class type question shows that a substantial share of the apparent disagreement concerns the gate premise, not the type.
 \end{abstract}
 
 \noindent\small\textbf{Keywords:} psychological reactance; social media;
@@ -147,8 +147,8 @@ Jev remains the fastest and cheapest backend: 0.46\,s and \$0.061 per
 (Figure~\ref{fig:cost}); GLM-5.3-Flash is the cheapest chat model
 (\$0.119) but does not beat Jev. Jev is also the only backend that returns
 class probabilities --- an advantage with a practical payoff in
-Section~\ref{sub:calib} (a threshold on the probability lifts consensus-agreement
-precision from 14\% to nearly 80\%).
+Section~\ref{sub:calib} (a threshold on the probability lifts
+leave-one-out-consensus precision from 0\% to 1\%).
 
 \begin{figure}[ht]
 \centering
@@ -183,9 +183,9 @@ only Jev's shift reaches the conventional significance level of an exact
 McNemar test). The aggregate figure alone does not answer the interesting
 question, however, which is whether the \emph{same comments} are classified as
 reactant with and without the transcript (Figures~\ref{fig:cmCondA} and
-\ref{fig:cmCondB} sit here on purpose). Case-level, the picture is the same in substance: for Jev, 1173 of 1200 comments are classified identically in both conditions (case-level agreement 97.75\%), and only 27 individual comments flip --- 7 gain the reactance label, 20 lose it. The same pattern holds for the other models: flips range from 11 to 59 on Codebook B and from 27 to 121 on Codebook A (Figures~\ref{fig:cmCondA}--\ref{fig:cmCondB}) --- double-digit flip counts in every case, but in absolute terms a small share of the sample. Small prevalence shift and small case-level flip shares are both observed; the transcript contributes neither aggregate nor item-level detection value. The transcript
-is therefore not a detection tool, but the comment text is sufficient for
-detection.
+\ref{fig:cmCondB} sit here on purpose). Case-level, the picture is the same in substance: for Jev, 1173 of 1200 comments are classified identically in both conditions (case-level agreement 97.75\%), and only 27 individual comments flip --- 7 gain the reactance label, 20 lose it. The same pattern holds for the other models: flips range from 11 to 59 on Codebook B and from 27 to 121 on Codebook A (Figures~\ref{fig:cmCondA}--\ref{fig:cmCondB}) --- double-digit flip counts in every case, but in absolute terms a small share of the sample. Adding the transcript changes aggregate prevalence only modestly and leaves most item-level classifications unchanged. Without human-labelled ground truth for the transcript-bearing condition, however, we cannot determine whether the remaining label changes improve or reduce validity. For a
+cost-sensitive screening pipeline, the limited change in model outputs
+provides little evidence that transcript inclusion is necessary.
 
 \begin{figure}[ht]
 \centering
@@ -261,23 +261,24 @@ artefact; AC1 and, for the binary task, F1 close it.}
 
 \begin{table}[htp]
 \centering
-\caption{Each model against the four-model majority vote (Codebook~A,
-Condition~A). All four columns sit on the 0--1 scale --- raw agreement and
-F1 next to the two chance-corrected coefficients, so F1 is a first-class
-measure here rather than a chapter of its own. The reference is the
+\caption{Each model against the \emph{leave-one-model-out} consensus of the
+other three (Codebook~A, Condition~A). All columns sit on the 0--1 scale ---
+raw agreement and F1 next to the two chance-corrected coefficients, plus a
+positive-class-specific agreement so the rare-positive overlap is visible
+rather than hidden behind the dominant negative class. The reference is a
 consensus, not a gold standard: these are agreement numbers, not
 correctness numbers.}
 \label{tab:agree}
 \footnotesize
 \setlength{\tabcolsep}{5pt}
-\begin{tabular}{lccccc}
+\begin{tabular}{lcccccc}
 \toprule
-Model & $n$ & Raw & F1 & $\kappa$ & AC1\\
+Model & $n$ & Raw & F1 & $\kappa$ & AC1 & Pos.\,agree.\\
 \midrule
-  deepseek-fl. & 1200 & 0.977 & 0.774 & 0.762 & 0.974 \\
-  glm-5.3-fl. & 1200 & 0.928 & 0.522 & 0.492 & 0.917 \\
-  gpt-6.luna & 1200 & 0.971 & 0.729 & 0.714 & 0.968 \\
-  jev-1.13 & 1200 & 0.973 & 0.667 & 0.653 & 0.971 \\
+  deepseek-fl. & 1200 & 0.965 & 0.696 & 0.677 & 0.961 & 0.696 \\
+  glm-5.3-fl. & 1200 & 0.926 & 0.514 & 0.481 & 0.914 & 0.514 \\
+  gpt-6.luna & 1200 & 0.962 & 0.671 & 0.651 & 0.957 & 0.671 \\
+  jev-1.13 & 1200 & 0.955 & 0.542 & 0.520 & 0.950 & 0.542 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -330,23 +331,32 @@ intervals on $n=12$ per stratum.}
 \label{fig:audit}
 \end{figure}
 
-Because most of the 3-model positives are single-model flags, a pipeline that
-runs a single model inherits roughly two thirds false alarms. The prevalence
-figures in Section~\ref{sec:freq} are therefore upper bounds; the order of
-magnitude survives, the exact percentages do not. A v2 audit sample covering
-the four-model pool (including the 61 GLM-only flags) is drawn and
-awaiting annotation; precision for the 4-model strata is a follow-up, not a
-number in this report.
+Precision falls sharply with the number of models that agree. Among the cases
+flagged by only one of the three original models, 3 of 12 were judged true
+positives; among those flagged by all three, 11 of 12 were. Within the audited
+cases flagged by a single model, this suggests low precision for isolated
+flags, although the estimate rests on a small stratified sample and the
+intervals are wide. The positive audit therefore indicates substantial
+false-positive contamination, especially in the isolated-flag strata. Raw
+model-positive rates should not be read directly as estimates of true
+prevalence. Because the audit samples predicted positives rather than the full
+comment population, it does not estimate false negatives and cannot establish
+whether prevalence is biased upward or downward overall. A v2 audit sample
+covering the four-model pool (including the 61 GLM-only flags) is
+drawn and awaiting annotation; precision for the four-model strata is a
+follow-up, not a number in this report.
 
-\subsection{F1 against the consensus majority}
+\subsection{F1 against the leave-one-model-out consensus}
 \label{sub:f1}
 F1 is treated as a first-class agreement measure in
 Section~\ref{sec:agree}, where it sits next to raw agreement, $\kappa$ and
 AC1 (Table~\ref{tab:agree}) rather than in a chapter of its own. The reference
-there is the four-model majority vote --- not a gold standard --- so F1 reads
-as how far a model sits from the consensual position, not how correct it is.
-At low prevalence precision and recall pull against each other: Jev has the
-best precision but gives up the most recall, and so loses to the chat models
+there is a \emph{leave-one-model-out consensus}: each model is compared with
+the majority of the other three only, so the evaluated model never votes in
+its own reference. It is a consensus, not a gold standard, so F1 reads as how
+far a model sits from the consensual position, not how correct it is. At low
+prevalence precision and recall pull against each other: Jev has the best
+precision but gives up the most recall, and so loses to the chat models
 on F1.
 
 \subsection{Codebook A and Codebook B agree --- on both samples}
@@ -357,11 +367,16 @@ is not reacting to a constraint. Gate~3 fixes that politeness markers are
 neither trigger nor shield. Both gates sit in the chat instructions \emph{and}
 in the Jev criteria, because the Decisions API only returns the criteria.
 
-Two samples, two tables --- deliberately kept apart, because mixing them is
-what the earlier draft did. On the \emph{large-scale} sample
-(2001 comments, Condition~B, Jev and GLM) the two instruments now agree to
-98.2\% raw with $\kappa=$0.98 and an FP/TP ratio of
-0.09 (Jev; Table~\ref{tab:ab}).
+Two samples, two tables --- deliberately kept apart. On the
+\emph{large-scale} sample (2001 comments, Condition~B, Jev and GLM) the two
+instruments agree to 98.2\% raw, but the chance-corrected
+agreement is only $\kappa=$0.55, with an FP/TP ratio of
+0.09 (Jev; Table~\ref{tab:ab}). The very high raw agreement is
+driven by both instruments labelling most comments as non-reactant; on the
+rare positive class the agreement is moderate once chance is accounted for.
+$\kappa$ is computed after collapsing both codebooks to the same binary label
+space (A: ja/nein vs.\ B: reactant/none), because comparing the two label
+spaces directly would make the expected-agreement term invalid.
 The \emph{matrix sample} (1200 comments, all four models) shows the same
 pattern per model and condition at n=1200
 (Table~\ref{tab:abm}); its aggregate raw agreement is lower simply because the
@@ -378,8 +393,8 @@ rows are 2{,}001, not the 1{,}200 of the matrix sample.}
 \toprule
 Model & $n$ & both & FP & FN & raw agree & $\kappa$ & FP:TP\\
 \midrule
-  glm-5.3-fl. & 2001 & 73 & 37 & 116 & 92.3 & 0.92 & 0.51 \\
-  jev-1.13 & 2001 & 23 & 2 & 35 & 98.2 & 0.98 & 0.09 \\
+  glm-5.3-fl. & 2001 & 73 & 37 & 116 & 92.3 & 0.45 & 0.51 \\
+  jev-1.13 & 2001 & 23 & 2 & 35 & 98.2 & 0.55 & 0.09 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -442,12 +457,13 @@ region that matters at low prevalence.
 \noindent\textbf{(b) The threshold trade-off.} Because $P(\mathrm{ja})$
 is meaningful, we can discard low-confidence flags. Raising the threshold
 $t$ --- flag only those comments with $P(\mathrm{ja})\geq t$ --- trades
-coverage for consensus-agreement precision: at $t=0.05$ nearly half the
-comments are flagged and precision is only 14\%; at $t=0.6$ precision reaches
-79\% but covers only 2.8\% of the sample. The 46\% line marks the precision
-of Jev's raw threshold-free label. Precision, then, is not a property of the
-model but of the operating point chosen on this curve --- relative to the
-consensus, not to a ground truth.
+coverage for agreement with the leave-one-model-out consensus: at $t=0.05$
+41.2\% of comments are flagged and precision is only 0\%;
+at $t=0.6$ precision reaches 1\% but covers only 2.8\% of
+the sample. The 70\% line marks the precision of Jev's raw
+threshold-free label. Precision, then, is not a property of the model but of
+the operating point chosen on this curve --- relative to the consensus of the
+other three models, not to a ground truth.
 
 \begin{figure}[ht]
 \centering
@@ -471,36 +487,32 @@ through. Every model --- Jev included, all four --- then classifies the type of
 reactance on exactly those comments, so the four annotate the same set and the
 matrix of confusion matrices is directly comparable. It costs no additional
 API calls in this benchmark, because the Codebook~B predictions were already
-collected: the gate is a recombination of existing labels.
-
-This section separates two questions that the previous draft answered with one
-figure, and the separation is the substantive point.
-
-\medskip
-\noindent\textbf{Step 1 -- detection.} Jev performs binary reactance detection
-over all comments. On the matrix sample, condition~B, the gate lets through
-33 of 1200 comments (2.75\%); on the large-scale sample
-58 of 2001 (2.90\%).
+collected: the gate is a recombination of existing labels. The gated pipeline
+raises two distinct questions: whether downstream classifiers retain Jev's
+binary reactance decision, and, conditional on retaining it, which reactance
+type they assign.
 
 \medskip
-\noindent\textbf{Step 2 -- gate consistency (a separate diagnostic).} Once Jev
-says ``reactance present'', a downstream model can still answer with
-\texttt{keine\_reaktanz}: it \emph{rejects the gate's premise}. That is not
-type disagreement, and it must not be mixed into the type analysis. How often
-each model does this is its own number (Table~\ref{tab:gatereject},
+\noindent\textbf{1. Gate retention and rejection.} Jev performs binary reactance
+detection over all comments. On the matrix sample, condition~B, the gate lets
+through 33 of 1200 comments (2.75\%); on the large-scale
+sample 58 of 2001 (2.90\%). Once Jev says ``reactance
+present'', a downstream model can still answer
+\texttt{keine\_reaktanz}: it \emph{rejects the gate's premise}. How often each
+model does this is its own diagnostic (Table~\ref{tab:gatereject},
 Figure~\ref{fig:gaterej}): Jev itself re-labels 48\% (16/33) of its own gated comments as \texttt{keine\_reaktanz} in the type stage; GPT-6-Luna the most (79\% (26/33)), DeepSeek-V4.1-Flash 48\% (16/33), GLM-5.3-Flash 39\% (13/33). Between a fifth and four-fifths of Jev's gated positives are thus not accepted as reactant by a given second model --- a gate-rejection diagnostic that says nothing about which \emph{type} the retainers then choose.
 
 \begin{table}[htp]
 \centering
-\caption{Gate consistency: of the 33 comments Jev's gate let through
-(matrix sample, Condition~B), how many does each downstream model retain as
-reactant (assign one of the six types) and how many does it re-label as
+\caption{Gate retention vs.\ rejection: of the 33 comments Jev's gate let
+through (matrix sample, Condition~B), how many does each downstream model retain
+as reactant (assign one of the six types) and how many does it re-label as
 \texttt{keine\_reaktanz}?}
 \label{tab:gatereject}
 \small
 \begin{tabular}{lcccc}
 \toprule
-Model & $n$ gated & retain & reject & reject\\
+Model & $n$ gated & retain & reject & reject\%\\
 \midrule
   jev-1.13 & 33 & 17 & 16 & 48\% \\
   gpt-6.luna & 33 & 7 & 26 & 79\% \\
@@ -519,29 +531,21 @@ GPT-6-Luna rejects Jev's gate most often; GLM-5.3-Flash retains it most often.}
 \end{figure}
 
 \medskip
-\noindent\textbf{Step 3 -- conditional type classification.} The type task,
+\noindent\textbf{2. Conditional six-class type agreement.} The type task,
 conditioned on the gate, is a \textbf{six-class} task: the six reactance types,
 without \texttt{keine\_reaktanz}, which at this stage means ``you rejected the
-gate'', not ``a kind of reactance''. Figure~\ref{fig:gatecm} is the six-class
-type-confusion grid: only comments on which \emph{both} models of a pair
-retained the gate enter a cell, and each cell carries its (conditional) $n$,
-because the support differs from pair to pair once rejections are removed.
-The type calls on this set are spread out more than one would expect for a
-task where the answer is almost always the same type: pairwise agreement
-ranges from 85 to 100\% raw with per-pair $n$ between
-5 and 14 --- most pairs still agree on the dominant type
-(attack), while a few differ on whether the (rare) other types apply at all
-($\kappa$ 0.00--1.00; on the same gated set, the unconditional
-7-class task the models were actually prompted with, the same pairs agreed to
-58--70\%, $\kappa$ 0.18--0.46). Two further
-caveats attach to these numbers: the
-conditional support is tiny (33 comments), and the six types are \emph{sparse}
---- on the gated set almost every retained type call is
+gate'', not ``a kind of reactance''. Given that two models both retain the
+gate, which types do they confuse? Figure~\ref{fig:gatecm} is that six-class
+grid; each cell carries its conditional $n$, because support differs from pair
+to pair once rejections are removed. The retained type calls are dominated by
 \texttt{konfrontation\_angriff} (attack), with the other five types at single
-digits in total (support annotated in Figure~\ref{fig:gatecm}). A global
-six-class $\kappa$ on near-empty classes is therefore not a robust summary;
-what the data support is a \emph{binary} finding --- attack versus the
-(very rare) other types --- plus a statement of the sparsity.
+digits in total (support annotated in Figure~\ref{fig:gatecm}), and the
+pairwise conditional support is tiny ($n$ between 5 and
+14). Type-level agreement therefore is \emph{descriptive only}: raw
+pairwise agreement ranges from 85 to 100\% ($\kappa$
+0.00--1.00; on the same gated set the unconditional seven-class task the
+models were prompted with agrees 58--70\%, $\kappa$ 0.18--0.46).
+A global six-class $\kappa$ on near-empty classes is not a robust summary.
 
 \begin{figure}[ht]
 \centering
@@ -549,25 +553,22 @@ what the data support is a \emph{binary} finding --- attack versus the
 \caption{Conditional six-class type confusion for the gated condition (matrix
 sample, Condition~B): rows and columns are the four models' type labels,
 restricted to the comments on which both models retained Jev's positive gate.
-``Given that two models both retain the gate, which types do they confuse?''
 Each cell carries its conditional $n$; per-type support is annotated below.}
 \label{fig:gatecm}
 \end{figure}
 
 \medskip
-\noindent\textbf{Step 4 -- consensus, tie-safe.} The majority vote is recomputed
-on the six types among the models that \emph{retained} the gate, with explicit
-ties: a 2--2 split is stored as a tie (label null), not resolved by label
-order, and no model is scored against an arbitrarily tie-broken reference.
-The two quantities the old single statistic conflated are now reported
-separately (Figure~\ref{fig:gatemaj}): \emph{gate acceptance}
-(5 of 33 comments have all four models retaining the gate,
-6+5 = 17 have at least three, and 7 are rejected by all)
-and \emph{conditional type consensus} (among the retainers: 5 four-of-four,
-6 three-of-four, 6 two-of-four --- where ``2 of 4'' is a plurality,
-not a majority --- 9 one-of-four, 0 ties). The practical reading does
-not change, but is now honest: requiring three-or-more models to retain the
-gate keeps 52\% of the gated stream and keeps the type label stable.
+\noindent\textbf{3. Consensus among the retaining models.} The majority vote is
+recomputed on the six types among the models that \emph{retained} the gate.
+Gate acceptance and conditional type consensus are distinct quantities
+(Figure~\ref{fig:gatemaj}): 5 of 33 comments have all four models
+retaining the gate and 7 are rejected by all, while \emph{among the
+retainers} the type label is a plurality of four (5), three (6), two
+(6) or one (9), with 0 explicit ties. Requiring three-or-more
+models to retain the gate keeps 52\% of the gated stream and keeps the
+type label stable. On the large-scale sample the gate is more selective
+(58 of 2001 comments), of which only 18 reach a plurality
+of the retaining models on the type.
 
 \begin{figure}[ht]
 \centering
@@ -579,17 +580,10 @@ ties shown as their own bar.}
 \label{fig:gatemaj}
 \end{figure}
 
-On the large-scale sample the gate is even more selective: 58 of
-2001 comments (2.90\%), of which only 18 reach a
-plurality of the retaining models on the type. The gate thus concentrates the
-analysis where it is needed, at roughly 3\% of the comments, without losing the
-ability to compare the models on a common set.
-
-The substantive result of the separation: \emph{the hard problem is not only
-deciding which reactance type applies. A substantial fraction of the apparent
-``disagreement'' already concerns whether Jev's gated positives satisfy the
-reactance definition at all.} Combining both sources in one 7-class matrix
-overstated the type problem and understated the gate problem.
+The substantive result: \emph{the hard problem is not only deciding which
+reactance type applies. A substantial fraction of the apparent
+``disagreement'' concerns whether Jev's gated positives satisfy the reactance
+definition at all.}
 
 \section{Two validation experiments}
 \label{sec:exp}
@@ -640,12 +634,12 @@ frequency to validating it. At low prevalence the question is not which model
 more often says yes, but whether a label carries at all.
 
 \medskip
-\noindent\textbf{The context work is avoidable.} Neither transcript nor video
-measurably affect aggregate detection, and the case-level evidence
-(Section~\ref{sub:transcript}) shows the transcript does not carry additional
-item-level signal either: the flip counts are small in both directions ($\sim$11--59 per model on Codebook B, $27--121$ on Codebook A), and the transcript changes neither the aggregate hit rate nor, case by case, which comments are called reactant. The most practical message for
-a pipeline over 6.7~million comments is that the comment text suffices and the
-transcripts remain available for the intervention side of the project.
+\noindent\textbf{The context work is low-priority.} Adding the transcript
+changes aggregate prevalence only modestly and leaves most item-level
+classifications unchanged (Section~\ref{sub:transcript}): most classifications remain unchanged, but item-level flips range from 11 to 59 per model on Codebook B and from 27 to 121 on Codebook A. For a cost-sensitive screening pipeline the limited change in model outputs provides little evidence that transcript inclusion is necessary; the experiment measures output stability, not demonstrated accuracy.
+The most practical message for a pipeline over 6.7~million comments is that
+the comment text appears sufficient for screening, while the transcripts
+remain available for the intervention side of the project.
 
 \medskip
 \noindent\textbf{Cascades instead of monoliths.} A cheap Jev pass with a
