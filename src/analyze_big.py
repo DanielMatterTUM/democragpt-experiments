@@ -21,11 +21,16 @@ Jobs:
 from __future__ import annotations
 
 import json
+import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
+
+# reuse the canonical kappa helper (analyze_extended.main() is __main__-guarded)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from analyze_extended import cohen_kappa  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
 RES = REPO / "results"
@@ -156,14 +161,20 @@ def main():
             bn = sum(1 for u in common if A_[u] == "nein" and Bb[u] == NEG_B)
             agree = round(100 * (both + bn) / len(common), 2)
             n_ = len(common)
-            po = (both + bn) / n_
-            ca = Counter(A_[u] for u in common)
-            cb = Counter(Bb[u] for u in common)
-            pe = sum((ca[l] / n_) * (cb[l] / n_) for l in set(ca) | set(cb))
-            k = 1.0 if abs(1 - pe) < 1e-12 else round((po - pe) / (1 - pe), 4)
+            # Cohen's kappa must be computed on a SHARED binary label space.
+            # Codebook A is {ja, nein}; Codebook B is {keine_reaktanz, six
+            # types}. Comparing those label spaces directly makes the expected
+            # agreement invalid (it effectively forces pe near 1 and inflates
+            # kappa). Collapse both to binary reactant/none first, then apply
+            # the same cohen_kappa() helper used elsewhere.
+            a_bin = [1 if A_[u] == "ja" else 0 for u in common]
+            b_bin = [1 if Bb[u] != NEG_B else 0 for u in common]
+            k = cohen_kappa(a_bin, b_bin, ["nein", "ja"])
             ab.append({"model": m, "sample": "big", "condition": "B", "n": n_,
                        "both": both, "fp": fp, "fn": fn, "both_none": bn,
-                       "raw_agreement_pct": agree, "cohens_kappa": k,
+                       "raw_agreement_pct": agree,
+                       "cohens_kappa": round(k, 4) if k is not None else None,
+                       "kappa_label_space": "binary (A: ja/nein vs B: reactant/none)",
                        "fp_tp": round(fp / both, 2) if both else None})
         out["A_vs_B"] = ab
         # Jev confidence bands (the decision API is the only one reporting them)
